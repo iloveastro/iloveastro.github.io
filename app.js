@@ -364,8 +364,11 @@
     const chartHtml = charts.length ? charts.map((ch, i) => `<div class="chart-detail-box"><h3>${esc(ch.displayName || name)}${charts.length > 1 ? ` chart ${i + 1}` : ''}</h3>${chartImg(ch, true, 'chart-img detail-chart', `${ch.displayName || name} labelled chart`)}</div>`).join('') : '';
     const atlasNotes = (info.atlasNotes || []).length ? `<h3>Sky picture</h3>${info.atlasNotes.map(x => `<p>${esc(x)}</p>`).join('')}` : '';
     const facts = (info.funFacts || []).filter(Boolean);
-    app.innerHTML = `<button type="button" id="backAtlas">← atlas</button><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><p>${info.asterisms.length ? info.asterisms.map(esc).join(', ') : 'none listed yet'}</p>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table></section>`;
+    const order = DATA.constellations.map(c => c.name);
+    const nextName = order[(order.indexOf(name) + 1) % order.length];
+    app.innerHTML = `<div class="controls"><button type="button" id="backAtlas">← atlas</button><button type="button" id="nextAtlas">next constellation →</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><p>${info.asterisms.length ? info.asterisms.map(esc).join(', ') : 'none listed yet'}</p>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table></section>`;
     $('#backAtlas').addEventListener('click', renderAtlas);
+    $('#nextAtlas').addEventListener('click', () => renderConstellationPage(nextName));
     document.querySelectorAll('[data-const]').forEach(b => b.addEventListener('click', () => renderConstellationPage(b.dataset.const)));
   }
 
@@ -848,7 +851,7 @@
 
   function renderAlphaPin() {
     const state = states.alphapin || (states.alphapin = { loaded: false, loading: false, error: '', fov: 140, magLimit: 4.8, target: null, selectedVec: null, result: '', submitted: false, orient: null });
-    app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find <strong>${esc(state.target ? state.target.constellation : '...')}</strong>.</div><label>FOV degrees<input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></label><label>Star density / faintest magnitude<input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">equinox</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaNew">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div></aside></div>`;
+    app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find <strong>${esc(state.target ? state.target.constellation : '...')}</strong>.</div><label>FOV degrees<input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></label><label>Star density / faintest magnitude<input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">○</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaNew">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div></aside></div>`;
     const canvas = $('#alphaCanvas'), ctx = canvas.getContext('2d');
     const fovInput = $('#alphaFov');
 
@@ -1024,7 +1027,7 @@
       const score = angle >= 45 ? 0 : Math.max(0, Math.min(5000, Math.round(5000 * (1 - Math.pow(angle / 45, 2.63)))));
       state.submitted = true;
       recordPointScore('alphapin', score);
-      state.result = `score: ${score}/5000`;
+      state.result = `score: ${score}/5000 · angle from α: ${angle.toFixed(1)}°`;
       $('#alphaMsg').textContent = state.result;
       draw();
     }
@@ -1116,7 +1119,7 @@
 
   function renderSkyRegions() {
     const state = states.skyregions || (states.skyregions = { loaded: false, loading: false, error: '', fov: 140, message: '', selected: '', showBoundaries: true, showStars: true, magLimit: 5.0, orient: null });
-    app.innerHTML = `<h2>Constellation Regions</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></label><label><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}> boundaries</label><label><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}> stars</label><label>Star density / faintest magnitude<input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></label><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
+    app.innerHTML = `<h2>Constellation Regions</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></label><label><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}> boundaries</label><label><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}> stars</label><label>Star density / faintest magnitude<input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></label><label>Search constellation<input id="regionSearch" autocomplete="off" placeholder="constellation name"></label><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
     const canvas = $('#regionCanvas'), ctx = canvas.getContext('2d');
     const fovInput = $('#regionFov');
     const boundsInput = $('#regionBounds');
@@ -1207,6 +1210,28 @@
       const centre = centreVec ? raDecFromVec(centreVec) : null;
       const centreText = centre ? `<br>region centre: RA ${formatRA(centre.ra)}, Dec ${formatDec(centre.dec)}` : '';
       return `<strong>${esc(name)}</strong><br>clicked point: RA ${formatRA(clicked.ra)}, Dec ${formatDec(clicked.dec)}${centreText}`;
+    }
+    function findConstellationByInput(value) {
+      const q = compact(value);
+      if (!q) return null;
+      let c = DATA.constellations.find(x => compact(x.name) === q || compact(x.abbr) === q);
+      if (c) return c.name;
+      if (q.length >= 3) {
+        c = DATA.constellations.find(x => compact(x.name).startsWith(q));
+        if (c) return c.name;
+      }
+      return null;
+    }
+    function centreRegionByName(name) {
+      const v = skyConstCentres.get(name);
+      if (!v) return false;
+      state.orient = makeBasisFromForward(v);
+      state.selected = name;
+      state.message = regionMessage(name, v);
+      $('#regionMsg').innerHTML = state.message;
+      draw();
+      canvas.focus();
+      return true;
     }
     function vecAtCanvasPoint(x, y) {
       const b = ensureOrientation();
@@ -1307,6 +1332,7 @@
     boundsInput.addEventListener('change', e => { state.showBoundaries = e.target.checked; draw(); });
     $('#regionStars').addEventListener('change', e => { state.showStars = e.target.checked; draw(); });
     $('#regionMag').addEventListener('input', e => { state.magLimit = Math.max(4, Math.min(6, parseFloat(e.target.value) || 5.0)); draw(); });
+    $('#regionSearch').addEventListener('input', e => { const name = findConstellationByInput(e.target.value); if (name) centreRegionByName(name); });
     $('#regionReset').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); draw(); canvas.focus(); });
     $('#regionRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#regionRollCW').addEventListener('click', () => rollFrame(1));
