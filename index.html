@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Night Sky Trainer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Night Sky Trainer</h1>
+    <button id="resetProgress">Reset progress</button>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="chart" class="active">Chart Quiz</button>
+    <button data-tab="neighbour">Neighbour Web</button>
+    <button data-tab="stars">Star Names</button>
+    <button data-tab="dso">DSOs</button>
+    <button data-tab="timer">88 Timer</button>
+    <button data-tab="atlas">Atlas</button>
+    <button data-tab="tables">Tables</button>
+  </nav>
+
+  <main>
+    <noscript>This site needs JavaScript enabled.</noscript>
+    <section id="chart" class="tab active">
+      <div class="layout">
+        <aside>
+          <h2>Guess the constellation chart</h2>
+          <p>Only constellation names are blanked. Star names, Greek letters, and DSO labels remain.</p>
+          <label><input type="checkbox" id="chartShuffle" checked> Shuffle deck</label>
+          <label><input type="checkbox" id="chartAnswerImage" checked> Show labelled answer chart</label>
+          <input id="chartGuess" placeholder="Constellation name">
+          <p>
+            <button id="chartSubmit">Guess</button>
+            <button id="chartReveal">Reveal</button>
+            <button id="chartNext">Next</button>
+          </p>
+          <div id="chartMsg" class="message"></div>
+          <div id="chartStats" class="stats"></div>
+        </aside>
+        <section>
+          <img id="chartImg" alt="Blanked IAU constellation chart">
+          <div id="chartAnswer" class="answer hidden"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="neighbour" class="tab">
+      <div class="layout">
+        <aside>
+          <h2>Neighbour Web</h2>
+          <div id="neighbourPrompt" class="prompt"></div>
+          <div id="neighbourChoices" class="choice-grid"></div>
+          <div id="neighbourMsg" class="message"></div>
+          <p><button id="neighbourNext">Next</button></p>
+        </aside>
+        <section><img id="neighbourImg" alt="Neighbour chart"></section>
+      </div>
+    </section>
+
+    <section id="stars" class="tab">
+      <div class="layout">
+        <aside>
+          <h2>Star Names</h2>
+          <label>Mode
+            <select id="starMode">
+              <option value="constellation">Star → constellation</option>
+              <option value="name">Designation → star name</option>
+              <option value="designation">Star → designation</option>
+            </select>
+          </label>
+          <div id="starPrompt" class="prompt"></div>
+          <div id="starChoices" class="choice-grid"></div>
+          <input id="starGuess" placeholder="Or type the answer">
+          <p>
+            <button id="starSubmit">Submit</button>
+            <button id="starReveal">Reveal</button>
+            <button id="starNext">Next</button>
+          </p>
+          <div id="starMsg" class="message"></div>
+        </aside>
+        <section>
+          <h2>Star card</h2>
+          <div id="starInfo" class="fact"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="dso" class="tab">
+      <div class="layout">
+        <aside>
+          <h2>Messier + Caldwell</h2>
+          <label>Catalogue
+            <select id="dsoCatalogue">
+              <option value="both">Messier + Caldwell</option>
+              <option value="M">Messier only</option>
+              <option value="C">Caldwell only</option>
+            </select>
+          </label>
+          <label>Mode
+            <select id="dsoMode">
+              <option value="codeToName">Number → common name</option>
+              <option value="nameToCode">Common name → number</option>
+              <option value="constellation">Object → constellation</option>
+              <option value="type">Object → object type</option>
+            </select>
+          </label>
+          <div id="dsoPrompt" class="prompt"></div>
+          <div id="dsoChoices" class="choice-grid"></div>
+          <input id="dsoGuess" placeholder="Or type the answer">
+          <p>
+            <button id="dsoSubmit">Submit</button>
+            <button id="dsoReveal">Reveal</button>
+            <button id="dsoNext">Next</button>
+          </p>
+          <div id="dsoMsg" class="message"></div>
+        </aside>
+        <section>
+          <h2>Object card</h2>
+          <div id="dsoInfo" class="fact"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="timer" class="tab">
+      <h2>Name all 88 constellations</h2>
+      <p>
+        <strong id="timerClock">10:00</strong>
+        <select id="timerMinutes"><option>5</option><option selected>10</option><option>15</option><option>20</option></select>
+        <button id="timerStart">Start</button>
+        <button id="timerStop">Stop</button>
+      </p>
+      <input id="timerInput" placeholder="Type a constellation and press Enter">
+      <div id="timerMsg" class="message"></div>
+      <h3>Found</h3>
+      <div id="timerFound" class="pillbox"></div>
+      <h3>Missing</h3>
+      <div id="timerMissing" class="pillbox muted"></div>
+    </section>
+
+    <section id="atlas" class="tab">
+      <h2>Atlas</h2>
+      <p>Click a chart to switch between blanked and labelled versions.</p>
+      <div id="atlasGrid" class="atlas-grid"></div>
+    </section>
+
+    <section id="tables" class="tab">
+      <h2>Tables</h2>
+      <input id="tableSearch" placeholder="Search constellation, star, M number, C number, common name...">
+      <p class="table-tabs">
+        <button data-table="constellations" class="active">Constellations</button>
+        <button data-table="stars">Stars</button>
+        <button data-table="dso">DSOs</button>
+      </p>
+      <div id="tableWrap" class="table-wrap"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
