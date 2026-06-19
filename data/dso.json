@@ -1,0 +1,3880 @@
+[
+  {
+    "catalog": "M",
+    "number": 1,
+    "code": "M1",
+    "commonName": "Crab Nebula",
+    "type": "supernova remnant",
+    "constellation": "Taurus",
+    "aliases": [
+      "NGC 1952"
+    ],
+    "accepted": [
+      "1",
+      "Crab Nebula",
+      "M 1",
+      "M1",
+      "NGC 1952"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 2,
+    "code": "M2",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Aquarius",
+    "aliases": [
+      "NGC 7089"
+    ],
+    "accepted": [
+      "2",
+      "M 2",
+      "M2",
+      "NGC 7089"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 3,
+    "code": "M3",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "NGC 5272"
+    ],
+    "accepted": [
+      "3",
+      "M 3",
+      "M3",
+      "NGC 5272"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 4,
+    "code": "M4",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Scorpius",
+    "aliases": [
+      "NGC 6121"
+    ],
+    "accepted": [
+      "4",
+      "M 4",
+      "M4",
+      "NGC 6121"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 5,
+    "code": "M5",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Serpens",
+    "aliases": [
+      "NGC 5904"
+    ],
+    "accepted": [
+      "5",
+      "M 5",
+      "M5",
+      "NGC 5904"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 6,
+    "code": "M6",
+    "commonName": "Butterfly Cluster",
+    "type": "open cluster",
+    "constellation": "Scorpius",
+    "aliases": [
+      "NGC 6405"
+    ],
+    "accepted": [
+      "6",
+      "Butterfly Cluster",
+      "M 6",
+      "M6",
+      "NGC 6405"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 7,
+    "code": "M7",
+    "commonName": "Ptolemy's Cluster",
+    "type": "open cluster",
+    "constellation": "Scorpius",
+    "aliases": [
+      "NGC 6475"
+    ],
+    "accepted": [
+      "7",
+      "M 7",
+      "M7",
+      "NGC 6475",
+      "Ptolemy's Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 8,
+    "code": "M8",
+    "commonName": "Lagoon Nebula",
+    "type": "emission nebula",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6523"
+    ],
+    "accepted": [
+      "8",
+      "Lagoon Nebula",
+      "M 8",
+      "M8",
+      "NGC 6523"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 9,
+    "code": "M9",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Ophiuchus",
+    "aliases": [
+      "NGC 6333"
+    ],
+    "accepted": [
+      "9",
+      "M 9",
+      "M9",
+      "NGC 6333"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 10,
+    "code": "M10",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Ophiuchus",
+    "aliases": [
+      "NGC 6254"
+    ],
+    "accepted": [
+      "10",
+      "M 10",
+      "M10",
+      "NGC 6254"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 11,
+    "code": "M11",
+    "commonName": "Wild Duck Cluster",
+    "type": "open cluster",
+    "constellation": "Scutum",
+    "aliases": [
+      "NGC 6705"
+    ],
+    "accepted": [
+      "11",
+      "M 11",
+      "M11",
+      "NGC 6705",
+      "Wild Duck Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 12,
+    "code": "M12",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Ophiuchus",
+    "aliases": [
+      "NGC 6218"
+    ],
+    "accepted": [
+      "12",
+      "M 12",
+      "M12",
+      "NGC 6218"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 13,
+    "code": "M13",
+    "commonName": "Hercules Globular Cluster",
+    "type": "globular cluster",
+    "constellation": "Hercules",
+    "aliases": [
+      "Great Hercules Cluster",
+      "NGC 6205"
+    ],
+    "accepted": [
+      "13",
+      "Great Hercules Cluster",
+      "Hercules Globular Cluster",
+      "M 13",
+      "M13",
+      "NGC 6205"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 14,
+    "code": "M14",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Ophiuchus",
+    "aliases": [
+      "NGC 6402"
+    ],
+    "accepted": [
+      "14",
+      "M 14",
+      "M14",
+      "NGC 6402"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 15,
+    "code": "M15",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Pegasus",
+    "aliases": [
+      "NGC 7078"
+    ],
+    "accepted": [
+      "15",
+      "M 15",
+      "M15",
+      "NGC 7078"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 16,
+    "code": "M16",
+    "commonName": "Eagle Nebula",
+    "type": "emission nebula/open cluster",
+    "constellation": "Serpens",
+    "aliases": [
+      "NGC 6611",
+      "Star Queen Nebula"
+    ],
+    "accepted": [
+      "16",
+      "Eagle Nebula",
+      "M 16",
+      "M16",
+      "NGC 6611",
+      "Star Queen Nebula"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 17,
+    "code": "M17",
+    "commonName": "Omega Nebula",
+    "type": "emission nebula",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "Swan Nebula",
+      "Horseshoe Nebula",
+      "NGC 6618"
+    ],
+    "accepted": [
+      "17",
+      "Horseshoe Nebula",
+      "M 17",
+      "M17",
+      "NGC 6618",
+      "Omega Nebula",
+      "Swan Nebula"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 18,
+    "code": "M18",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6613"
+    ],
+    "accepted": [
+      "18",
+      "M 18",
+      "M18",
+      "NGC 6613"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 19,
+    "code": "M19",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Ophiuchus",
+    "aliases": [
+      "NGC 6273"
+    ],
+    "accepted": [
+      "19",
+      "M 19",
+      "M19",
+      "NGC 6273"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 20,
+    "code": "M20",
+    "commonName": "Trifid Nebula",
+    "type": "emission/reflection nebula",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6514"
+    ],
+    "accepted": [
+      "20",
+      "M 20",
+      "M20",
+      "NGC 6514",
+      "Trifid Nebula"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 21,
+    "code": "M21",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6531"
+    ],
+    "accepted": [
+      "21",
+      "M 21",
+      "M21",
+      "NGC 6531"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 22,
+    "code": "M22",
+    "commonName": "Sagittarius Cluster",
+    "type": "globular cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6656"
+    ],
+    "accepted": [
+      "22",
+      "M 22",
+      "M22",
+      "NGC 6656",
+      "Sagittarius Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 23,
+    "code": "M23",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6494"
+    ],
+    "accepted": [
+      "23",
+      "M 23",
+      "M23",
+      "NGC 6494"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 24,
+    "code": "M24",
+    "commonName": "Small Sagittarius Star Cloud",
+    "type": "star cloud",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "IC 4715"
+    ],
+    "accepted": [
+      "24",
+      "IC 4715",
+      "M 24",
+      "M24",
+      "Small Sagittarius Star Cloud"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 25,
+    "code": "M25",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "IC 4725"
+    ],
+    "accepted": [
+      "25",
+      "IC 4725",
+      "M 25",
+      "M25"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 26,
+    "code": "M26",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Scutum",
+    "aliases": [
+      "NGC 6694"
+    ],
+    "accepted": [
+      "26",
+      "M 26",
+      "M26",
+      "NGC 6694"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 27,
+    "code": "M27",
+    "commonName": "Dumbbell Nebula",
+    "type": "planetary nebula",
+    "constellation": "Vulpecula",
+    "aliases": [
+      "NGC 6853",
+      "Apple Core Nebula"
+    ],
+    "accepted": [
+      "27",
+      "Apple Core Nebula",
+      "Dumbbell Nebula",
+      "M 27",
+      "M27",
+      "NGC 6853"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 28,
+    "code": "M28",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6626"
+    ],
+    "accepted": [
+      "28",
+      "M 28",
+      "M28",
+      "NGC 6626"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 29,
+    "code": "M29",
+    "commonName": "Cooling Tower Cluster",
+    "type": "open cluster",
+    "constellation": "Cygnus",
+    "aliases": [
+      "NGC 6913"
+    ],
+    "accepted": [
+      "29",
+      "Cooling Tower Cluster",
+      "M 29",
+      "M29",
+      "NGC 6913"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 30,
+    "code": "M30",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Capricornus",
+    "aliases": [
+      "NGC 7099"
+    ],
+    "accepted": [
+      "30",
+      "M 30",
+      "M30",
+      "NGC 7099"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 31,
+    "code": "M31",
+    "commonName": "Andromeda Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Andromeda",
+    "aliases": [
+      "NGC 224"
+    ],
+    "accepted": [
+      "31",
+      "Andromeda Galaxy",
+      "M 31",
+      "M31",
+      "NGC 224"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 32,
+    "code": "M32",
+    "commonName": "Le Gentil",
+    "type": "dwarf elliptical galaxy",
+    "constellation": "Andromeda",
+    "aliases": [
+      "NGC 221"
+    ],
+    "accepted": [
+      "32",
+      "Le Gentil",
+      "M 32",
+      "M32",
+      "NGC 221"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 33,
+    "code": "M33",
+    "commonName": "Triangulum Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Triangulum",
+    "aliases": [
+      "NGC 598",
+      "Pinwheel Galaxy"
+    ],
+    "accepted": [
+      "33",
+      "M 33",
+      "M33",
+      "NGC 598",
+      "Pinwheel Galaxy",
+      "Triangulum Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 34,
+    "code": "M34",
+    "commonName": "Spiral Cluster",
+    "type": "open cluster",
+    "constellation": "Perseus",
+    "aliases": [
+      "NGC 1039"
+    ],
+    "accepted": [
+      "34",
+      "M 34",
+      "M34",
+      "NGC 1039",
+      "Spiral Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 35,
+    "code": "M35",
+    "commonName": "Shoe Buckle Cluster",
+    "type": "open cluster",
+    "constellation": "Gemini",
+    "aliases": [
+      "NGC 2168"
+    ],
+    "accepted": [
+      "35",
+      "M 35",
+      "M35",
+      "NGC 2168",
+      "Shoe Buckle Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 36,
+    "code": "M36",
+    "commonName": "Pinwheel Cluster",
+    "type": "open cluster",
+    "constellation": "Auriga",
+    "aliases": [
+      "NGC 1960"
+    ],
+    "accepted": [
+      "36",
+      "M 36",
+      "M36",
+      "NGC 1960",
+      "Pinwheel Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 37,
+    "code": "M37",
+    "commonName": "Salt and Pepper Cluster",
+    "type": "open cluster",
+    "constellation": "Auriga",
+    "aliases": [
+      "NGC 2099"
+    ],
+    "accepted": [
+      "37",
+      "M 37",
+      "M37",
+      "NGC 2099",
+      "Salt and Pepper Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 38,
+    "code": "M38",
+    "commonName": "Starfish Cluster",
+    "type": "open cluster",
+    "constellation": "Auriga",
+    "aliases": [
+      "NGC 1912"
+    ],
+    "accepted": [
+      "38",
+      "M 38",
+      "M38",
+      "NGC 1912",
+      "Starfish Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 39,
+    "code": "M39",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Cygnus",
+    "aliases": [
+      "NGC 7092"
+    ],
+    "accepted": [
+      "39",
+      "M 39",
+      "M39",
+      "NGC 7092"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 40,
+    "code": "M40",
+    "commonName": "Winnecke 4",
+    "type": "double star",
+    "constellation": "Ursa Major",
+    "aliases": [
+      "WNC 4"
+    ],
+    "accepted": [
+      "40",
+      "M 40",
+      "M40",
+      "WNC 4",
+      "Winnecke 4"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 41,
+    "code": "M41",
+    "commonName": "Little Beehive Cluster",
+    "type": "open cluster",
+    "constellation": "Canis Major",
+    "aliases": [
+      "NGC 2287"
+    ],
+    "accepted": [
+      "41",
+      "Little Beehive Cluster",
+      "M 41",
+      "M41",
+      "NGC 2287"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 42,
+    "code": "M42",
+    "commonName": "Orion Nebula",
+    "type": "emission nebula",
+    "constellation": "Orion",
+    "aliases": [
+      "NGC 1976"
+    ],
+    "accepted": [
+      "42",
+      "M 42",
+      "M42",
+      "NGC 1976",
+      "Orion Nebula"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 43,
+    "code": "M43",
+    "commonName": "De Mairan's Nebula",
+    "type": "emission nebula",
+    "constellation": "Orion",
+    "aliases": [
+      "NGC 1982"
+    ],
+    "accepted": [
+      "43",
+      "De Mairan's Nebula",
+      "M 43",
+      "M43",
+      "NGC 1982"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 44,
+    "code": "M44",
+    "commonName": "Beehive Cluster",
+    "type": "open cluster",
+    "constellation": "Cancer",
+    "aliases": [
+      "Praesepe",
+      "NGC 2632"
+    ],
+    "accepted": [
+      "44",
+      "Beehive Cluster",
+      "M 44",
+      "M44",
+      "NGC 2632",
+      "Praesepe"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 45,
+    "code": "M45",
+    "commonName": "Pleiades",
+    "type": "open cluster",
+    "constellation": "Taurus",
+    "aliases": [
+      "Seven Sisters"
+    ],
+    "accepted": [
+      "45",
+      "M 45",
+      "M45",
+      "Pleiades",
+      "Seven Sisters"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 46,
+    "code": "M46",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Puppis",
+    "aliases": [
+      "NGC 2437"
+    ],
+    "accepted": [
+      "46",
+      "M 46",
+      "M46",
+      "NGC 2437"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 47,
+    "code": "M47",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Puppis",
+    "aliases": [
+      "NGC 2422"
+    ],
+    "accepted": [
+      "47",
+      "M 47",
+      "M47",
+      "NGC 2422"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 48,
+    "code": "M48",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Hydra",
+    "aliases": [
+      "NGC 2548"
+    ],
+    "accepted": [
+      "48",
+      "M 48",
+      "M48",
+      "NGC 2548"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 49,
+    "code": "M49",
+    "commonName": "",
+    "type": "elliptical galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4472"
+    ],
+    "accepted": [
+      "49",
+      "M 49",
+      "M49",
+      "NGC 4472"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 50,
+    "code": "M50",
+    "commonName": "Heart-Shaped Cluster",
+    "type": "open cluster",
+    "constellation": "Monoceros",
+    "aliases": [
+      "NGC 2323"
+    ],
+    "accepted": [
+      "50",
+      "Heart-Shaped Cluster",
+      "M 50",
+      "M50",
+      "NGC 2323"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 51,
+    "code": "M51",
+    "commonName": "Whirlpool Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "NGC 5194"
+    ],
+    "accepted": [
+      "51",
+      "M 51",
+      "M51",
+      "NGC 5194",
+      "Whirlpool Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 52,
+    "code": "M52",
+    "commonName": "Salt and Pepper Cluster",
+    "type": "open cluster",
+    "constellation": "Cassiopeia",
+    "aliases": [
+      "NGC 7654"
+    ],
+    "accepted": [
+      "52",
+      "M 52",
+      "M52",
+      "NGC 7654",
+      "Salt and Pepper Cluster"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 53,
+    "code": "M53",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 5024"
+    ],
+    "accepted": [
+      "53",
+      "M 53",
+      "M53",
+      "NGC 5024"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 54,
+    "code": "M54",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6715"
+    ],
+    "accepted": [
+      "54",
+      "M 54",
+      "M54",
+      "NGC 6715"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 55,
+    "code": "M55",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6809"
+    ],
+    "accepted": [
+      "55",
+      "M 55",
+      "M55",
+      "NGC 6809"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 56,
+    "code": "M56",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Lyra",
+    "aliases": [
+      "NGC 6779"
+    ],
+    "accepted": [
+      "56",
+      "M 56",
+      "M56",
+      "NGC 6779"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 57,
+    "code": "M57",
+    "commonName": "Ring Nebula",
+    "type": "planetary nebula",
+    "constellation": "Lyra",
+    "aliases": [
+      "NGC 6720"
+    ],
+    "accepted": [
+      "57",
+      "M 57",
+      "M57",
+      "NGC 6720",
+      "Ring Nebula"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 58,
+    "code": "M58",
+    "commonName": "",
+    "type": "barred spiral galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4579"
+    ],
+    "accepted": [
+      "58",
+      "M 58",
+      "M58",
+      "NGC 4579"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 59,
+    "code": "M59",
+    "commonName": "",
+    "type": "elliptical galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4621"
+    ],
+    "accepted": [
+      "59",
+      "M 59",
+      "M59",
+      "NGC 4621"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 60,
+    "code": "M60",
+    "commonName": "",
+    "type": "elliptical galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4649"
+    ],
+    "accepted": [
+      "60",
+      "M 60",
+      "M60",
+      "NGC 4649"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 61,
+    "code": "M61",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4303"
+    ],
+    "accepted": [
+      "61",
+      "M 61",
+      "M61",
+      "NGC 4303"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 62,
+    "code": "M62",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Ophiuchus",
+    "aliases": [
+      "NGC 6266"
+    ],
+    "accepted": [
+      "62",
+      "M 62",
+      "M62",
+      "NGC 6266"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 63,
+    "code": "M63",
+    "commonName": "Sunflower Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "NGC 5055"
+    ],
+    "accepted": [
+      "63",
+      "M 63",
+      "M63",
+      "NGC 5055",
+      "Sunflower Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 64,
+    "code": "M64",
+    "commonName": "Black Eye Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "Evil Eye Galaxy",
+      "NGC 4826"
+    ],
+    "accepted": [
+      "64",
+      "Black Eye Galaxy",
+      "Evil Eye Galaxy",
+      "M 64",
+      "M64",
+      "NGC 4826"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 65,
+    "code": "M65",
+    "commonName": "Leo Triplet Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Leo",
+    "aliases": [
+      "NGC 3623"
+    ],
+    "accepted": [
+      "65",
+      "Leo Triplet Galaxy",
+      "M 65",
+      "M65",
+      "NGC 3623"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 66,
+    "code": "M66",
+    "commonName": "Leo Triplet Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Leo",
+    "aliases": [
+      "NGC 3627"
+    ],
+    "accepted": [
+      "66",
+      "Leo Triplet Galaxy",
+      "M 66",
+      "M66",
+      "NGC 3627"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 67,
+    "code": "M67",
+    "commonName": "King Cobra Cluster",
+    "type": "open cluster",
+    "constellation": "Cancer",
+    "aliases": [
+      "NGC 2682"
+    ],
+    "accepted": [
+      "67",
+      "King Cobra Cluster",
+      "M 67",
+      "M67",
+      "NGC 2682"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 68,
+    "code": "M68",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Hydra",
+    "aliases": [
+      "NGC 4590"
+    ],
+    "accepted": [
+      "68",
+      "M 68",
+      "M68",
+      "NGC 4590"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 69,
+    "code": "M69",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6637"
+    ],
+    "accepted": [
+      "69",
+      "M 69",
+      "M69",
+      "NGC 6637"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 70,
+    "code": "M70",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6681"
+    ],
+    "accepted": [
+      "70",
+      "M 70",
+      "M70",
+      "NGC 6681"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 71,
+    "code": "M71",
+    "commonName": "Angelfish Cluster",
+    "type": "globular cluster",
+    "constellation": "Sagitta",
+    "aliases": [
+      "NGC 6838"
+    ],
+    "accepted": [
+      "71",
+      "Angelfish Cluster",
+      "M 71",
+      "M71",
+      "NGC 6838"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 72,
+    "code": "M72",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Aquarius",
+    "aliases": [
+      "NGC 6981"
+    ],
+    "accepted": [
+      "72",
+      "M 72",
+      "M72",
+      "NGC 6981"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 73,
+    "code": "M73",
+    "commonName": "",
+    "type": "asterism",
+    "constellation": "Aquarius",
+    "aliases": [
+      "NGC 6994"
+    ],
+    "accepted": [
+      "73",
+      "M 73",
+      "M73",
+      "NGC 6994"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 74,
+    "code": "M74",
+    "commonName": "Phantom Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Pisces",
+    "aliases": [
+      "NGC 628"
+    ],
+    "accepted": [
+      "74",
+      "M 74",
+      "M74",
+      "NGC 628",
+      "Phantom Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 75,
+    "code": "M75",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6864"
+    ],
+    "accepted": [
+      "75",
+      "M 75",
+      "M75",
+      "NGC 6864"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 76,
+    "code": "M76",
+    "commonName": "Little Dumbbell Nebula",
+    "type": "planetary nebula",
+    "constellation": "Perseus",
+    "aliases": [
+      "Cork Nebula",
+      "Butterfly Nebula",
+      "NGC 650"
+    ],
+    "accepted": [
+      "76",
+      "Butterfly Nebula",
+      "Cork Nebula",
+      "Little Dumbbell Nebula",
+      "M 76",
+      "M76",
+      "NGC 650"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 77,
+    "code": "M77",
+    "commonName": "Cetus A",
+    "type": "barred spiral galaxy",
+    "constellation": "Cetus",
+    "aliases": [
+      "Squid Galaxy",
+      "NGC 1068"
+    ],
+    "accepted": [
+      "77",
+      "Cetus A",
+      "M 77",
+      "M77",
+      "NGC 1068",
+      "Squid Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 78,
+    "code": "M78",
+    "commonName": "",
+    "type": "reflection nebula",
+    "constellation": "Orion",
+    "aliases": [
+      "NGC 2068"
+    ],
+    "accepted": [
+      "78",
+      "M 78",
+      "M78",
+      "NGC 2068"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 79,
+    "code": "M79",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Lepus",
+    "aliases": [
+      "NGC 1904"
+    ],
+    "accepted": [
+      "79",
+      "M 79",
+      "M79",
+      "NGC 1904"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 80,
+    "code": "M80",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Scorpius",
+    "aliases": [
+      "NGC 6093"
+    ],
+    "accepted": [
+      "80",
+      "M 80",
+      "M80",
+      "NGC 6093"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 81,
+    "code": "M81",
+    "commonName": "Bode's Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Ursa Major",
+    "aliases": [
+      "NGC 3031"
+    ],
+    "accepted": [
+      "81",
+      "Bode's Galaxy",
+      "M 81",
+      "M81",
+      "NGC 3031"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 82,
+    "code": "M82",
+    "commonName": "Cigar Galaxy",
+    "type": "starburst galaxy",
+    "constellation": "Ursa Major",
+    "aliases": [
+      "NGC 3034"
+    ],
+    "accepted": [
+      "82",
+      "Cigar Galaxy",
+      "M 82",
+      "M82",
+      "NGC 3034"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 83,
+    "code": "M83",
+    "commonName": "Southern Pinwheel Galaxy",
+    "type": "barred spiral galaxy",
+    "constellation": "Hydra",
+    "aliases": [
+      "NGC 5236"
+    ],
+    "accepted": [
+      "83",
+      "M 83",
+      "M83",
+      "NGC 5236",
+      "Southern Pinwheel Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 84,
+    "code": "M84",
+    "commonName": "",
+    "type": "lenticular galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4374"
+    ],
+    "accepted": [
+      "84",
+      "M 84",
+      "M84",
+      "NGC 4374"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 85,
+    "code": "M85",
+    "commonName": "",
+    "type": "lenticular galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4382"
+    ],
+    "accepted": [
+      "85",
+      "M 85",
+      "M85",
+      "NGC 4382"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 86,
+    "code": "M86",
+    "commonName": "",
+    "type": "lenticular galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4406"
+    ],
+    "accepted": [
+      "86",
+      "M 86",
+      "M86",
+      "NGC 4406"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 87,
+    "code": "M87",
+    "commonName": "Virgo A",
+    "type": "elliptical galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4486"
+    ],
+    "accepted": [
+      "87",
+      "M 87",
+      "M87",
+      "NGC 4486",
+      "Virgo A"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 88,
+    "code": "M88",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4501"
+    ],
+    "accepted": [
+      "88",
+      "M 88",
+      "M88",
+      "NGC 4501"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 89,
+    "code": "M89",
+    "commonName": "",
+    "type": "elliptical galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4552"
+    ],
+    "accepted": [
+      "89",
+      "M 89",
+      "M89",
+      "NGC 4552"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 90,
+    "code": "M90",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4569"
+    ],
+    "accepted": [
+      "90",
+      "M 90",
+      "M90",
+      "NGC 4569"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 91,
+    "code": "M91",
+    "commonName": "",
+    "type": "barred spiral galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4548"
+    ],
+    "accepted": [
+      "91",
+      "M 91",
+      "M91",
+      "NGC 4548"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 92,
+    "code": "M92",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Hercules",
+    "aliases": [
+      "NGC 6341"
+    ],
+    "accepted": [
+      "92",
+      "M 92",
+      "M92",
+      "NGC 6341"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 93,
+    "code": "M93",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Puppis",
+    "aliases": [
+      "NGC 2447"
+    ],
+    "accepted": [
+      "93",
+      "M 93",
+      "M93",
+      "NGC 2447"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 94,
+    "code": "M94",
+    "commonName": "Crocodile Eye Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "Cat’s Eye Galaxy",
+      "NGC 4736"
+    ],
+    "accepted": [
+      "94",
+      "Cat’s Eye Galaxy",
+      "Crocodile Eye Galaxy",
+      "M 94",
+      "M94",
+      "NGC 4736"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 95,
+    "code": "M95",
+    "commonName": "",
+    "type": "barred spiral galaxy",
+    "constellation": "Leo",
+    "aliases": [
+      "NGC 3351"
+    ],
+    "accepted": [
+      "95",
+      "M 95",
+      "M95",
+      "NGC 3351"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 96,
+    "code": "M96",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Leo",
+    "aliases": [
+      "NGC 3368"
+    ],
+    "accepted": [
+      "96",
+      "M 96",
+      "M96",
+      "NGC 3368"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 97,
+    "code": "M97",
+    "commonName": "Owl Nebula",
+    "type": "planetary nebula",
+    "constellation": "Ursa Major",
+    "aliases": [
+      "NGC 3587"
+    ],
+    "accepted": [
+      "97",
+      "M 97",
+      "M97",
+      "NGC 3587",
+      "Owl Nebula"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 98,
+    "code": "M98",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4192"
+    ],
+    "accepted": [
+      "98",
+      "M 98",
+      "M98",
+      "NGC 4192"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 99,
+    "code": "M99",
+    "commonName": "Coma Pinwheel Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4254"
+    ],
+    "accepted": [
+      "99",
+      "Coma Pinwheel Galaxy",
+      "M 99",
+      "M99",
+      "NGC 4254"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 100,
+    "code": "M100",
+    "commonName": "Mirror Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4321"
+    ],
+    "accepted": [
+      "100",
+      "M 100",
+      "M100",
+      "Mirror Galaxy",
+      "NGC 4321"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 101,
+    "code": "M101",
+    "commonName": "Pinwheel Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Ursa Major",
+    "aliases": [
+      "NGC 5457"
+    ],
+    "accepted": [
+      "101",
+      "M 101",
+      "M101",
+      "NGC 5457",
+      "Pinwheel Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 102,
+    "code": "M102",
+    "commonName": "Spindle Galaxy",
+    "type": "lenticular galaxy",
+    "constellation": "Draco",
+    "aliases": [
+      "NGC 5866"
+    ],
+    "accepted": [
+      "102",
+      "M 102",
+      "M102",
+      "NGC 5866",
+      "Spindle Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 103,
+    "code": "M103",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Cassiopeia",
+    "aliases": [
+      "NGC 581"
+    ],
+    "accepted": [
+      "103",
+      "M 103",
+      "M103",
+      "NGC 581"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 104,
+    "code": "M104",
+    "commonName": "Sombrero Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4594"
+    ],
+    "accepted": [
+      "104",
+      "M 104",
+      "M104",
+      "NGC 4594",
+      "Sombrero Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 105,
+    "code": "M105",
+    "commonName": "",
+    "type": "elliptical galaxy",
+    "constellation": "Leo",
+    "aliases": [
+      "NGC 3379"
+    ],
+    "accepted": [
+      "105",
+      "M 105",
+      "M105",
+      "NGC 3379"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 106,
+    "code": "M106",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "NGC 4258"
+    ],
+    "accepted": [
+      "106",
+      "M 106",
+      "M106",
+      "NGC 4258"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 107,
+    "code": "M107",
+    "commonName": "Crucifix Cluster",
+    "type": "globular cluster",
+    "constellation": "Ophiuchus",
+    "aliases": [
+      "NGC 6171"
+    ],
+    "accepted": [
+      "107",
+      "Crucifix Cluster",
+      "M 107",
+      "M107",
+      "NGC 6171"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 108,
+    "code": "M108",
+    "commonName": "Surfboard Galaxy",
+    "type": "barred spiral galaxy",
+    "constellation": "Ursa Major",
+    "aliases": [
+      "NGC 3556"
+    ],
+    "accepted": [
+      "108",
+      "M 108",
+      "M108",
+      "NGC 3556",
+      "Surfboard Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 109,
+    "code": "M109",
+    "commonName": "Vacuum Cleaner Galaxy",
+    "type": "barred spiral galaxy",
+    "constellation": "Ursa Major",
+    "aliases": [
+      "NGC 3992"
+    ],
+    "accepted": [
+      "109",
+      "M 109",
+      "M109",
+      "NGC 3992",
+      "Vacuum Cleaner Galaxy"
+    ]
+  },
+  {
+    "catalog": "M",
+    "number": 110,
+    "code": "M110",
+    "commonName": "Edward Young Star",
+    "type": "dwarf elliptical galaxy",
+    "constellation": "Andromeda",
+    "aliases": [
+      "NGC 205"
+    ],
+    "accepted": [
+      "110",
+      "Edward Young Star",
+      "M 110",
+      "M110",
+      "NGC 205"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 1,
+    "code": "C1",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Cepheus",
+    "aliases": [
+      "NGC 188"
+    ],
+    "accepted": [
+      "1",
+      "C 1",
+      "C1",
+      "NGC 188"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 2,
+    "code": "C2",
+    "commonName": "Bow Tie Nebula",
+    "type": "planetary nebula",
+    "constellation": "Cepheus",
+    "aliases": [
+      "NGC 40"
+    ],
+    "accepted": [
+      "2",
+      "Bow Tie Nebula",
+      "C 2",
+      "C2",
+      "NGC 40"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 3,
+    "code": "C3",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Draco",
+    "aliases": [
+      "NGC 4236"
+    ],
+    "accepted": [
+      "3",
+      "C 3",
+      "C3",
+      "NGC 4236"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 4,
+    "code": "C4",
+    "commonName": "Iris Nebula",
+    "type": "reflection nebula",
+    "constellation": "Cepheus",
+    "aliases": [
+      "NGC 7023"
+    ],
+    "accepted": [
+      "4",
+      "C 4",
+      "C4",
+      "Iris Nebula",
+      "NGC 7023"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 5,
+    "code": "C5",
+    "commonName": "Hidden Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Camelopardalis",
+    "aliases": [
+      "IC 342"
+    ],
+    "accepted": [
+      "5",
+      "C 5",
+      "C5",
+      "Hidden Galaxy",
+      "IC 342"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 6,
+    "code": "C6",
+    "commonName": "Cat's Eye Nebula",
+    "type": "planetary nebula",
+    "constellation": "Draco",
+    "aliases": [
+      "NGC 6543"
+    ],
+    "accepted": [
+      "6",
+      "C 6",
+      "C6",
+      "Cat's Eye Nebula",
+      "NGC 6543"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 7,
+    "code": "C7",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Camelopardalis",
+    "aliases": [
+      "NGC 2403"
+    ],
+    "accepted": [
+      "7",
+      "C 7",
+      "C7",
+      "NGC 2403"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 8,
+    "code": "C8",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Cassiopeia",
+    "aliases": [
+      "NGC 559"
+    ],
+    "accepted": [
+      "8",
+      "C 8",
+      "C8",
+      "NGC 559"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 9,
+    "code": "C9",
+    "commonName": "Cave Nebula",
+    "type": "emission nebula",
+    "constellation": "Cepheus",
+    "aliases": [
+      "Sh2-155"
+    ],
+    "accepted": [
+      "9",
+      "C 9",
+      "C9",
+      "Cave Nebula",
+      "Sh2-155"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 10,
+    "code": "C10",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Cassiopeia",
+    "aliases": [
+      "NGC 663"
+    ],
+    "accepted": [
+      "10",
+      "C 10",
+      "C10",
+      "NGC 663"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 11,
+    "code": "C11",
+    "commonName": "Bubble Nebula",
+    "type": "emission nebula",
+    "constellation": "Cassiopeia",
+    "aliases": [
+      "NGC 7635"
+    ],
+    "accepted": [
+      "11",
+      "Bubble Nebula",
+      "C 11",
+      "C11",
+      "NGC 7635"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 12,
+    "code": "C12",
+    "commonName": "Fireworks Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Cepheus",
+    "aliases": [
+      "NGC 6946"
+    ],
+    "accepted": [
+      "12",
+      "C 12",
+      "C12",
+      "Fireworks Galaxy",
+      "NGC 6946"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 13,
+    "code": "C13",
+    "commonName": "Owl Cluster",
+    "type": "open cluster",
+    "constellation": "Cassiopeia",
+    "aliases": [
+      "ET Cluster",
+      "NGC 457"
+    ],
+    "accepted": [
+      "13",
+      "C 13",
+      "C13",
+      "ET Cluster",
+      "NGC 457",
+      "Owl Cluster"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 14,
+    "code": "C14",
+    "commonName": "Double Cluster",
+    "type": "open cluster",
+    "constellation": "Perseus",
+    "aliases": [
+      "NGC 869",
+      "h Persei"
+    ],
+    "accepted": [
+      "14",
+      "C 14",
+      "C14",
+      "Double Cluster",
+      "NGC 869",
+      "h Persei"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 15,
+    "code": "C15",
+    "commonName": "Blinking Planetary Nebula",
+    "type": "planetary nebula",
+    "constellation": "Cygnus",
+    "aliases": [
+      "NGC 6826"
+    ],
+    "accepted": [
+      "15",
+      "Blinking Planetary Nebula",
+      "C 15",
+      "C15",
+      "NGC 6826"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 16,
+    "code": "C16",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Lacerta",
+    "aliases": [
+      "NGC 7243"
+    ],
+    "accepted": [
+      "16",
+      "C 16",
+      "C16",
+      "NGC 7243"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 17,
+    "code": "C17",
+    "commonName": "",
+    "type": "dwarf spheroidal galaxy",
+    "constellation": "Cassiopeia",
+    "aliases": [
+      "NGC 147"
+    ],
+    "accepted": [
+      "17",
+      "C 17",
+      "C17",
+      "NGC 147"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 18,
+    "code": "C18",
+    "commonName": "",
+    "type": "dwarf spheroidal galaxy",
+    "constellation": "Cassiopeia",
+    "aliases": [
+      "NGC 185"
+    ],
+    "accepted": [
+      "18",
+      "C 18",
+      "C18",
+      "NGC 185"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 19,
+    "code": "C19",
+    "commonName": "Cocoon Nebula",
+    "type": "emission/reflection nebula",
+    "constellation": "Cygnus",
+    "aliases": [
+      "IC 5146"
+    ],
+    "accepted": [
+      "19",
+      "C 19",
+      "C19",
+      "Cocoon Nebula",
+      "IC 5146"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 20,
+    "code": "C20",
+    "commonName": "North America Nebula",
+    "type": "emission nebula",
+    "constellation": "Cygnus",
+    "aliases": [
+      "NGC 7000"
+    ],
+    "accepted": [
+      "20",
+      "C 20",
+      "C20",
+      "NGC 7000",
+      "North America Nebula"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 21,
+    "code": "C21",
+    "commonName": "",
+    "type": "irregular galaxy",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "NGC 4449"
+    ],
+    "accepted": [
+      "21",
+      "C 21",
+      "C21",
+      "NGC 4449"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 22,
+    "code": "C22",
+    "commonName": "Blue Snowball Nebula",
+    "type": "planetary nebula",
+    "constellation": "Andromeda",
+    "aliases": [
+      "NGC 7662"
+    ],
+    "accepted": [
+      "22",
+      "Blue Snowball Nebula",
+      "C 22",
+      "C22",
+      "NGC 7662"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 23,
+    "code": "C23",
+    "commonName": "Silver Sliver Galaxy",
+    "type": "edge-on spiral galaxy",
+    "constellation": "Andromeda",
+    "aliases": [
+      "NGC 891",
+      "Outer Limits Galaxy"
+    ],
+    "accepted": [
+      "23",
+      "C 23",
+      "C23",
+      "NGC 891",
+      "Outer Limits Galaxy",
+      "Silver Sliver Galaxy"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 24,
+    "code": "C24",
+    "commonName": "Perseus A",
+    "type": "galaxy",
+    "constellation": "Perseus",
+    "aliases": [
+      "NGC 1275"
+    ],
+    "accepted": [
+      "24",
+      "C 24",
+      "C24",
+      "NGC 1275",
+      "Perseus A"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 25,
+    "code": "C25",
+    "commonName": "Intergalactic Wanderer",
+    "type": "globular cluster",
+    "constellation": "Lynx",
+    "aliases": [
+      "NGC 2419"
+    ],
+    "accepted": [
+      "25",
+      "C 25",
+      "C25",
+      "Intergalactic Wanderer",
+      "NGC 2419"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 26,
+    "code": "C26",
+    "commonName": "Silver Needle Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "NGC 4244"
+    ],
+    "accepted": [
+      "26",
+      "C 26",
+      "C26",
+      "NGC 4244",
+      "Silver Needle Galaxy"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 27,
+    "code": "C27",
+    "commonName": "Crescent Nebula",
+    "type": "emission nebula",
+    "constellation": "Cygnus",
+    "aliases": [
+      "NGC 6888"
+    ],
+    "accepted": [
+      "27",
+      "C 27",
+      "C27",
+      "Crescent Nebula",
+      "NGC 6888"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 28,
+    "code": "C28",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Andromeda",
+    "aliases": [
+      "NGC 752"
+    ],
+    "accepted": [
+      "28",
+      "C 28",
+      "C28",
+      "NGC 752"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 29,
+    "code": "C29",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "NGC 5005"
+    ],
+    "accepted": [
+      "29",
+      "C 29",
+      "C29",
+      "NGC 5005"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 30,
+    "code": "C30",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Pegasus",
+    "aliases": [
+      "NGC 7331"
+    ],
+    "accepted": [
+      "30",
+      "C 30",
+      "C30",
+      "NGC 7331"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 31,
+    "code": "C31",
+    "commonName": "Flaming Star Nebula",
+    "type": "emission/reflection nebula",
+    "constellation": "Auriga",
+    "aliases": [
+      "IC 405"
+    ],
+    "accepted": [
+      "31",
+      "C 31",
+      "C31",
+      "Flaming Star Nebula",
+      "IC 405"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 32,
+    "code": "C32",
+    "commonName": "Whale Galaxy",
+    "type": "edge-on spiral galaxy",
+    "constellation": "Canes Venatici",
+    "aliases": [
+      "NGC 4631"
+    ],
+    "accepted": [
+      "32",
+      "C 32",
+      "C32",
+      "NGC 4631",
+      "Whale Galaxy"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 33,
+    "code": "C33",
+    "commonName": "Eastern Veil Nebula",
+    "type": "supernova remnant",
+    "constellation": "Cygnus",
+    "aliases": [
+      "NGC 6992"
+    ],
+    "accepted": [
+      "33",
+      "C 33",
+      "C33",
+      "Eastern Veil Nebula",
+      "NGC 6992"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 34,
+    "code": "C34",
+    "commonName": "Witch's Broom",
+    "type": "supernova remnant",
+    "constellation": "Cygnus",
+    "aliases": [
+      "Western Veil Nebula",
+      "NGC 6960"
+    ],
+    "accepted": [
+      "34",
+      "C 34",
+      "C34",
+      "NGC 6960",
+      "Western Veil Nebula",
+      "Witch's Broom"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 35,
+    "code": "C35",
+    "commonName": "",
+    "type": "elliptical galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4889"
+    ],
+    "accepted": [
+      "35",
+      "C 35",
+      "C35",
+      "NGC 4889"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 36,
+    "code": "C36",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4559"
+    ],
+    "accepted": [
+      "36",
+      "C 36",
+      "C36",
+      "NGC 4559"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 37,
+    "code": "C37",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Vulpecula",
+    "aliases": [
+      "NGC 6885"
+    ],
+    "accepted": [
+      "37",
+      "C 37",
+      "C37",
+      "NGC 6885"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 38,
+    "code": "C38",
+    "commonName": "Needle Galaxy",
+    "type": "edge-on spiral galaxy",
+    "constellation": "Coma Berenices",
+    "aliases": [
+      "NGC 4565"
+    ],
+    "accepted": [
+      "38",
+      "C 38",
+      "C38",
+      "NGC 4565",
+      "Needle Galaxy"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 39,
+    "code": "C39",
+    "commonName": "Eskimo Nebula",
+    "type": "planetary nebula",
+    "constellation": "Gemini",
+    "aliases": [
+      "Clown Face Nebula",
+      "NGC 2392"
+    ],
+    "accepted": [
+      "39",
+      "C 39",
+      "C39",
+      "Clown Face Nebula",
+      "Eskimo Nebula",
+      "NGC 2392"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 40,
+    "code": "C40",
+    "commonName": "",
+    "type": "lenticular galaxy",
+    "constellation": "Leo",
+    "aliases": [
+      "NGC 3626"
+    ],
+    "accepted": [
+      "40",
+      "C 40",
+      "C40",
+      "NGC 3626"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 41,
+    "code": "C41",
+    "commonName": "Hyades",
+    "type": "open cluster",
+    "constellation": "Taurus",
+    "aliases": [
+      "Melotte 25"
+    ],
+    "accepted": [
+      "41",
+      "C 41",
+      "C41",
+      "Hyades",
+      "Melotte 25"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 42,
+    "code": "C42",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Delphinus",
+    "aliases": [
+      "NGC 7006"
+    ],
+    "accepted": [
+      "42",
+      "C 42",
+      "C42",
+      "NGC 7006"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 43,
+    "code": "C43",
+    "commonName": "Little Sombrero Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Pegasus",
+    "aliases": [
+      "NGC 7814"
+    ],
+    "accepted": [
+      "43",
+      "C 43",
+      "C43",
+      "Little Sombrero Galaxy",
+      "NGC 7814"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 44,
+    "code": "C44",
+    "commonName": "Propeller Galaxy",
+    "type": "barred spiral galaxy",
+    "constellation": "Pegasus",
+    "aliases": [
+      "NGC 7479"
+    ],
+    "accepted": [
+      "44",
+      "C 44",
+      "C44",
+      "NGC 7479",
+      "Propeller Galaxy"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 45,
+    "code": "C45",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Boötes",
+    "aliases": [
+      "NGC 5248"
+    ],
+    "accepted": [
+      "45",
+      "C 45",
+      "C45",
+      "NGC 5248"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 46,
+    "code": "C46",
+    "commonName": "Hubble's Variable Nebula",
+    "type": "reflection nebula",
+    "constellation": "Monoceros",
+    "aliases": [
+      "NGC 2261"
+    ],
+    "accepted": [
+      "46",
+      "C 46",
+      "C46",
+      "Hubble's Variable Nebula",
+      "NGC 2261"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 47,
+    "code": "C47",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Delphinus",
+    "aliases": [
+      "NGC 6934"
+    ],
+    "accepted": [
+      "47",
+      "C 47",
+      "C47",
+      "NGC 6934"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 48,
+    "code": "C48",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Cancer",
+    "aliases": [
+      "NGC 2775"
+    ],
+    "accepted": [
+      "48",
+      "C 48",
+      "C48",
+      "NGC 2775"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 49,
+    "code": "C49",
+    "commonName": "Rosette Nebula",
+    "type": "emission nebula",
+    "constellation": "Monoceros",
+    "aliases": [
+      "NGC 2237"
+    ],
+    "accepted": [
+      "49",
+      "C 49",
+      "C49",
+      "NGC 2237",
+      "Rosette Nebula"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 50,
+    "code": "C50",
+    "commonName": "Rosette Cluster",
+    "type": "open cluster",
+    "constellation": "Monoceros",
+    "aliases": [
+      "NGC 2244"
+    ],
+    "accepted": [
+      "50",
+      "C 50",
+      "C50",
+      "NGC 2244",
+      "Rosette Cluster"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 51,
+    "code": "C51",
+    "commonName": "",
+    "type": "irregular galaxy",
+    "constellation": "Cetus",
+    "aliases": [
+      "IC 1613"
+    ],
+    "accepted": [
+      "51",
+      "C 51",
+      "C51",
+      "IC 1613"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 52,
+    "code": "C52",
+    "commonName": "",
+    "type": "elliptical galaxy",
+    "constellation": "Virgo",
+    "aliases": [
+      "NGC 4697"
+    ],
+    "accepted": [
+      "52",
+      "C 52",
+      "C52",
+      "NGC 4697"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 53,
+    "code": "C53",
+    "commonName": "Spindle Galaxy",
+    "type": "lenticular galaxy",
+    "constellation": "Sextans",
+    "aliases": [
+      "NGC 3115"
+    ],
+    "accepted": [
+      "53",
+      "C 53",
+      "C53",
+      "NGC 3115",
+      "Spindle Galaxy"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 54,
+    "code": "C54",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Monoceros",
+    "aliases": [
+      "NGC 2506"
+    ],
+    "accepted": [
+      "54",
+      "C 54",
+      "C54",
+      "NGC 2506"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 55,
+    "code": "C55",
+    "commonName": "Saturn Nebula",
+    "type": "planetary nebula",
+    "constellation": "Aquarius",
+    "aliases": [
+      "NGC 7009"
+    ],
+    "accepted": [
+      "55",
+      "C 55",
+      "C55",
+      "NGC 7009",
+      "Saturn Nebula"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 56,
+    "code": "C56",
+    "commonName": "Skull Nebula",
+    "type": "planetary nebula",
+    "constellation": "Cetus",
+    "aliases": [
+      "NGC 246"
+    ],
+    "accepted": [
+      "56",
+      "C 56",
+      "C56",
+      "NGC 246",
+      "Skull Nebula"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 57,
+    "code": "C57",
+    "commonName": "Barnard's Galaxy",
+    "type": "irregular galaxy",
+    "constellation": "Sagittarius",
+    "aliases": [
+      "NGC 6822"
+    ],
+    "accepted": [
+      "57",
+      "Barnard's Galaxy",
+      "C 57",
+      "C57",
+      "NGC 6822"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 58,
+    "code": "C58",
+    "commonName": "Caroline's Cluster",
+    "type": "open cluster",
+    "constellation": "Canis Major",
+    "aliases": [
+      "NGC 2360"
+    ],
+    "accepted": [
+      "58",
+      "C 58",
+      "C58",
+      "Caroline's Cluster",
+      "NGC 2360"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 59,
+    "code": "C59",
+    "commonName": "Ghost of Jupiter",
+    "type": "planetary nebula",
+    "constellation": "Hydra",
+    "aliases": [
+      "NGC 3242"
+    ],
+    "accepted": [
+      "59",
+      "C 59",
+      "C59",
+      "Ghost of Jupiter",
+      "NGC 3242"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 60,
+    "code": "C60",
+    "commonName": "Antennae Galaxies",
+    "type": "interacting galaxy",
+    "constellation": "Corvus",
+    "aliases": [
+      "NGC 4038"
+    ],
+    "accepted": [
+      "60",
+      "Antennae Galaxies",
+      "C 60",
+      "C60",
+      "NGC 4038"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 61,
+    "code": "C61",
+    "commonName": "Antennae Galaxies",
+    "type": "interacting galaxy",
+    "constellation": "Corvus",
+    "aliases": [
+      "NGC 4039"
+    ],
+    "accepted": [
+      "61",
+      "Antennae Galaxies",
+      "C 61",
+      "C61",
+      "NGC 4039"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 62,
+    "code": "C62",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Cetus",
+    "aliases": [
+      "NGC 247"
+    ],
+    "accepted": [
+      "62",
+      "C 62",
+      "C62",
+      "NGC 247"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 63,
+    "code": "C63",
+    "commonName": "Helix Nebula",
+    "type": "planetary nebula",
+    "constellation": "Aquarius",
+    "aliases": [
+      "NGC 7293"
+    ],
+    "accepted": [
+      "63",
+      "C 63",
+      "C63",
+      "Helix Nebula",
+      "NGC 7293"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 64,
+    "code": "C64",
+    "commonName": "Tau Canis Majoris Cluster",
+    "type": "open cluster",
+    "constellation": "Canis Major",
+    "aliases": [
+      "NGC 2362"
+    ],
+    "accepted": [
+      "64",
+      "C 64",
+      "C64",
+      "NGC 2362",
+      "Tau Canis Majoris Cluster"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 65,
+    "code": "C65",
+    "commonName": "Sculptor Galaxy",
+    "type": "spiral galaxy",
+    "constellation": "Sculptor",
+    "aliases": [
+      "NGC 253"
+    ],
+    "accepted": [
+      "65",
+      "C 65",
+      "C65",
+      "NGC 253",
+      "Sculptor Galaxy"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 66,
+    "code": "C66",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Hydra",
+    "aliases": [
+      "NGC 5694"
+    ],
+    "accepted": [
+      "66",
+      "C 66",
+      "C66",
+      "NGC 5694"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 67,
+    "code": "C67",
+    "commonName": "",
+    "type": "barred spiral galaxy",
+    "constellation": "Fornax",
+    "aliases": [
+      "NGC 1097"
+    ],
+    "accepted": [
+      "67",
+      "C 67",
+      "C67",
+      "NGC 1097"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 68,
+    "code": "C68",
+    "commonName": "",
+    "type": "reflection/emission nebula",
+    "constellation": "Corona Australis",
+    "aliases": [
+      "NGC 6729"
+    ],
+    "accepted": [
+      "68",
+      "C 68",
+      "C68",
+      "NGC 6729"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 69,
+    "code": "C69",
+    "commonName": "Bug Nebula",
+    "type": "planetary nebula",
+    "constellation": "Scorpius",
+    "aliases": [
+      "Butterfly Nebula",
+      "NGC 6302"
+    ],
+    "accepted": [
+      "69",
+      "Bug Nebula",
+      "Butterfly Nebula",
+      "C 69",
+      "C69",
+      "NGC 6302"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 70,
+    "code": "C70",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Sculptor",
+    "aliases": [
+      "NGC 300"
+    ],
+    "accepted": [
+      "70",
+      "C 70",
+      "C70",
+      "NGC 300"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 71,
+    "code": "C71",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Puppis",
+    "aliases": [
+      "NGC 2477"
+    ],
+    "accepted": [
+      "71",
+      "C 71",
+      "C71",
+      "NGC 2477"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 72,
+    "code": "C72",
+    "commonName": "",
+    "type": "irregular galaxy",
+    "constellation": "Sculptor",
+    "aliases": [
+      "NGC 55"
+    ],
+    "accepted": [
+      "72",
+      "C 72",
+      "C72",
+      "NGC 55"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 73,
+    "code": "C73",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Columba",
+    "aliases": [
+      "NGC 1851"
+    ],
+    "accepted": [
+      "73",
+      "C 73",
+      "C73",
+      "NGC 1851"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 74,
+    "code": "C74",
+    "commonName": "Southern Ring Nebula",
+    "type": "planetary nebula",
+    "constellation": "Vela",
+    "aliases": [
+      "NGC 3132"
+    ],
+    "accepted": [
+      "74",
+      "C 74",
+      "C74",
+      "NGC 3132",
+      "Southern Ring Nebula"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 75,
+    "code": "C75",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Scorpius",
+    "aliases": [
+      "NGC 6124"
+    ],
+    "accepted": [
+      "75",
+      "C 75",
+      "C75",
+      "NGC 6124"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 76,
+    "code": "C76",
+    "commonName": "Northern Jewel Box",
+    "type": "open cluster",
+    "constellation": "Scorpius",
+    "aliases": [
+      "NGC 6231"
+    ],
+    "accepted": [
+      "76",
+      "C 76",
+      "C76",
+      "NGC 6231",
+      "Northern Jewel Box"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 77,
+    "code": "C77",
+    "commonName": "Centaurus A",
+    "type": "lenticular galaxy",
+    "constellation": "Centaurus",
+    "aliases": [
+      "NGC 5128"
+    ],
+    "accepted": [
+      "77",
+      "C 77",
+      "C77",
+      "Centaurus A",
+      "NGC 5128"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 78,
+    "code": "C78",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Corona Australis",
+    "aliases": [
+      "NGC 6541"
+    ],
+    "accepted": [
+      "78",
+      "C 78",
+      "C78",
+      "NGC 6541"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 79,
+    "code": "C79",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Vela",
+    "aliases": [
+      "NGC 3201"
+    ],
+    "accepted": [
+      "79",
+      "C 79",
+      "C79",
+      "NGC 3201"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 80,
+    "code": "C80",
+    "commonName": "Omega Centauri",
+    "type": "globular cluster",
+    "constellation": "Centaurus",
+    "aliases": [
+      "NGC 5139"
+    ],
+    "accepted": [
+      "80",
+      "C 80",
+      "C80",
+      "NGC 5139",
+      "Omega Centauri"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 81,
+    "code": "C81",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Ara",
+    "aliases": [
+      "NGC 6352"
+    ],
+    "accepted": [
+      "81",
+      "C 81",
+      "C81",
+      "NGC 6352"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 82,
+    "code": "C82",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Ara",
+    "aliases": [
+      "NGC 6193"
+    ],
+    "accepted": [
+      "82",
+      "C 82",
+      "C82",
+      "NGC 6193"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 83,
+    "code": "C83",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Centaurus",
+    "aliases": [
+      "NGC 4945"
+    ],
+    "accepted": [
+      "83",
+      "C 83",
+      "C83",
+      "NGC 4945"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 84,
+    "code": "C84",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Centaurus",
+    "aliases": [
+      "NGC 5286"
+    ],
+    "accepted": [
+      "84",
+      "C 84",
+      "C84",
+      "NGC 5286"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 85,
+    "code": "C85",
+    "commonName": "Omicron Velorum Cluster",
+    "type": "open cluster",
+    "constellation": "Vela",
+    "aliases": [
+      "IC 2391"
+    ],
+    "accepted": [
+      "85",
+      "C 85",
+      "C85",
+      "IC 2391",
+      "Omicron Velorum Cluster"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 86,
+    "code": "C86",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Ara",
+    "aliases": [
+      "NGC 6397"
+    ],
+    "accepted": [
+      "86",
+      "C 86",
+      "C86",
+      "NGC 6397"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 87,
+    "code": "C87",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Horologium",
+    "aliases": [
+      "NGC 1261"
+    ],
+    "accepted": [
+      "87",
+      "C 87",
+      "C87",
+      "NGC 1261"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 88,
+    "code": "C88",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Circinus",
+    "aliases": [
+      "NGC 5823"
+    ],
+    "accepted": [
+      "88",
+      "C 88",
+      "C88",
+      "NGC 5823"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 89,
+    "code": "C89",
+    "commonName": "S Normae Cluster",
+    "type": "open cluster",
+    "constellation": "Norma",
+    "aliases": [
+      "NGC 6087"
+    ],
+    "accepted": [
+      "89",
+      "C 89",
+      "C89",
+      "NGC 6087",
+      "S Normae Cluster"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 90,
+    "code": "C90",
+    "commonName": "",
+    "type": "planetary nebula",
+    "constellation": "Carina",
+    "aliases": [
+      "NGC 2867"
+    ],
+    "accepted": [
+      "90",
+      "C 90",
+      "C90",
+      "NGC 2867"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 91,
+    "code": "C91",
+    "commonName": "Wishing Well Cluster",
+    "type": "open cluster",
+    "constellation": "Carina",
+    "aliases": [
+      "NGC 3532"
+    ],
+    "accepted": [
+      "91",
+      "C 91",
+      "C91",
+      "NGC 3532",
+      "Wishing Well Cluster"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 92,
+    "code": "C92",
+    "commonName": "Carina Nebula",
+    "type": "emission nebula",
+    "constellation": "Carina",
+    "aliases": [
+      "NGC 3372",
+      "Eta Carinae Nebula"
+    ],
+    "accepted": [
+      "92",
+      "C 92",
+      "C92",
+      "Carina Nebula",
+      "Eta Carinae Nebula",
+      "NGC 3372"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 93,
+    "code": "C93",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Pavo",
+    "aliases": [
+      "NGC 6752"
+    ],
+    "accepted": [
+      "93",
+      "C 93",
+      "C93",
+      "NGC 6752"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 94,
+    "code": "C94",
+    "commonName": "Jewel Box",
+    "type": "open cluster",
+    "constellation": "Crux",
+    "aliases": [
+      "NGC 4755"
+    ],
+    "accepted": [
+      "94",
+      "C 94",
+      "C94",
+      "Jewel Box",
+      "NGC 4755"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 95,
+    "code": "C95",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Triangulum Australe",
+    "aliases": [
+      "NGC 6025"
+    ],
+    "accepted": [
+      "95",
+      "C 95",
+      "C95",
+      "NGC 6025"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 96,
+    "code": "C96",
+    "commonName": "Southern Beehive Cluster",
+    "type": "open cluster",
+    "constellation": "Carina",
+    "aliases": [
+      "NGC 2516"
+    ],
+    "accepted": [
+      "96",
+      "C 96",
+      "C96",
+      "NGC 2516",
+      "Southern Beehive Cluster"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 97,
+    "code": "C97",
+    "commonName": "Pearl Cluster",
+    "type": "open cluster",
+    "constellation": "Centaurus",
+    "aliases": [
+      "NGC 3766"
+    ],
+    "accepted": [
+      "97",
+      "C 97",
+      "C97",
+      "NGC 3766",
+      "Pearl Cluster"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 98,
+    "code": "C98",
+    "commonName": "",
+    "type": "open cluster",
+    "constellation": "Crux",
+    "aliases": [
+      "NGC 4609"
+    ],
+    "accepted": [
+      "98",
+      "C 98",
+      "C98",
+      "NGC 4609"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 99,
+    "code": "C99",
+    "commonName": "Coalsack Nebula",
+    "type": "dark nebula",
+    "constellation": "Crux",
+    "aliases": [
+      "Coalsack"
+    ],
+    "accepted": [
+      "99",
+      "C 99",
+      "C99",
+      "Coalsack",
+      "Coalsack Nebula"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 100,
+    "code": "C100",
+    "commonName": "Running Chicken Nebula",
+    "type": "emission nebula",
+    "constellation": "Centaurus",
+    "aliases": [
+      "Lambda Centauri Nebula",
+      "IC 2944"
+    ],
+    "accepted": [
+      "100",
+      "C 100",
+      "C100",
+      "IC 2944",
+      "Lambda Centauri Nebula",
+      "Running Chicken Nebula"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 101,
+    "code": "C101",
+    "commonName": "",
+    "type": "spiral galaxy",
+    "constellation": "Pavo",
+    "aliases": [
+      "NGC 6744"
+    ],
+    "accepted": [
+      "101",
+      "C 101",
+      "C101",
+      "NGC 6744"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 102,
+    "code": "C102",
+    "commonName": "Southern Pleiades",
+    "type": "open cluster",
+    "constellation": "Carina",
+    "aliases": [
+      "IC 2602"
+    ],
+    "accepted": [
+      "102",
+      "C 102",
+      "C102",
+      "IC 2602",
+      "Southern Pleiades"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 103,
+    "code": "C103",
+    "commonName": "Tarantula Nebula",
+    "type": "emission nebula",
+    "constellation": "Dorado",
+    "aliases": [
+      "NGC 2070",
+      "30 Doradus"
+    ],
+    "accepted": [
+      "103",
+      "30 Doradus",
+      "C 103",
+      "C103",
+      "NGC 2070",
+      "Tarantula Nebula"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 104,
+    "code": "C104",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Tucana",
+    "aliases": [
+      "NGC 362"
+    ],
+    "accepted": [
+      "104",
+      "C 104",
+      "C104",
+      "NGC 362"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 105,
+    "code": "C105",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Musca",
+    "aliases": [
+      "NGC 4833"
+    ],
+    "accepted": [
+      "105",
+      "C 105",
+      "C105",
+      "NGC 4833"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 106,
+    "code": "C106",
+    "commonName": "47 Tucanae",
+    "type": "globular cluster",
+    "constellation": "Tucana",
+    "aliases": [
+      "NGC 104"
+    ],
+    "accepted": [
+      "106",
+      "47 Tucanae",
+      "C 106",
+      "C106",
+      "NGC 104"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 107,
+    "code": "C107",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Apus",
+    "aliases": [
+      "NGC 6101"
+    ],
+    "accepted": [
+      "107",
+      "C 107",
+      "C107",
+      "NGC 6101"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 108,
+    "code": "C108",
+    "commonName": "",
+    "type": "globular cluster",
+    "constellation": "Musca",
+    "aliases": [
+      "NGC 4372"
+    ],
+    "accepted": [
+      "108",
+      "C 108",
+      "C108",
+      "NGC 4372"
+    ]
+  },
+  {
+    "catalog": "C",
+    "number": 109,
+    "code": "C109",
+    "commonName": "",
+    "type": "planetary nebula",
+    "constellation": "Chamaeleon",
+    "aliases": [
+      "NGC 3195"
+    ],
+    "accepted": [
+      "109",
+      "C 109",
+      "C109",
+      "NGC 3195"
+    ]
+  }
+]

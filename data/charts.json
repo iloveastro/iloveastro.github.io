@@ -1,0 +1,2618 @@
+[
+  {
+    "id": "01-and",
+    "page": 1,
+    "name": "Andromeda",
+    "displayName": "Andromeda",
+    "abbr": "And",
+    "accepted": [
+      "Andromeda"
+    ],
+    "image": "assets/charts/blank/01-and.jpg",
+    "answerImage": "assets/charts/labelled/01-and.jpg",
+    "visibleConstellations": [
+      "Andromeda",
+      "Aries",
+      "Cassiopeia",
+      "Lacerta",
+      "Pegasus",
+      "Perseus",
+      "Pisces",
+      "Triangulum"
+    ],
+    "neighbours": [
+      "Aries",
+      "Cassiopeia",
+      "Lacerta",
+      "Pegasus",
+      "Perseus",
+      "Pisces",
+      "Triangulum"
+    ]
+  },
+  {
+    "id": "02-ant",
+    "page": 2,
+    "name": "Antlia",
+    "displayName": "Antlia",
+    "abbr": "Ant",
+    "accepted": [
+      "Antlia"
+    ],
+    "image": "assets/charts/blank/02-ant.jpg",
+    "answerImage": "assets/charts/labelled/02-ant.jpg",
+    "visibleConstellations": [
+      "Antlia",
+      "Centaurus",
+      "Crater",
+      "Hydra",
+      "Pyxis",
+      "Taurus",
+      "Vela"
+    ],
+    "neighbours": [
+      "Centaurus",
+      "Crater",
+      "Hydra",
+      "Pyxis",
+      "Taurus",
+      "Vela"
+    ]
+  },
+  {
+    "id": "03-aps",
+    "page": 3,
+    "name": "Apus",
+    "displayName": "Apus",
+    "abbr": "Aps",
+    "accepted": [
+      "Apus"
+    ],
+    "image": "assets/charts/blank/03-aps.jpg",
+    "answerImage": "assets/charts/labelled/03-aps.jpg",
+    "visibleConstellations": [
+      "Apus",
+      "Ara",
+      "Centaurus",
+      "Chamaeleon",
+      "Circinus",
+      "Leo",
+      "Musca",
+      "Octans",
+      "Pavo",
+      "Taurus",
+      "Triangulum Australe"
+    ],
+    "neighbours": [
+      "Ara",
+      "Centaurus",
+      "Chamaeleon",
+      "Circinus",
+      "Leo",
+      "Musca",
+      "Octans",
+      "Pavo",
+      "Taurus",
+      "Triangulum Australe"
+    ]
+  },
+  {
+    "id": "04-aqr",
+    "page": 4,
+    "name": "Aquarius",
+    "displayName": "Aquarius",
+    "abbr": "Aqr",
+    "accepted": [
+      "Aquarius"
+    ],
+    "image": "assets/charts/blank/04-aqr.jpg",
+    "answerImage": "assets/charts/labelled/04-aqr.jpg",
+    "visibleConstellations": [
+      "Aquarius",
+      "Aquila",
+      "Capricornus",
+      "Cetus",
+      "Delphinus",
+      "Equuleus",
+      "Microscopium",
+      "Pegasus",
+      "Pisces",
+      "Piscis Austrinus",
+      "Sculptor"
+    ],
+    "neighbours": [
+      "Aquila",
+      "Capricornus",
+      "Cetus",
+      "Delphinus",
+      "Equuleus",
+      "Microscopium",
+      "Pegasus",
+      "Pisces",
+      "Piscis Austrinus",
+      "Sculptor"
+    ]
+  },
+  {
+    "id": "05-aql",
+    "page": 5,
+    "name": "Aquila",
+    "displayName": "Aquila",
+    "abbr": "Aql",
+    "accepted": [
+      "Aquila"
+    ],
+    "image": "assets/charts/blank/05-aql.jpg",
+    "answerImage": "assets/charts/labelled/05-aql.jpg",
+    "visibleConstellations": [
+      "Aquarius",
+      "Aquila",
+      "Capricornus",
+      "Delphinus",
+      "Hercules",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Scutum",
+      "Vulpecula"
+    ],
+    "neighbours": [
+      "Aquarius",
+      "Capricornus",
+      "Delphinus",
+      "Hercules",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Scutum",
+      "Vulpecula"
+    ]
+  },
+  {
+    "id": "06-ara",
+    "page": 6,
+    "name": "Ara",
+    "displayName": "Ara",
+    "abbr": "Ara",
+    "accepted": [
+      "Ara"
+    ],
+    "image": "assets/charts/blank/06-ara.jpg",
+    "answerImage": "assets/charts/labelled/06-ara.jpg",
+    "visibleConstellations": [
+      "Ara",
+      "Norma",
+      "Pavo",
+      "Scorpius",
+      "Telescopium"
+    ],
+    "neighbours": [
+      "Norma",
+      "Pavo",
+      "Scorpius",
+      "Telescopium"
+    ]
+  },
+  {
+    "id": "07-ari",
+    "page": 7,
+    "name": "Aries",
+    "displayName": "Aries",
+    "abbr": "Ari",
+    "accepted": [
+      "Aries"
+    ],
+    "image": "assets/charts/blank/07-ari.jpg",
+    "answerImage": "assets/charts/labelled/07-ari.jpg",
+    "visibleConstellations": [
+      "Aries",
+      "Taurus",
+      "Triangulum"
+    ],
+    "neighbours": [
+      "Taurus",
+      "Triangulum"
+    ]
+  },
+  {
+    "id": "08-aur",
+    "page": 8,
+    "name": "Auriga",
+    "displayName": "Auriga",
+    "abbr": "Aur",
+    "accepted": [
+      "Auriga"
+    ],
+    "image": "assets/charts/blank/08-aur.jpg",
+    "answerImage": "assets/charts/labelled/08-aur.jpg",
+    "visibleConstellations": [
+      "Auriga",
+      "Gemini",
+      "Lynx",
+      "Perseus"
+    ],
+    "neighbours": [
+      "Gemini",
+      "Lynx",
+      "Perseus"
+    ]
+  },
+  {
+    "id": "09-boo",
+    "page": 9,
+    "name": "Boötes",
+    "displayName": "Boötes",
+    "abbr": "Boo",
+    "accepted": [
+      "Boötes",
+      "Bootes"
+    ],
+    "image": "assets/charts/blank/09-boo.jpg",
+    "answerImage": "assets/charts/labelled/09-boo.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Canes Venatici",
+      "Coma Berenices",
+      "Corona Borealis",
+      "Draco",
+      "Hercules",
+      "Serpens",
+      "Ursa Major",
+      "Virgo"
+    ],
+    "neighbours": [
+      "Canes Venatici",
+      "Coma Berenices",
+      "Corona Borealis",
+      "Draco",
+      "Hercules",
+      "Serpens",
+      "Ursa Major",
+      "Virgo"
+    ]
+  },
+  {
+    "id": "10-cae",
+    "page": 10,
+    "name": "Caelum",
+    "displayName": "Caelum",
+    "abbr": "Cae",
+    "accepted": [
+      "Caelum"
+    ],
+    "image": "assets/charts/blank/10-cae.jpg",
+    "answerImage": "assets/charts/labelled/10-cae.jpg",
+    "visibleConstellations": [
+      "Caelum",
+      "Columba",
+      "Eridanus",
+      "Horologium",
+      "Lepus",
+      "Pictor"
+    ],
+    "neighbours": [
+      "Columba",
+      "Eridanus",
+      "Horologium",
+      "Lepus",
+      "Pictor"
+    ]
+  },
+  {
+    "id": "11-cam",
+    "page": 11,
+    "name": "Camelopardalis",
+    "displayName": "Camelopardalis",
+    "abbr": "Cam",
+    "accepted": [
+      "Camelopardalis"
+    ],
+    "image": "assets/charts/blank/11-cam.jpg",
+    "answerImage": "assets/charts/labelled/11-cam.jpg",
+    "visibleConstellations": [
+      "Auriga",
+      "Camelopardalis",
+      "Cassiopeia",
+      "Cepheus",
+      "Draco",
+      "Lynx",
+      "Perseus",
+      "Ursa Major",
+      "Ursa Minor"
+    ],
+    "neighbours": [
+      "Auriga",
+      "Cassiopeia",
+      "Cepheus",
+      "Draco",
+      "Lynx",
+      "Perseus",
+      "Ursa Major",
+      "Ursa Minor"
+    ]
+  },
+  {
+    "id": "12-cnc",
+    "page": 12,
+    "name": "Cancer",
+    "displayName": "Cancer",
+    "abbr": "Cnc",
+    "accepted": [
+      "Cancer"
+    ],
+    "image": "assets/charts/blank/12-cnc.jpg",
+    "answerImage": "assets/charts/labelled/12-cnc.jpg",
+    "visibleConstellations": [
+      "Cancer",
+      "Canis Minor",
+      "Gemini",
+      "Hydra",
+      "Leo",
+      "Leo Minor",
+      "Lynx"
+    ],
+    "neighbours": [
+      "Canis Minor",
+      "Gemini",
+      "Hydra",
+      "Leo",
+      "Leo Minor",
+      "Lynx"
+    ]
+  },
+  {
+    "id": "13-cvn",
+    "page": 13,
+    "name": "Canes Venatici",
+    "displayName": "Canes Venatici",
+    "abbr": "CVn",
+    "accepted": [
+      "Canes Venatici"
+    ],
+    "image": "assets/charts/blank/13-cvn.jpg",
+    "answerImage": "assets/charts/labelled/13-cvn.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Canes Venatici",
+      "Coma Berenices",
+      "Ursa Major"
+    ],
+    "neighbours": [
+      "Boötes",
+      "Coma Berenices",
+      "Ursa Major"
+    ]
+  },
+  {
+    "id": "14-cma",
+    "page": 14,
+    "name": "Canis Major",
+    "displayName": "Canis Major",
+    "abbr": "CMa",
+    "accepted": [
+      "Canis Major"
+    ],
+    "image": "assets/charts/blank/14-cma.jpg",
+    "answerImage": "assets/charts/labelled/14-cma.jpg",
+    "visibleConstellations": [
+      "Canis Major",
+      "Columba",
+      "Lepus",
+      "Monoceros",
+      "Puppis"
+    ],
+    "neighbours": [
+      "Columba",
+      "Lepus",
+      "Monoceros",
+      "Puppis"
+    ]
+  },
+  {
+    "id": "15-cmi",
+    "page": 15,
+    "name": "Canis Minor",
+    "displayName": "Canis Minor",
+    "abbr": "CMi",
+    "accepted": [
+      "Canis Minor"
+    ],
+    "image": "assets/charts/blank/15-cmi.jpg",
+    "answerImage": "assets/charts/labelled/15-cmi.jpg",
+    "visibleConstellations": [
+      "Cancer",
+      "Canis Minor",
+      "Gemini",
+      "Hydra",
+      "Monoceros"
+    ],
+    "neighbours": [
+      "Cancer",
+      "Gemini",
+      "Hydra",
+      "Monoceros"
+    ]
+  },
+  {
+    "id": "16-cap",
+    "page": 16,
+    "name": "Capricornus",
+    "displayName": "Capricornus",
+    "abbr": "Cap",
+    "accepted": [
+      "Capricornus"
+    ],
+    "image": "assets/charts/blank/16-cap.jpg",
+    "answerImage": "assets/charts/labelled/16-cap.jpg",
+    "visibleConstellations": [
+      "Aquarius",
+      "Aquila",
+      "Capricornus",
+      "Microscopium",
+      "Piscis Austrinus",
+      "Sagitta",
+      "Sagittarius"
+    ],
+    "neighbours": [
+      "Aquarius",
+      "Aquila",
+      "Microscopium",
+      "Piscis Austrinus",
+      "Sagitta",
+      "Sagittarius"
+    ]
+  },
+  {
+    "id": "17-car",
+    "page": 17,
+    "name": "Carina",
+    "displayName": "Carina",
+    "abbr": "Car",
+    "accepted": [
+      "Carina"
+    ],
+    "image": "assets/charts/blank/17-car.jpg",
+    "answerImage": "assets/charts/labelled/17-car.jpg",
+    "visibleConstellations": [
+      "Carina",
+      "Dorado",
+      "Mensa",
+      "Musca",
+      "Pictor",
+      "Puppis",
+      "Vela",
+      "Volans"
+    ],
+    "neighbours": [
+      "Dorado",
+      "Mensa",
+      "Musca",
+      "Pictor",
+      "Puppis",
+      "Vela",
+      "Volans"
+    ]
+  },
+  {
+    "id": "18-cas",
+    "page": 18,
+    "name": "Cassiopeia",
+    "displayName": "Cassiopeia",
+    "abbr": "Cas",
+    "accepted": [
+      "Cassiopeia"
+    ],
+    "image": "assets/charts/blank/18-cas.jpg",
+    "answerImage": "assets/charts/labelled/18-cas.jpg",
+    "visibleConstellations": [
+      "Andromeda",
+      "Camelopardalis",
+      "Cassiopeia",
+      "Cepheus",
+      "Perseus"
+    ],
+    "neighbours": [
+      "Andromeda",
+      "Camelopardalis",
+      "Cepheus",
+      "Perseus"
+    ]
+  },
+  {
+    "id": "19-cen",
+    "page": 19,
+    "name": "Centaurus",
+    "displayName": "Centaurus",
+    "abbr": "Cen",
+    "accepted": [
+      "Centaurus"
+    ],
+    "image": "assets/charts/blank/19-cen.jpg",
+    "answerImage": "assets/charts/labelled/19-cen.jpg",
+    "visibleConstellations": [
+      "Antlia",
+      "Carina",
+      "Centaurus",
+      "Circinus",
+      "Corvus",
+      "Crater",
+      "Crux",
+      "Hydra",
+      "Libra",
+      "Musca",
+      "Norma",
+      "Taurus",
+      "Vela"
+    ],
+    "neighbours": [
+      "Antlia",
+      "Carina",
+      "Circinus",
+      "Corvus",
+      "Crater",
+      "Crux",
+      "Hydra",
+      "Libra",
+      "Musca",
+      "Norma",
+      "Taurus",
+      "Vela"
+    ]
+  },
+  {
+    "id": "20-cep",
+    "page": 20,
+    "name": "Cepheus",
+    "displayName": "Cepheus",
+    "abbr": "Cep",
+    "accepted": [
+      "Cepheus"
+    ],
+    "image": "assets/charts/blank/20-cep.jpg",
+    "answerImage": "assets/charts/labelled/20-cep.jpg",
+    "visibleConstellations": [
+      "Andromeda",
+      "Camelopardalis",
+      "Cassiopeia",
+      "Cepheus",
+      "Cygnus",
+      "Draco",
+      "Lacerta",
+      "Ursa Minor"
+    ],
+    "neighbours": [
+      "Andromeda",
+      "Camelopardalis",
+      "Cassiopeia",
+      "Cygnus",
+      "Draco",
+      "Lacerta",
+      "Ursa Minor"
+    ]
+  },
+  {
+    "id": "21-cet",
+    "page": 21,
+    "name": "Cetus",
+    "displayName": "Cetus",
+    "abbr": "Cet",
+    "accepted": [
+      "Cetus"
+    ],
+    "image": "assets/charts/blank/21-cet.jpg",
+    "answerImage": "assets/charts/labelled/21-cet.jpg",
+    "visibleConstellations": [
+      "Cetus",
+      "Eridanus",
+      "Fornax",
+      "Pisces",
+      "Sculptor"
+    ],
+    "neighbours": [
+      "Eridanus",
+      "Fornax",
+      "Pisces",
+      "Sculptor"
+    ]
+  },
+  {
+    "id": "22-cha",
+    "page": 22,
+    "name": "Chamaeleon",
+    "displayName": "Chamaeleon",
+    "abbr": "Cha",
+    "accepted": [
+      "Chamaeleon"
+    ],
+    "image": "assets/charts/blank/22-cha.jpg",
+    "answerImage": "assets/charts/labelled/22-cha.jpg",
+    "visibleConstellations": [
+      "Apus",
+      "Carina",
+      "Chamaeleon",
+      "Crux",
+      "Leo",
+      "Mensa",
+      "Musca",
+      "Octans",
+      "Volans"
+    ],
+    "neighbours": [
+      "Apus",
+      "Carina",
+      "Crux",
+      "Leo",
+      "Mensa",
+      "Musca",
+      "Octans",
+      "Volans"
+    ]
+  },
+  {
+    "id": "23-cir",
+    "page": 23,
+    "name": "Circinus",
+    "displayName": "Circinus",
+    "abbr": "Cir",
+    "accepted": [
+      "Circinus"
+    ],
+    "image": "assets/charts/blank/23-cir.jpg",
+    "answerImage": "assets/charts/labelled/23-cir.jpg",
+    "visibleConstellations": [
+      "Apus",
+      "Centaurus",
+      "Circinus",
+      "Crux",
+      "Lupus",
+      "Musca",
+      "Norma",
+      "Taurus",
+      "Triangulum Australe"
+    ],
+    "neighbours": [
+      "Apus",
+      "Centaurus",
+      "Crux",
+      "Lupus",
+      "Musca",
+      "Norma",
+      "Taurus",
+      "Triangulum Australe"
+    ]
+  },
+  {
+    "id": "24-col",
+    "page": 24,
+    "name": "Columba",
+    "displayName": "Columba",
+    "abbr": "Col",
+    "accepted": [
+      "Columba"
+    ],
+    "image": "assets/charts/blank/24-col.jpg",
+    "answerImage": "assets/charts/labelled/24-col.jpg",
+    "visibleConstellations": [
+      "Caelum",
+      "Canis Major",
+      "Columba",
+      "Lepus",
+      "Pictor",
+      "Puppis"
+    ],
+    "neighbours": [
+      "Caelum",
+      "Canis Major",
+      "Lepus",
+      "Pictor",
+      "Puppis"
+    ]
+  },
+  {
+    "id": "25-com",
+    "page": 25,
+    "name": "Coma Berenices",
+    "displayName": "Coma Berenices",
+    "abbr": "Com",
+    "accepted": [
+      "Coma Berenices"
+    ],
+    "image": "assets/charts/blank/25-com.jpg",
+    "answerImage": "assets/charts/labelled/25-com.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Canes Venatici",
+      "Coma Berenices",
+      "Leo",
+      "Ursa Major",
+      "Virgo"
+    ],
+    "neighbours": [
+      "Boötes",
+      "Canes Venatici",
+      "Leo",
+      "Ursa Major",
+      "Virgo"
+    ]
+  },
+  {
+    "id": "26-cra",
+    "page": 26,
+    "name": "Corona Australis",
+    "displayName": "Corona Australis",
+    "abbr": "CrA",
+    "accepted": [
+      "Corona Australis"
+    ],
+    "image": "assets/charts/blank/26-cra.jpg",
+    "answerImage": "assets/charts/labelled/26-cra.jpg",
+    "visibleConstellations": [
+      "Ara",
+      "Corona Australis",
+      "Sagitta",
+      "Sagittarius",
+      "Scorpius",
+      "Telescopium"
+    ],
+    "neighbours": [
+      "Ara",
+      "Sagitta",
+      "Sagittarius",
+      "Scorpius",
+      "Telescopium"
+    ]
+  },
+  {
+    "id": "27-crb",
+    "page": 27,
+    "name": "Corona Borealis",
+    "displayName": "Corona Borealis",
+    "abbr": "CrB",
+    "accepted": [
+      "Corona Borealis"
+    ],
+    "image": "assets/charts/blank/27-crb.jpg",
+    "answerImage": "assets/charts/labelled/27-crb.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Corona Borealis",
+      "Hercules",
+      "Serpens"
+    ],
+    "neighbours": [
+      "Boötes",
+      "Hercules",
+      "Serpens"
+    ]
+  },
+  {
+    "id": "28-crv",
+    "page": 28,
+    "name": "Corvus",
+    "displayName": "Corvus",
+    "abbr": "Crv",
+    "accepted": [
+      "Corvus"
+    ],
+    "image": "assets/charts/blank/28-crv.jpg",
+    "answerImage": "assets/charts/labelled/28-crv.jpg",
+    "visibleConstellations": [
+      "Corvus",
+      "Crater"
+    ],
+    "neighbours": [
+      "Crater"
+    ]
+  },
+  {
+    "id": "29-crt",
+    "page": 29,
+    "name": "Crater",
+    "displayName": "Crater",
+    "abbr": "Crt",
+    "accepted": [
+      "Crater"
+    ],
+    "image": "assets/charts/blank/29-crt.jpg",
+    "answerImage": "assets/charts/labelled/29-crt.jpg",
+    "visibleConstellations": [
+      "Corvus",
+      "Crater",
+      "Hydra",
+      "Leo",
+      "Sextans",
+      "Virgo"
+    ],
+    "neighbours": [
+      "Corvus",
+      "Hydra",
+      "Leo",
+      "Sextans",
+      "Virgo"
+    ]
+  },
+  {
+    "id": "30-cru",
+    "page": 30,
+    "name": "Crux",
+    "displayName": "Crux",
+    "abbr": "Cru",
+    "accepted": [
+      "Crux"
+    ],
+    "image": "assets/charts/blank/30-cru.jpg",
+    "answerImage": "assets/charts/labelled/30-cru.jpg",
+    "visibleConstellations": [
+      "Carina",
+      "Centaurus",
+      "Crux",
+      "Musca",
+      "Taurus"
+    ],
+    "neighbours": [
+      "Carina",
+      "Centaurus",
+      "Musca",
+      "Taurus"
+    ]
+  },
+  {
+    "id": "31-cyg",
+    "page": 31,
+    "name": "Cygnus",
+    "displayName": "Cygnus",
+    "abbr": "Cyg",
+    "accepted": [
+      "Cygnus"
+    ],
+    "image": "assets/charts/blank/31-cyg.jpg",
+    "answerImage": "assets/charts/labelled/31-cyg.jpg",
+    "visibleConstellations": [
+      "Cepheus",
+      "Cygnus",
+      "Delphinus",
+      "Draco",
+      "Lacerta",
+      "Lyra",
+      "Pegasus",
+      "Sagitta",
+      "Vulpecula"
+    ],
+    "neighbours": [
+      "Cepheus",
+      "Delphinus",
+      "Draco",
+      "Lacerta",
+      "Lyra",
+      "Pegasus",
+      "Sagitta",
+      "Vulpecula"
+    ]
+  },
+  {
+    "id": "32-del",
+    "page": 32,
+    "name": "Delphinus",
+    "displayName": "Delphinus",
+    "abbr": "Del",
+    "accepted": [
+      "Delphinus"
+    ],
+    "image": "assets/charts/blank/32-del.jpg",
+    "answerImage": "assets/charts/labelled/32-del.jpg",
+    "visibleConstellations": [
+      "Aquila",
+      "Delphinus",
+      "Equuleus",
+      "Pegasus",
+      "Sagitta",
+      "Vulpecula"
+    ],
+    "neighbours": [
+      "Aquila",
+      "Equuleus",
+      "Pegasus",
+      "Sagitta",
+      "Vulpecula"
+    ]
+  },
+  {
+    "id": "33-dor",
+    "page": 33,
+    "name": "Dorado",
+    "displayName": "Dorado",
+    "abbr": "Dor",
+    "accepted": [
+      "Dorado"
+    ],
+    "image": "assets/charts/blank/33-dor.jpg",
+    "answerImage": "assets/charts/labelled/33-dor.jpg",
+    "visibleConstellations": [
+      "Dorado",
+      "Hydrus",
+      "Mensa",
+      "Pictor",
+      "Reticulum"
+    ],
+    "neighbours": [
+      "Hydrus",
+      "Mensa",
+      "Pictor",
+      "Reticulum"
+    ]
+  },
+  {
+    "id": "34-dra",
+    "page": 34,
+    "name": "Draco",
+    "displayName": "Draco",
+    "abbr": "Dra",
+    "accepted": [
+      "Draco"
+    ],
+    "image": "assets/charts/blank/34-dra.jpg",
+    "answerImage": "assets/charts/labelled/34-dra.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Canes Venatici",
+      "Cepheus",
+      "Cygnus",
+      "Draco",
+      "Hercules",
+      "Lyra",
+      "Ursa Major",
+      "Ursa Minor"
+    ],
+    "neighbours": [
+      "Boötes",
+      "Canes Venatici",
+      "Cepheus",
+      "Cygnus",
+      "Hercules",
+      "Lyra",
+      "Ursa Major",
+      "Ursa Minor"
+    ]
+  },
+  {
+    "id": "35-equ",
+    "page": 35,
+    "name": "Equuleus",
+    "displayName": "Equuleus",
+    "abbr": "Equ",
+    "accepted": [
+      "Equuleus"
+    ],
+    "image": "assets/charts/blank/35-equ.jpg",
+    "answerImage": "assets/charts/labelled/35-equ.jpg",
+    "visibleConstellations": [
+      "Aquarius",
+      "Delphinus",
+      "Equuleus",
+      "Pegasus"
+    ],
+    "neighbours": [
+      "Aquarius",
+      "Delphinus",
+      "Pegasus"
+    ]
+  },
+  {
+    "id": "36-eri",
+    "page": 36,
+    "name": "Eridanus",
+    "displayName": "Eridanus",
+    "abbr": "Eri",
+    "accepted": [
+      "Eridanus"
+    ],
+    "image": "assets/charts/blank/36-eri.jpg",
+    "answerImage": "assets/charts/labelled/36-eri.jpg",
+    "visibleConstellations": [
+      "Caelum",
+      "Cetus",
+      "Columba",
+      "Dorado",
+      "Eridanus",
+      "Fornax",
+      "Horologium",
+      "Lepus",
+      "Orion",
+      "Phoenix",
+      "Pictor",
+      "Taurus"
+    ],
+    "neighbours": [
+      "Caelum",
+      "Cetus",
+      "Columba",
+      "Dorado",
+      "Fornax",
+      "Horologium",
+      "Lepus",
+      "Orion",
+      "Phoenix",
+      "Pictor",
+      "Taurus"
+    ]
+  },
+  {
+    "id": "37-for",
+    "page": 37,
+    "name": "Fornax",
+    "displayName": "Fornax",
+    "abbr": "For",
+    "accepted": [
+      "Fornax"
+    ],
+    "image": "assets/charts/blank/37-for.jpg",
+    "answerImage": "assets/charts/labelled/37-for.jpg",
+    "visibleConstellations": [
+      "Caelum",
+      "Cetus",
+      "Eridanus",
+      "Fornax",
+      "Horologium",
+      "Phoenix",
+      "Sculptor"
+    ],
+    "neighbours": [
+      "Caelum",
+      "Cetus",
+      "Eridanus",
+      "Horologium",
+      "Phoenix",
+      "Sculptor"
+    ]
+  },
+  {
+    "id": "38-gem",
+    "page": 38,
+    "name": "Gemini",
+    "displayName": "Gemini",
+    "abbr": "Gem",
+    "accepted": [
+      "Gemini"
+    ],
+    "image": "assets/charts/blank/38-gem.jpg",
+    "answerImage": "assets/charts/labelled/38-gem.jpg",
+    "visibleConstellations": [
+      "Auriga",
+      "Cancer",
+      "Canis Minor",
+      "Gemini",
+      "Lynx",
+      "Monoceros",
+      "Orion",
+      "Taurus"
+    ],
+    "neighbours": [
+      "Auriga",
+      "Cancer",
+      "Canis Minor",
+      "Lynx",
+      "Monoceros",
+      "Orion",
+      "Taurus"
+    ]
+  },
+  {
+    "id": "39-gru",
+    "page": 39,
+    "name": "Grus",
+    "displayName": "Grus",
+    "abbr": "Gru",
+    "accepted": [
+      "Grus"
+    ],
+    "image": "assets/charts/blank/39-gru.jpg",
+    "answerImage": "assets/charts/labelled/39-gru.jpg",
+    "visibleConstellations": [
+      "Grus",
+      "Indus",
+      "Microscopium",
+      "Phoenix",
+      "Piscis Austrinus",
+      "Sculptor",
+      "Tucana"
+    ],
+    "neighbours": [
+      "Indus",
+      "Microscopium",
+      "Phoenix",
+      "Piscis Austrinus",
+      "Sculptor",
+      "Tucana"
+    ]
+  },
+  {
+    "id": "40-her",
+    "page": 40,
+    "name": "Hercules",
+    "displayName": "Hercules",
+    "abbr": "Her",
+    "accepted": [
+      "Hercules"
+    ],
+    "image": "assets/charts/blank/40-her.jpg",
+    "answerImage": "assets/charts/labelled/40-her.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Corona Borealis",
+      "Draco",
+      "Hercules",
+      "Lyra",
+      "Ophiuchus"
+    ],
+    "neighbours": [
+      "Boötes",
+      "Corona Borealis",
+      "Draco",
+      "Lyra",
+      "Ophiuchus"
+    ]
+  },
+  {
+    "id": "41-hor",
+    "page": 41,
+    "name": "Horologium",
+    "displayName": "Horologium",
+    "abbr": "Hor",
+    "accepted": [
+      "Horologium"
+    ],
+    "image": "assets/charts/blank/41-hor.jpg",
+    "answerImage": "assets/charts/labelled/41-hor.jpg",
+    "visibleConstellations": [
+      "Caelum",
+      "Dorado",
+      "Eridanus",
+      "Horologium",
+      "Hydrus",
+      "Reticulum"
+    ],
+    "neighbours": [
+      "Caelum",
+      "Dorado",
+      "Eridanus",
+      "Hydrus",
+      "Reticulum"
+    ]
+  },
+  {
+    "id": "42-hya",
+    "page": 42,
+    "name": "Hydra",
+    "displayName": "Hydra",
+    "abbr": "Hya",
+    "accepted": [
+      "Hydra"
+    ],
+    "image": "assets/charts/blank/42-hya.jpg",
+    "answerImage": "assets/charts/labelled/42-hya.jpg",
+    "visibleConstellations": [
+      "Antlia",
+      "Boötes",
+      "Cancer",
+      "Corvus",
+      "Crater",
+      "Hydra",
+      "Puppis",
+      "Pyxis",
+      "Sextans",
+      "Virgo"
+    ],
+    "neighbours": [
+      "Antlia",
+      "Boötes",
+      "Cancer",
+      "Corvus",
+      "Crater",
+      "Puppis",
+      "Pyxis",
+      "Sextans",
+      "Virgo"
+    ]
+  },
+  {
+    "id": "43-hyi",
+    "page": 43,
+    "name": "Hydrus",
+    "displayName": "Hydrus",
+    "abbr": "Hyi",
+    "accepted": [
+      "Hydrus"
+    ],
+    "image": "assets/charts/blank/43-hyi.jpg",
+    "answerImage": "assets/charts/labelled/43-hyi.jpg",
+    "visibleConstellations": [
+      "Horologium",
+      "Hydrus",
+      "Mensa",
+      "Octans",
+      "Phoenix",
+      "Reticulum",
+      "Tucana"
+    ],
+    "neighbours": [
+      "Horologium",
+      "Mensa",
+      "Octans",
+      "Phoenix",
+      "Reticulum",
+      "Tucana"
+    ]
+  },
+  {
+    "id": "44-ind",
+    "page": 44,
+    "name": "Indus",
+    "displayName": "Indus",
+    "abbr": "Ind",
+    "accepted": [
+      "Indus"
+    ],
+    "image": "assets/charts/blank/44-ind.jpg",
+    "answerImage": "assets/charts/labelled/44-ind.jpg",
+    "visibleConstellations": [
+      "Grus",
+      "Indus",
+      "Microscopium",
+      "Octans",
+      "Pavo",
+      "Sagitta",
+      "Sagittarius",
+      "Telescopium",
+      "Tucana"
+    ],
+    "neighbours": [
+      "Grus",
+      "Microscopium",
+      "Octans",
+      "Pavo",
+      "Sagitta",
+      "Sagittarius",
+      "Telescopium",
+      "Tucana"
+    ]
+  },
+  {
+    "id": "45-lac",
+    "page": 45,
+    "name": "Lacerta",
+    "displayName": "Lacerta",
+    "abbr": "Lac",
+    "accepted": [
+      "Lacerta"
+    ],
+    "image": "assets/charts/blank/45-lac.jpg",
+    "answerImage": "assets/charts/labelled/45-lac.jpg",
+    "visibleConstellations": [
+      "Andromeda",
+      "Cassiopeia",
+      "Cepheus",
+      "Cygnus",
+      "Lacerta",
+      "Pegasus"
+    ],
+    "neighbours": [
+      "Andromeda",
+      "Cassiopeia",
+      "Cepheus",
+      "Cygnus",
+      "Pegasus"
+    ]
+  },
+  {
+    "id": "46-leo",
+    "page": 46,
+    "name": "Leo",
+    "displayName": "Leo",
+    "abbr": "Leo",
+    "accepted": [
+      "Leo"
+    ],
+    "image": "assets/charts/blank/46-leo.jpg",
+    "answerImage": "assets/charts/labelled/46-leo.jpg",
+    "visibleConstellations": [
+      "Crater",
+      "Hydra",
+      "Leo",
+      "Leo Minor",
+      "Sextans",
+      "Ursa Major",
+      "Ursa Minor",
+      "Virgo"
+    ],
+    "neighbours": [
+      "Crater",
+      "Hydra",
+      "Leo Minor",
+      "Sextans",
+      "Ursa Major",
+      "Ursa Minor",
+      "Virgo"
+    ]
+  },
+  {
+    "id": "47-lmi",
+    "page": 47,
+    "name": "Leo Minor",
+    "displayName": "Leo Minor",
+    "abbr": "LMi",
+    "accepted": [
+      "Leo Minor"
+    ],
+    "image": "assets/charts/blank/47-lmi.jpg",
+    "answerImage": "assets/charts/labelled/47-lmi.jpg",
+    "visibleConstellations": [
+      "Leo",
+      "Leo Minor",
+      "Lynx",
+      "Ursa Major",
+      "Ursa Minor"
+    ],
+    "neighbours": [
+      "Leo",
+      "Lynx",
+      "Ursa Major",
+      "Ursa Minor"
+    ]
+  },
+  {
+    "id": "48-lep",
+    "page": 48,
+    "name": "Lepus",
+    "displayName": "Lepus",
+    "abbr": "Lep",
+    "accepted": [
+      "Lepus"
+    ],
+    "image": "assets/charts/blank/48-lep.jpg",
+    "answerImage": "assets/charts/labelled/48-lep.jpg",
+    "visibleConstellations": [
+      "Canis Major",
+      "Columba",
+      "Eridanus",
+      "Lepus",
+      "Orion"
+    ],
+    "neighbours": [
+      "Canis Major",
+      "Columba",
+      "Eridanus",
+      "Orion"
+    ]
+  },
+  {
+    "id": "49-lib",
+    "page": 49,
+    "name": "Libra",
+    "displayName": "Libra",
+    "abbr": "Lib",
+    "accepted": [
+      "Libra"
+    ],
+    "image": "assets/charts/blank/49-lib.jpg",
+    "answerImage": "assets/charts/labelled/49-lib.jpg",
+    "visibleConstellations": [
+      "Centaurus",
+      "Hydra",
+      "Libra",
+      "Lupus",
+      "Ophiuchus",
+      "Scorpius",
+      "Serpens",
+      "Taurus",
+      "Virgo"
+    ],
+    "neighbours": [
+      "Centaurus",
+      "Hydra",
+      "Lupus",
+      "Ophiuchus",
+      "Scorpius",
+      "Serpens",
+      "Taurus",
+      "Virgo"
+    ]
+  },
+  {
+    "id": "50-lup",
+    "page": 50,
+    "name": "Lupus",
+    "displayName": "Lupus",
+    "abbr": "Lup",
+    "accepted": [
+      "Lupus"
+    ],
+    "image": "assets/charts/blank/50-lup.jpg",
+    "answerImage": "assets/charts/labelled/50-lup.jpg",
+    "visibleConstellations": [
+      "Ara",
+      "Centaurus",
+      "Circinus",
+      "Hydra",
+      "Libra",
+      "Lupus",
+      "Norma",
+      "Scorpius",
+      "Taurus"
+    ],
+    "neighbours": [
+      "Ara",
+      "Centaurus",
+      "Circinus",
+      "Hydra",
+      "Libra",
+      "Norma",
+      "Scorpius",
+      "Taurus"
+    ]
+  },
+  {
+    "id": "51-lyn",
+    "page": 51,
+    "name": "Lynx",
+    "displayName": "Lynx",
+    "abbr": "Lyn",
+    "accepted": [
+      "Lynx"
+    ],
+    "image": "assets/charts/blank/51-lyn.jpg",
+    "answerImage": "assets/charts/labelled/51-lyn.jpg",
+    "visibleConstellations": [
+      "Auriga",
+      "Camelopardalis",
+      "Cancer",
+      "Gemini",
+      "Leo",
+      "Lynx",
+      "Ursa Major"
+    ],
+    "neighbours": [
+      "Auriga",
+      "Camelopardalis",
+      "Cancer",
+      "Gemini",
+      "Leo",
+      "Ursa Major"
+    ]
+  },
+  {
+    "id": "52-lyr",
+    "page": 52,
+    "name": "Lyra",
+    "displayName": "Lyra",
+    "abbr": "Lyr",
+    "accepted": [
+      "Lyra"
+    ],
+    "image": "assets/charts/blank/52-lyr.jpg",
+    "answerImage": "assets/charts/labelled/52-lyr.jpg",
+    "visibleConstellations": [
+      "Cygnus",
+      "Hercules",
+      "Lyra",
+      "Vulpecula"
+    ],
+    "neighbours": [
+      "Cygnus",
+      "Hercules",
+      "Vulpecula"
+    ]
+  },
+  {
+    "id": "53-men",
+    "page": 53,
+    "name": "Mensa",
+    "displayName": "Mensa",
+    "abbr": "Men",
+    "accepted": [
+      "Mensa"
+    ],
+    "image": "assets/charts/blank/53-men.jpg",
+    "answerImage": "assets/charts/labelled/53-men.jpg",
+    "visibleConstellations": [
+      "Chamaeleon",
+      "Dorado",
+      "Hydrus",
+      "Leo",
+      "Mensa",
+      "Octans",
+      "Reticulum",
+      "Volans"
+    ],
+    "neighbours": [
+      "Chamaeleon",
+      "Dorado",
+      "Hydrus",
+      "Leo",
+      "Octans",
+      "Reticulum",
+      "Volans"
+    ]
+  },
+  {
+    "id": "54-mic",
+    "page": 54,
+    "name": "Microscopium",
+    "displayName": "Microscopium",
+    "abbr": "Mic",
+    "accepted": [
+      "Microscopium"
+    ],
+    "image": "assets/charts/blank/54-mic.jpg",
+    "answerImage": "assets/charts/labelled/54-mic.jpg",
+    "visibleConstellations": [
+      "Capricornus",
+      "Grus",
+      "Indus",
+      "Microscopium",
+      "Piscis Austrinus",
+      "Sagitta",
+      "Sagittarius"
+    ],
+    "neighbours": [
+      "Capricornus",
+      "Grus",
+      "Indus",
+      "Piscis Austrinus",
+      "Sagitta",
+      "Sagittarius"
+    ]
+  },
+  {
+    "id": "55-mon",
+    "page": 55,
+    "name": "Monoceros",
+    "displayName": "Monoceros",
+    "abbr": "Mon",
+    "accepted": [
+      "Monoceros"
+    ],
+    "image": "assets/charts/blank/55-mon.jpg",
+    "answerImage": "assets/charts/labelled/55-mon.jpg",
+    "visibleConstellations": [
+      "Cancer",
+      "Canis Major",
+      "Canis Minor",
+      "Gemini",
+      "Hydra",
+      "Lepus",
+      "Monoceros",
+      "Orion",
+      "Puppis"
+    ],
+    "neighbours": [
+      "Cancer",
+      "Canis Major",
+      "Canis Minor",
+      "Gemini",
+      "Hydra",
+      "Lepus",
+      "Orion",
+      "Puppis"
+    ]
+  },
+  {
+    "id": "56-mus",
+    "page": 56,
+    "name": "Musca",
+    "displayName": "Musca",
+    "abbr": "Mus",
+    "accepted": [
+      "Musca"
+    ],
+    "image": "assets/charts/blank/56-mus.jpg",
+    "answerImage": "assets/charts/labelled/56-mus.jpg",
+    "visibleConstellations": [
+      "Apus",
+      "Carina",
+      "Centaurus",
+      "Chamaeleon",
+      "Circinus",
+      "Crux",
+      "Leo",
+      "Musca",
+      "Taurus"
+    ],
+    "neighbours": [
+      "Apus",
+      "Carina",
+      "Centaurus",
+      "Chamaeleon",
+      "Circinus",
+      "Crux",
+      "Leo",
+      "Taurus"
+    ]
+  },
+  {
+    "id": "57-nor",
+    "page": 57,
+    "name": "Norma",
+    "displayName": "Norma",
+    "abbr": "Nor",
+    "accepted": [
+      "Norma"
+    ],
+    "image": "assets/charts/blank/57-nor.jpg",
+    "answerImage": "assets/charts/labelled/57-nor.jpg",
+    "visibleConstellations": [
+      "Ara",
+      "Circinus",
+      "Lupus",
+      "Norma",
+      "Scorpius",
+      "Triangulum Australe"
+    ],
+    "neighbours": [
+      "Ara",
+      "Circinus",
+      "Lupus",
+      "Scorpius",
+      "Triangulum Australe"
+    ]
+  },
+  {
+    "id": "58-oct",
+    "page": 58,
+    "name": "Octans",
+    "displayName": "Octans",
+    "abbr": "Oct",
+    "accepted": [
+      "Octans"
+    ],
+    "image": "assets/charts/blank/58-oct.jpg",
+    "answerImage": "assets/charts/labelled/58-oct.jpg",
+    "visibleConstellations": [
+      "Apus",
+      "Chamaeleon",
+      "Hydrus",
+      "Indus",
+      "Leo",
+      "Mensa",
+      "Octans",
+      "Pavo",
+      "Tucana"
+    ],
+    "neighbours": [
+      "Apus",
+      "Chamaeleon",
+      "Hydrus",
+      "Indus",
+      "Leo",
+      "Mensa",
+      "Pavo",
+      "Tucana"
+    ]
+  },
+  {
+    "id": "59-oph",
+    "page": 59,
+    "name": "Ophiuchus",
+    "displayName": "Ophiuchus",
+    "abbr": "Oph",
+    "accepted": [
+      "Ophiuchus"
+    ],
+    "image": "assets/charts/blank/59-oph.jpg",
+    "answerImage": "assets/charts/labelled/59-oph.jpg",
+    "visibleConstellations": [
+      "Hercules",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Scorpius",
+      "Scutum",
+      "Serpens"
+    ],
+    "neighbours": [
+      "Hercules",
+      "Sagitta",
+      "Sagittarius",
+      "Scorpius",
+      "Scutum",
+      "Serpens"
+    ]
+  },
+  {
+    "id": "60-ori",
+    "page": 60,
+    "name": "Orion",
+    "displayName": "Orion",
+    "abbr": "Ori",
+    "accepted": [
+      "Orion"
+    ],
+    "image": "assets/charts/blank/60-ori.jpg",
+    "answerImage": "assets/charts/labelled/60-ori.jpg",
+    "visibleConstellations": [
+      "Auriga",
+      "Canis Major",
+      "Eridanus",
+      "Gemini",
+      "Lepus",
+      "Monoceros",
+      "Orion",
+      "Taurus"
+    ],
+    "neighbours": [
+      "Auriga",
+      "Canis Major",
+      "Eridanus",
+      "Gemini",
+      "Lepus",
+      "Monoceros",
+      "Taurus"
+    ]
+  },
+  {
+    "id": "61-pav",
+    "page": 61,
+    "name": "Pavo",
+    "displayName": "Pavo",
+    "abbr": "Pav",
+    "accepted": [
+      "Pavo"
+    ],
+    "image": "assets/charts/blank/61-pav.jpg",
+    "answerImage": "assets/charts/labelled/61-pav.jpg",
+    "visibleConstellations": [
+      "Apus",
+      "Ara",
+      "Indus",
+      "Octans",
+      "Pavo",
+      "Telescopium",
+      "Triangulum Australe",
+      "Tucana"
+    ],
+    "neighbours": [
+      "Apus",
+      "Ara",
+      "Indus",
+      "Octans",
+      "Telescopium",
+      "Triangulum Australe",
+      "Tucana"
+    ]
+  },
+  {
+    "id": "62-peg",
+    "page": 62,
+    "name": "Pegasus",
+    "displayName": "Pegasus",
+    "abbr": "Peg",
+    "accepted": [
+      "Pegasus"
+    ],
+    "image": "assets/charts/blank/62-peg.jpg",
+    "answerImage": "assets/charts/labelled/62-peg.jpg",
+    "visibleConstellations": [
+      "Andromeda",
+      "Aquarius",
+      "Cygnus",
+      "Delphinus",
+      "Equuleus",
+      "Lacerta",
+      "Pegasus",
+      "Pisces",
+      "Vulpecula"
+    ],
+    "neighbours": [
+      "Andromeda",
+      "Aquarius",
+      "Cygnus",
+      "Delphinus",
+      "Equuleus",
+      "Lacerta",
+      "Pisces",
+      "Vulpecula"
+    ]
+  },
+  {
+    "id": "63-per",
+    "page": 63,
+    "name": "Perseus",
+    "displayName": "Perseus",
+    "abbr": "Per",
+    "accepted": [
+      "Perseus"
+    ],
+    "image": "assets/charts/blank/63-per.jpg",
+    "answerImage": "assets/charts/labelled/63-per.jpg",
+    "visibleConstellations": [
+      "Andromeda",
+      "Aries",
+      "Auriga",
+      "Camelopardalis",
+      "Cassiopeia",
+      "Perseus",
+      "Taurus",
+      "Triangulum"
+    ],
+    "neighbours": [
+      "Andromeda",
+      "Aries",
+      "Auriga",
+      "Camelopardalis",
+      "Cassiopeia",
+      "Taurus",
+      "Triangulum"
+    ]
+  },
+  {
+    "id": "64-phe",
+    "page": 64,
+    "name": "Phoenix",
+    "displayName": "Phoenix",
+    "abbr": "Phe",
+    "accepted": [
+      "Phoenix"
+    ],
+    "image": "assets/charts/blank/64-phe.jpg",
+    "answerImage": "assets/charts/labelled/64-phe.jpg",
+    "visibleConstellations": [
+      "Eridanus",
+      "Fornax",
+      "Grus",
+      "Horologium",
+      "Hydrus",
+      "Phoenix",
+      "Reticulum",
+      "Sculptor",
+      "Tucana"
+    ],
+    "neighbours": [
+      "Eridanus",
+      "Fornax",
+      "Grus",
+      "Horologium",
+      "Hydrus",
+      "Reticulum",
+      "Sculptor",
+      "Tucana"
+    ]
+  },
+  {
+    "id": "65-pic",
+    "page": 65,
+    "name": "Pictor",
+    "displayName": "Pictor",
+    "abbr": "Pic",
+    "accepted": [
+      "Pictor"
+    ],
+    "image": "assets/charts/blank/65-pic.jpg",
+    "answerImage": "assets/charts/labelled/65-pic.jpg",
+    "visibleConstellations": [
+      "Caelum",
+      "Carina",
+      "Columba",
+      "Dorado",
+      "Pictor",
+      "Puppis",
+      "Reticulum",
+      "Volans"
+    ],
+    "neighbours": [
+      "Caelum",
+      "Carina",
+      "Columba",
+      "Dorado",
+      "Puppis",
+      "Reticulum",
+      "Volans"
+    ]
+  },
+  {
+    "id": "66-psc",
+    "page": 66,
+    "name": "Pisces",
+    "displayName": "Pisces",
+    "abbr": "Psc",
+    "accepted": [
+      "Pisces"
+    ],
+    "image": "assets/charts/blank/66-psc.jpg",
+    "answerImage": "assets/charts/labelled/66-psc.jpg",
+    "visibleConstellations": [
+      "Andromeda",
+      "Aquarius",
+      "Aries",
+      "Cetus",
+      "Pegasus",
+      "Pisces",
+      "Triangulum"
+    ],
+    "neighbours": [
+      "Andromeda",
+      "Aquarius",
+      "Aries",
+      "Cetus",
+      "Pegasus",
+      "Triangulum"
+    ]
+  },
+  {
+    "id": "67-psa",
+    "page": 67,
+    "name": "Piscis Austrinus",
+    "displayName": "Piscis Austrinus",
+    "abbr": "PsA",
+    "accepted": [
+      "Piscis Austrinus"
+    ],
+    "image": "assets/charts/blank/67-psa.jpg",
+    "answerImage": "assets/charts/labelled/67-psa.jpg",
+    "visibleConstellations": [
+      "Aquarius",
+      "Capricornus",
+      "Grus",
+      "Microscopium",
+      "Piscis Austrinus",
+      "Sculptor"
+    ],
+    "neighbours": [
+      "Aquarius",
+      "Capricornus",
+      "Grus",
+      "Microscopium",
+      "Sculptor"
+    ]
+  },
+  {
+    "id": "68-pup",
+    "page": 68,
+    "name": "Puppis",
+    "displayName": "Puppis",
+    "abbr": "Pup",
+    "accepted": [
+      "Puppis"
+    ],
+    "image": "assets/charts/blank/68-pup.jpg",
+    "answerImage": "assets/charts/labelled/68-pup.jpg",
+    "visibleConstellations": [
+      "Canis Major",
+      "Carina",
+      "Columba",
+      "Hydra",
+      "Monoceros",
+      "Pictor",
+      "Puppis",
+      "Pyxis",
+      "Vela"
+    ],
+    "neighbours": [
+      "Canis Major",
+      "Carina",
+      "Columba",
+      "Hydra",
+      "Monoceros",
+      "Pictor",
+      "Pyxis",
+      "Vela"
+    ]
+  },
+  {
+    "id": "69-pyx",
+    "page": 69,
+    "name": "Pyxis",
+    "displayName": "Pyxis",
+    "abbr": "Pyx",
+    "accepted": [
+      "Pyxis"
+    ],
+    "image": "assets/charts/blank/69-pyx.jpg",
+    "answerImage": "assets/charts/labelled/69-pyx.jpg",
+    "visibleConstellations": [
+      "Antlia",
+      "Hydra",
+      "Puppis",
+      "Pyxis",
+      "Vela"
+    ],
+    "neighbours": [
+      "Antlia",
+      "Hydra",
+      "Puppis",
+      "Vela"
+    ]
+  },
+  {
+    "id": "70-ret",
+    "page": 70,
+    "name": "Reticulum",
+    "displayName": "Reticulum",
+    "abbr": "Ret",
+    "accepted": [
+      "Reticulum"
+    ],
+    "image": "assets/charts/blank/70-ret.jpg",
+    "answerImage": "assets/charts/labelled/70-ret.jpg",
+    "visibleConstellations": [
+      "Dorado",
+      "Eridanus",
+      "Horologium",
+      "Hydrus",
+      "Mensa",
+      "Pictor",
+      "Reticulum"
+    ],
+    "neighbours": [
+      "Dorado",
+      "Eridanus",
+      "Horologium",
+      "Hydrus",
+      "Mensa",
+      "Pictor"
+    ]
+  },
+  {
+    "id": "71-sge",
+    "page": 71,
+    "name": "Sagitta",
+    "displayName": "Sagitta",
+    "abbr": "Sge",
+    "accepted": [
+      "Sagitta"
+    ],
+    "image": "assets/charts/blank/71-sge.jpg",
+    "answerImage": "assets/charts/labelled/71-sge.jpg",
+    "visibleConstellations": [
+      "Aquila",
+      "Cygnus",
+      "Delphinus",
+      "Hercules",
+      "Lyra",
+      "Sagitta",
+      "Vulpecula"
+    ],
+    "neighbours": [
+      "Aquila",
+      "Cygnus",
+      "Delphinus",
+      "Hercules",
+      "Lyra",
+      "Vulpecula"
+    ]
+  },
+  {
+    "id": "72-sgr",
+    "page": 72,
+    "name": "Sagittarius",
+    "displayName": "Sagittarius",
+    "abbr": "Sgr",
+    "accepted": [
+      "Sagittarius"
+    ],
+    "image": "assets/charts/blank/72-sgr.jpg",
+    "answerImage": "assets/charts/labelled/72-sgr.jpg",
+    "visibleConstellations": [
+      "Aquila",
+      "Ara",
+      "Capricornus",
+      "Corona Australis",
+      "Indus",
+      "Sagitta",
+      "Sagittarius",
+      "Scorpius",
+      "Scutum",
+      "Serpens",
+      "Telescopium"
+    ],
+    "neighbours": [
+      "Aquila",
+      "Ara",
+      "Capricornus",
+      "Corona Australis",
+      "Indus",
+      "Sagitta",
+      "Scorpius",
+      "Scutum",
+      "Serpens",
+      "Telescopium"
+    ]
+  },
+  {
+    "id": "73-sco",
+    "page": 73,
+    "name": "Scorpius",
+    "displayName": "Scorpius",
+    "abbr": "Sco",
+    "accepted": [
+      "Scorpius"
+    ],
+    "image": "assets/charts/blank/73-sco.jpg",
+    "answerImage": "assets/charts/labelled/73-sco.jpg",
+    "visibleConstellations": [
+      "Ara",
+      "Libra",
+      "Lupus",
+      "Norma",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Scorpius",
+      "Serpens"
+    ],
+    "neighbours": [
+      "Ara",
+      "Libra",
+      "Lupus",
+      "Norma",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Serpens"
+    ]
+  },
+  {
+    "id": "74-scl",
+    "page": 74,
+    "name": "Sculptor",
+    "displayName": "Sculptor",
+    "abbr": "Scl",
+    "accepted": [
+      "Sculptor"
+    ],
+    "image": "assets/charts/blank/74-scl.jpg",
+    "answerImage": "assets/charts/labelled/74-scl.jpg",
+    "visibleConstellations": [
+      "Aquarius",
+      "Cetus",
+      "Fornax",
+      "Grus",
+      "Phoenix",
+      "Sculptor"
+    ],
+    "neighbours": [
+      "Aquarius",
+      "Cetus",
+      "Fornax",
+      "Grus",
+      "Phoenix"
+    ]
+  },
+  {
+    "id": "75-sct",
+    "page": 75,
+    "name": "Scutum",
+    "displayName": "Scutum",
+    "abbr": "Sct",
+    "accepted": [
+      "Scutum"
+    ],
+    "image": "assets/charts/blank/75-sct.jpg",
+    "answerImage": "assets/charts/labelled/75-sct.jpg",
+    "visibleConstellations": [
+      "Aquila",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Scutum",
+      "Serpens"
+    ],
+    "neighbours": [
+      "Aquila",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Serpens"
+    ]
+  },
+  {
+    "id": "76-ser-caput",
+    "page": 76,
+    "name": "Serpens",
+    "displayName": "Serpens Caput",
+    "abbr": "Ser",
+    "accepted": [
+      "Serpens",
+      "Serpens Caput"
+    ],
+    "image": "assets/charts/blank/76-ser-caput.jpg",
+    "answerImage": "assets/charts/labelled/76-ser-caput.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Corona Borealis",
+      "Hercules",
+      "Libra",
+      "Ophiuchus",
+      "Serpens",
+      "Virgo"
+    ],
+    "neighbours": [
+      "Boötes",
+      "Corona Borealis",
+      "Hercules",
+      "Libra",
+      "Ophiuchus",
+      "Virgo"
+    ]
+  },
+  {
+    "id": "77-ser-cauda",
+    "page": 77,
+    "name": "Serpens",
+    "displayName": "Serpens Cauda",
+    "abbr": "Ser",
+    "accepted": [
+      "Serpens",
+      "Serpens Cauda"
+    ],
+    "image": "assets/charts/blank/77-ser-cauda.jpg",
+    "answerImage": "assets/charts/labelled/77-ser-cauda.jpg",
+    "visibleConstellations": [
+      "Aquila",
+      "Hercules",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Scutum",
+      "Serpens"
+    ],
+    "neighbours": [
+      "Aquila",
+      "Hercules",
+      "Ophiuchus",
+      "Sagitta",
+      "Sagittarius",
+      "Scutum"
+    ]
+  },
+  {
+    "id": "78-sex",
+    "page": 78,
+    "name": "Sextans",
+    "displayName": "Sextans",
+    "abbr": "Sex",
+    "accepted": [
+      "Sextans"
+    ],
+    "image": "assets/charts/blank/78-sex.jpg",
+    "answerImage": "assets/charts/labelled/78-sex.jpg",
+    "visibleConstellations": [
+      "Cancer",
+      "Crater",
+      "Hydra",
+      "Leo",
+      "Sextans"
+    ],
+    "neighbours": [
+      "Cancer",
+      "Crater",
+      "Hydra",
+      "Leo"
+    ]
+  },
+  {
+    "id": "79-tau",
+    "page": 79,
+    "name": "Taurus",
+    "displayName": "Taurus",
+    "abbr": "Tau",
+    "accepted": [
+      "Taurus"
+    ],
+    "image": "assets/charts/blank/79-tau.jpg",
+    "answerImage": "assets/charts/labelled/79-tau.jpg",
+    "visibleConstellations": [
+      "Aries",
+      "Auriga",
+      "Eridanus",
+      "Orion",
+      "Perseus",
+      "Taurus"
+    ],
+    "neighbours": [
+      "Aries",
+      "Auriga",
+      "Eridanus",
+      "Orion",
+      "Perseus"
+    ]
+  },
+  {
+    "id": "80-tel",
+    "page": 80,
+    "name": "Telescopium",
+    "displayName": "Telescopium",
+    "abbr": "Tel",
+    "accepted": [
+      "Telescopium"
+    ],
+    "image": "assets/charts/blank/80-tel.jpg",
+    "answerImage": "assets/charts/labelled/80-tel.jpg",
+    "visibleConstellations": [
+      "Ara",
+      "Corona Australis",
+      "Indus",
+      "Microscopium",
+      "Pavo",
+      "Sagitta",
+      "Sagittarius",
+      "Scorpius",
+      "Telescopium"
+    ],
+    "neighbours": [
+      "Ara",
+      "Corona Australis",
+      "Indus",
+      "Microscopium",
+      "Pavo",
+      "Sagitta",
+      "Sagittarius",
+      "Scorpius"
+    ]
+  },
+  {
+    "id": "81-tri",
+    "page": 81,
+    "name": "Triangulum",
+    "displayName": "Triangulum",
+    "abbr": "Tri",
+    "accepted": [
+      "Triangulum"
+    ],
+    "image": "assets/charts/blank/81-tri.jpg",
+    "answerImage": "assets/charts/labelled/81-tri.jpg",
+    "visibleConstellations": [
+      "Andromeda",
+      "Aries",
+      "Perseus",
+      "Pisces",
+      "Triangulum"
+    ],
+    "neighbours": [
+      "Andromeda",
+      "Aries",
+      "Perseus",
+      "Pisces"
+    ]
+  },
+  {
+    "id": "82-tra",
+    "page": 82,
+    "name": "Triangulum Australe",
+    "displayName": "Triangulum Australe",
+    "abbr": "TrA",
+    "accepted": [
+      "Triangulum Australe"
+    ],
+    "image": "assets/charts/blank/82-tra.jpg",
+    "answerImage": "assets/charts/labelled/82-tra.jpg",
+    "visibleConstellations": [
+      "Apus",
+      "Ara",
+      "Centaurus",
+      "Circinus",
+      "Lupus",
+      "Musca",
+      "Norma",
+      "Pavo",
+      "Taurus",
+      "Triangulum Australe"
+    ],
+    "neighbours": [
+      "Apus",
+      "Ara",
+      "Centaurus",
+      "Circinus",
+      "Lupus",
+      "Musca",
+      "Norma",
+      "Pavo",
+      "Taurus"
+    ]
+  },
+  {
+    "id": "83-tuc",
+    "page": 83,
+    "name": "Tucana",
+    "displayName": "Tucana",
+    "abbr": "Tuc",
+    "accepted": [
+      "Tucana"
+    ],
+    "image": "assets/charts/blank/83-tuc.jpg",
+    "answerImage": "assets/charts/labelled/83-tuc.jpg",
+    "visibleConstellations": [
+      "Grus",
+      "Hydrus",
+      "Indus",
+      "Octans",
+      "Phoenix",
+      "Tucana"
+    ],
+    "neighbours": [
+      "Grus",
+      "Hydrus",
+      "Indus",
+      "Octans",
+      "Phoenix"
+    ]
+  },
+  {
+    "id": "84-uma",
+    "page": 84,
+    "name": "Ursa Major",
+    "displayName": "Ursa Major",
+    "abbr": "UMa",
+    "accepted": [
+      "Ursa Major"
+    ],
+    "image": "assets/charts/blank/84-uma.jpg",
+    "answerImage": "assets/charts/labelled/84-uma.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Camelopardalis",
+      "Cancer",
+      "Canes Venatici",
+      "Coma Berenices",
+      "Draco",
+      "Leo",
+      "Leo Minor",
+      "Lynx",
+      "Ursa Major",
+      "Ursa Minor"
+    ],
+    "neighbours": [
+      "Boötes",
+      "Camelopardalis",
+      "Cancer",
+      "Canes Venatici",
+      "Coma Berenices",
+      "Draco",
+      "Leo",
+      "Leo Minor",
+      "Lynx",
+      "Ursa Minor"
+    ]
+  },
+  {
+    "id": "85-umi",
+    "page": 85,
+    "name": "Ursa Minor",
+    "displayName": "Ursa Minor",
+    "abbr": "UMi",
+    "accepted": [
+      "Ursa Minor"
+    ],
+    "image": "assets/charts/blank/85-umi.jpg",
+    "answerImage": "assets/charts/labelled/85-umi.jpg",
+    "visibleConstellations": [
+      "Camelopardalis",
+      "Cepheus",
+      "Draco",
+      "Ursa Major",
+      "Ursa Minor"
+    ],
+    "neighbours": [
+      "Camelopardalis",
+      "Cepheus",
+      "Draco",
+      "Ursa Major"
+    ]
+  },
+  {
+    "id": "86-vel",
+    "page": 86,
+    "name": "Vela",
+    "displayName": "Vela",
+    "abbr": "Vel",
+    "accepted": [
+      "Vela"
+    ],
+    "image": "assets/charts/blank/86-vel.jpg",
+    "answerImage": "assets/charts/labelled/86-vel.jpg",
+    "visibleConstellations": [
+      "Antlia",
+      "Carina",
+      "Centaurus",
+      "Crux",
+      "Puppis",
+      "Pyxis",
+      "Taurus",
+      "Vela"
+    ],
+    "neighbours": [
+      "Antlia",
+      "Carina",
+      "Centaurus",
+      "Crux",
+      "Puppis",
+      "Pyxis",
+      "Taurus"
+    ]
+  },
+  {
+    "id": "87-vir",
+    "page": 87,
+    "name": "Virgo",
+    "displayName": "Virgo",
+    "abbr": "Vir",
+    "accepted": [
+      "Virgo"
+    ],
+    "image": "assets/charts/blank/87-vir.jpg",
+    "answerImage": "assets/charts/labelled/87-vir.jpg",
+    "visibleConstellations": [
+      "Boötes",
+      "Coma Berenices",
+      "Corvus",
+      "Crater",
+      "Leo",
+      "Libra",
+      "Virgo"
+    ],
+    "neighbours": [
+      "Boötes",
+      "Coma Berenices",
+      "Corvus",
+      "Crater",
+      "Leo",
+      "Libra"
+    ]
+  },
+  {
+    "id": "88-vol",
+    "page": 88,
+    "name": "Volans",
+    "displayName": "Volans",
+    "abbr": "Vol",
+    "accepted": [
+      "Volans"
+    ],
+    "image": "assets/charts/blank/88-vol.jpg",
+    "answerImage": "assets/charts/labelled/88-vol.jpg",
+    "visibleConstellations": [
+      "Carina",
+      "Chamaeleon",
+      "Dorado",
+      "Leo",
+      "Mensa",
+      "Volans"
+    ],
+    "neighbours": [
+      "Carina",
+      "Chamaeleon",
+      "Dorado",
+      "Leo",
+      "Mensa"
+    ]
+  },
+  {
+    "id": "89-vul",
+    "page": 89,
+    "name": "Vulpecula",
+    "displayName": "Vulpecula",
+    "abbr": "Vul",
+    "accepted": [
+      "Vulpecula"
+    ],
+    "image": "assets/charts/blank/89-vul.jpg",
+    "answerImage": "assets/charts/labelled/89-vul.jpg",
+    "visibleConstellations": [
+      "Aquila",
+      "Cygnus",
+      "Delphinus",
+      "Equuleus",
+      "Lyra",
+      "Pegasus",
+      "Sagitta",
+      "Vulpecula"
+    ],
+    "neighbours": [
+      "Aquila",
+      "Cygnus",
+      "Delphinus",
+      "Equuleus",
+      "Lyra",
+      "Pegasus",
+      "Sagitta"
+    ]
+  }
+]
