@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Night Sky Memory Arcade</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Night Sky Memory Arcade</h1>
+      <p>Constellations, named stars, Messier objects, Caldwell objects, and celestial-sphere relationships.</p>
+    </div>
+    <button id="resetProgress" class="ghost">Reset progress</button>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="home" class="active">Home</button>
+    <button data-tab="chart">Chart Quiz</button>
+    <button data-tab="neighbour">Neighbour Web</button>
+    <button data-tab="stars">Star Names</button>
+    <button data-tab="dso">DSOs</button>
+    <button data-tab="timer">88 Timer</button>
+    <button data-tab="abbr">Abbrev Sprint</button>
+    <button data-tab="atlas">Atlas</button>
+    <button data-tab="tables">Tables</button>
+  </nav>
+
+  <main>
+    <section id="home" class="tab active">
+      <div class="grid two">
+        <article class="card">
+          <h2>Best learning loop</h2>
+          <ol class="steps">
+            <li><strong>Anchor shapes first.</strong> Learn a few obvious skeletons: Orion, Scorpius, the Summer Triangle, the Big Dipper, Cassiopeia’s W, Crux, Sagittarius’ Teapot.</li>
+            <li><strong>Attach names to stars.</strong> Use the named stars as hooks: Sirius → Canis Major, Mirach → Andromeda, Antares → Scorpius, Deneb → Cygnus.</li>
+            <li><strong>Add DSOs by constellation.</strong> Memorise objects in clusters: Orion has M42/M43/M78; Sagittarius is dense with Messier objects; Canes Venatici has M3/M51/M63/M94/M106.</li>
+            <li><strong>Use relative position, not isolated facts.</strong> Learn “what surrounds this?” and “what chart would I step into next?”</li>
+            <li><strong>Recall before looking.</strong> Each session: guess, reveal, correct, then immediately do a related neighbouring object.</li>
+          </ol>
+        </article>
+        <article class="card stat-card">
+          <h2>Today’s dashboard</h2>
+          <div id="dashboard"></div>
+          <p class="small">Progress is saved locally in your browser. It will not sync across devices.</p>
+        </article>
+      </div>
+      <article class="card">
+        <h2>Recommended 30-minute session</h2>
+        <div class="routine">
+          <span>5 min: 88 Timer warm-up</span>
+          <span>8 min: Chart Quiz</span>
+          <span>5 min: Neighbour Web</span>
+          <span>7 min: Star Names</span>
+          <span>5 min: Messier/Caldwell DSOs</span>
+        </div>
+      </article>
+    </section>
+
+    <section id="chart" class="tab">
+      <div class="game-layout">
+        <aside class="card controls">
+          <h2>Guess the constellation chart</h2>
+          <p class="small">Constellation names are blanked, but star names and DSO numbers remain.</p>
+          <label><input type="checkbox" id="chartShuffle" checked> Shuffle deck</label>
+          <label><input type="checkbox" id="chartAnswerImage" checked> Show labelled answer chart</label>
+          <input id="chartGuess" placeholder="Name or abbreviation, e.g. Andromeda or And">
+          <div class="buttons"><button id="chartSubmit">Guess</button><button id="chartReveal" class="secondary">Reveal</button><button id="chartNext" class="secondary">Next</button></div>
+          <div id="chartMsg" class="message"></div>
+          <div id="chartStats" class="mini-stats"></div>
+        </aside>
+        <section class="card chart-card">
+          <img id="chartImg" alt="Blanked IAU constellation chart">
+          <div id="chartAnswer" class="answer hidden"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="neighbour" class="tab">
+      <div class="grid two">
+        <article class="card">
+          <h2>Neighbour Web</h2>
+          <p>Train relative position by using the constellations visible on the same IAU chart.</p>
+          <div id="neighbourPrompt" class="prompt"></div>
+          <div id="neighbourChoices" class="choice-grid"></div>
+          <div id="neighbourMsg" class="message"></div>
+          <div class="buttons"><button id="neighbourNext">Next</button></div>
+        </article>
+        <article class="card chart-card"><img id="neighbourImg" alt="Neighbour chart"></article>
+      </div>
+    </section>
+
+    <section id="stars" class="tab">
+      <div class="grid two">
+        <article class="card">
+          <h2>Named Star Drill</h2>
+          <label>Mode <select id="starMode"><option value="constellation">Star → constellation</option><option value="name">Designation → star name</option><option value="designation">Star → Bayer/Flamsteed designation</option></select></label>
+          <div id="starPrompt" class="prompt"></div>
+          <div id="starChoices" class="choice-grid"></div>
+          <input id="starGuess" placeholder="Or type the answer">
+          <div class="buttons"><button id="starSubmit">Submit typed answer</button><button id="starReveal" class="secondary">Reveal</button><button id="starNext" class="secondary">Next</button></div>
+          <div id="starMsg" class="message"></div>
+        </article>
+        <article class="card"><h2>Star hook</h2><div id="starInfo" class="fact"></div></article>
+      </div>
+    </section>
+
+    <section id="dso" class="tab">
+      <div class="grid two">
+        <article class="card">
+          <h2>Messier + Caldwell DSO Drill</h2>
+          <label>Catalogue <select id="dsoCatalogue"><option value="both">Messier + Caldwell</option><option value="M">Messier only</option><option value="C">Caldwell only</option></select></label>
+          <label>Mode <select id="dsoMode"><option value="codeToName">Catalogue number → common name</option><option value="nameToCode">Common name → catalogue number</option><option value="constellation">Object → constellation</option><option value="type">Object → object type</option></select></label>
+          <div id="dsoPrompt" class="prompt"></div>
+          <div id="dsoChoices" class="choice-grid"></div>
+          <input id="dsoGuess" placeholder="Or type the answer">
+          <div class="buttons"><button id="dsoSubmit">Submit typed answer</button><button id="dsoReveal" class="secondary">Reveal</button><button id="dsoNext" class="secondary">Next</button></div>
+          <div id="dsoMsg" class="message"></div>
+        </article>
+        <article class="card"><h2>Object card</h2><div id="dsoInfo" class="fact"></div></article>
+      </div>
+    </section>
+
+    <section id="timer" class="tab">
+      <article class="card">
+        <h2>Name all 88 constellations</h2>
+        <div class="timerbar"><strong id="timerClock">10:00</strong><select id="timerMinutes"><option>5</option><option selected>10</option><option>15</option><option>20</option></select><button id="timerStart">Start</button><button id="timerStop" class="secondary">Stop</button></div>
+        <input id="timerInput" placeholder="Type a constellation and press Enter">
+        <div id="timerMsg" class="message"></div>
+        <div id="timerFound" class="pillbox"></div>
+        <h3>Missing</h3>
+        <div id="timerMissing" class="pillbox muted"></div>
+      </article>
+    </section>
+
+    <section id="abbr" class="tab">
+      <div class="grid two">
+        <article class="card">
+          <h2>IAU abbreviation sprint</h2>
+          <label>Mode <select id="abbrMode"><option value="nameToAbbr">Name → abbreviation</option><option value="abbrToName">Abbreviation → name</option></select></label>
+          <div id="abbrPrompt" class="prompt"></div>
+          <input id="abbrGuess" placeholder="Type answer">
+          <div class="buttons"><button id="abbrSubmit">Submit</button><button id="abbrReveal" class="secondary">Reveal</button><button id="abbrNext" class="secondary">Next</button></div>
+          <div id="abbrMsg" class="message"></div>
+        </article>
+        <article class="card"><h2>Why this helps</h2><p>Abbreviations appear in Bayer designations, star catalogues, observing lists, and charts. Once “α CMa = Sirius in Canis Major” is automatic, star names start linking to positions.</p></article>
+      </div>
+    </section>
+
+    <section id="atlas" class="tab">
+      <article class="card">
+        <h2>Study atlas</h2>
+        <p class="small">Click any card to reveal the labelled chart. Use this after attempting recall.</p>
+        <div id="atlasGrid" class="atlas-grid"></div>
+      </article>
+    </section>
+
+    <section id="tables" class="tab">
+      <article class="card">
+        <h2>Searchable tables</h2>
+        <input id="tableSearch" placeholder="Search constellation, star, M number, C number, common name...">
+        <div class="table-tabs"><button data-table="constellations" class="active">Constellations</button><button data-table="stars">Stars</button><button data-table="dso">DSOs</button></div>
+        <div id="tableWrap" class="table-wrap"></div>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    Built as a static GitHub Pages site. Source charts: IAU/Sky & Telescope constellation charts. DSO and star datasets are study-oriented and editable in the data folder.
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
