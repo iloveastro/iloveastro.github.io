@@ -48,8 +48,8 @@ ul { margin-top: 6px; padding-left: 22px; }
 
 .sky-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 14px; align-items: start; }
 .sky-panel { position: relative; padding: 8px; }
-#skyCanvas { width: 100%; height: min(72vh, 760px); display: block; background: white; border: 1px solid #111; touch-action: none; }
-@media (max-width: 900px) { .sky-layout { grid-template-columns: 1fr; } #skyCanvas { height: 62vh; } }
+#skyCanvas, #alphaCanvas, #regionCanvas { width: min(100%, 72vh, 760px); height: auto; aspect-ratio: 1 / 1; display: block; margin: 0 auto; background: white; border: 1px solid #111; touch-action: none; }
+@media (max-width: 900px) { .sky-layout { grid-template-columns: 1fr; } #skyCanvas, #alphaCanvas, #regionCanvas { width: min(100%, 62vh); } }
 
 .sky-nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-width: 170px; margin: 8px 0 10px; }
 .sky-nav-grid button { min-height: 34px; padding: 4px 0; }
