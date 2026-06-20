@@ -15,6 +15,52 @@
   };
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
 
+  function updateRangeVisual(input) {
+    if (!input) return;
+    const min = parseFloat(input.min || '0');
+    const max = parseFloat(input.max || '100');
+    const value = parseFloat(input.value || '0');
+    const span = max - min || 1;
+    const pct = Math.max(0, Math.min(100, ((value - min) / span) * 100));
+    input.style.setProperty('--pct', pct + '%');
+  }
+  function initRangeVisuals(root = document) {
+    root.querySelectorAll('input[type="range"]').forEach(input => {
+      updateRangeVisual(input);
+      if (!input.dataset.rangeVisualBound) {
+        input.addEventListener('input', () => updateRangeVisual(input));
+        input.addEventListener('change', () => updateRangeVisual(input));
+        input.dataset.rangeVisualBound = '1';
+      }
+    });
+  }
+
+  function ensureImageModal() {
+    let modal = document.getElementById('imageModal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'imageModal';
+    modal.className = 'image-modal hidden';
+    modal.innerHTML = '<button type="button" class="image-modal-close" aria-label="close image">×</button><img class="image-modal-img" alt="enlarged image">';
+    const img = modal.querySelector('.image-modal-img');
+    const close = () => modal.classList.add('hidden');
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    modal.querySelector('.image-modal-close').addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    modal.openImage = (src, alt='') => { img.src = src; img.alt = alt || 'enlarged image'; modal.classList.remove('hidden'); };
+    document.body.appendChild(modal);
+    return modal;
+  }
+  function enableAnswerImageZoom(root) {
+    const modal = ensureImageModal();
+    root.querySelectorAll('.answer-details img').forEach(img => {
+      img.classList.add('zoomable-image');
+      if (img.dataset.zoomBound) return;
+      img.dataset.zoomBound = '1';
+      img.addEventListener('click', () => modal.openImage(img.currentSrc || img.src, img.alt || 'enlarged image'));
+    });
+  }
+
   window.__iloveastroImgFallback = img => {
     const rest = (img.dataset.fallbacks || '').split('|').filter(Boolean);
     if (!rest.length) return;
@@ -46,6 +92,9 @@
   function chartImg(c, labelled = false, cls = 'chart-img', alt = 'constellation chart') {
     const paths = chartAssetPaths(c, labelled);
     return `<img class="${esc(cls)}" src="${esc(paths[0])}" data-fallbacks="${esc(paths.slice(1).join('|'))}" onerror="window.__iloveastroImgFallback(this)" loading="lazy" decoding="async" alt="${esc(alt)}">`;
+  }
+  function chartPanelImg(c, labelled = false, alt = 'constellation chart') {
+    return `<div class="main-chart-crop">${chartImg(c, labelled, 'chart-img chart-main-img', alt)}</div>`;
   }
 
   const norm = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -213,6 +262,7 @@
       }
       const main = el('section', { class: 'panel', html: q.visual || '' });
       app.append(el('div', { class: 'layout' }, [aside, main]));
+      enableAnswerImageZoom(app);
     }
     state.next = newQuestion;
     if (!state.current) newQuestion(); else draw();
@@ -227,13 +277,13 @@
   }
   function chartQuestion() {
     const c = rand(DATA.charts);
-    return { prompt: 'Name the constellation chart.', answers: c.accepted, visual: chartImg(c, false, 'chart-img', 'blanked constellation chart'), card: () => `<h3>${esc(c.displayName)}</h3>${infoCard(c.name)}${chartImg(c, true, 'chart-img', 'labelled chart')}` };
+    return { prompt: 'Name the constellation chart.', answers: c.accepted, visual: chartPanelImg(c, false, 'blanked constellation chart'), card: () => `<h3>${esc(c.displayName)}</h3>${infoCard(c.name)}${chartImg(c, true, 'chart-img', 'labelled chart')}` };
   }
   function neighbourQuestion() {
     const pool = DATA.charts.filter(c => c.neighbourClues && c.neighbourClues.length);
     const c = rand(pool);
     const target = rand(c.neighbourClues);
-    return { prompt: `On the <strong>${esc(c.displayName)}</strong> chart, name ${esc(target.clue)}.`, answers: [target.answer], visual: chartImg(c, false, 'chart-img', 'blanked constellation chart'), card: () => `<h3>${esc(target.answer)}</h3><p>Target neighbour on the ${esc(c.displayName)} chart.</p>${chartImg(c, true, 'chart-img', 'labelled chart')}` };
+    return { prompt: `On the <strong>${esc(c.displayName)}</strong> chart, name ${esc(target.clue)}.`, answers: [target.answer], visual: chartPanelImg(c, false, 'blanked constellation chart'), card: () => `<h3>${esc(target.answer)}</h3><p>Target neighbour on the ${esc(c.displayName)} chart.</p>${chartImg(c, true, 'chart-img', 'labelled chart')}` };
   }
 
   const starModes = [
@@ -580,7 +630,8 @@
 
   function renderSkyGuessr() {
     const state = states.skyguessr || (states.skyguessr = { loaded: false, loading: false, error: '', fov: 140, magLimit: 5.0, autoMag: true, target: null, answered: false, message: '', score: scoreKey('skyguessr'), orient: null });
-    app.innerHTML = `<h2>SkyGuessr</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyCanvas" width="900" height="900" tabindex="0" aria-label="celestial sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="skyFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="skyFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label><input id="skyAutoMag" type="checkbox" ${state.autoMag !== false ? "checked" : ""}> adaptive star density</label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="skyMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="skyMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="sky movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="skyCentre">X</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="skyRollCCW">↺ rotate</button><button type="button" id="skyRollCW">rotate ↻</button></div><input id="skyAnswer" autocomplete="off" placeholder="constellation at the X"><div class="controls"><button type="button" id="skyNew">new location</button><button type="button" id="skyReveal">reveal</button></div><div id="skyMsg" class="message">${esc(state.message || '')}</div><div class="stats">${formatScore('skyguessr')}</div></aside></div>`;
+    app.innerHTML = `<h2>SkyGuessr</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyCanvas" width="900" height="900" tabindex="0" aria-label="celestial sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="skyFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="skyFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="skyAutoMag" type="checkbox" ${state.autoMag !== false ? "checked" : ""}><span>adaptive star density</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="skyMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="skyMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="sky movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="skyCentre">X</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="skyRollCCW">↺ rotate</button><button type="button" id="skyRollCW">rotate ↻</button></div><input id="skyAnswer" autocomplete="off" placeholder="constellation at the X"><div class="controls"><button type="button" id="skyNew">new location</button><button type="button" id="skyReveal">reveal</button></div><div id="skyMsg" class="message">${esc(state.message || '')}</div><div class="stats">${formatScore('skyguessr')}</div></aside></div>`;
+    initRangeVisuals(app);
     const canvas = $('#skyCanvas'), ctx = canvas.getContext('2d');
     const answer = $('#skyAnswer');
     const fovInput = $('#skyFov');
@@ -599,7 +650,7 @@
       const mag = $('#skyMag');
       const slider = $('#skyMagSlider');
       if (mag && state.autoMag !== false) mag.value = value;
-      if (slider && state.autoMag !== false) slider.value = value;
+      if (slider && state.autoMag !== false) { slider.value = value; updateRangeVisual(slider); }
     }
     function targetPool() {
       const base = effectiveMag();
@@ -653,7 +704,7 @@
       state.fov = clampFov(v);
       const value = Number(state.fov.toFixed(1));
       if (fovInput) fovInput.value = value;
-      if (fovSlider) fovSlider.value = value;
+      if (fovSlider) { fovSlider.value = value; updateRangeVisual(fovSlider); }
       draw();
     }
     function project(v, b, radius, fovRad) {
@@ -792,6 +843,7 @@
       const value = Number(state.magLimit.toFixed(1));
       $('#skyMag').value = value;
       $('#skyMagSlider').value = value;
+      updateRangeVisual($('#skyMagSlider'));
       draw();
     }
     $('#skyAutoMag').addEventListener('change', e => { state.autoMag = e.target.checked; syncMagInput(); draw(); });
@@ -872,7 +924,8 @@
 
   function renderAlphaPin() {
     const state = states.alphapin || (states.alphapin = { loaded: false, loading: false, error: '', fov: 140, magLimit: 5.0, target: null, selectedVec: null, result: '', submitted: false, orient: null });
-    app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find <strong>${esc(state.target ? state.target.constellation : '...')}</strong>.<br><span class="small">Aim for its α star.</span></div><label>FOV degrees<div class="slider-text-row"><input id="alphaFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="alphaMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">○</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaZoomX">zoom to X</button><button type="button" id="alphaNew">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div></aside></div>`;
+    app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find <strong>${esc(state.target ? state.target.constellation : '...')}</strong>.</div><label>FOV degrees<div class="slider-text-row"><input id="alphaFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="alphaMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">○</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaZoomIn">zoom in</button><button type="button" id="alphaZoomOut">zoom out</button><button type="button" id="alphaNew">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div><div class="small alpha-pin-hint">(pin the alpha star)</div></aside></div>`;
+    initRangeVisuals(app);
     const canvas = $('#alphaCanvas'), ctx = canvas.getContext('2d');
     const fovInput = $('#alphaFov');
     const fovSlider = $('#alphaFovSlider');
@@ -936,7 +989,7 @@
       state.fov = clampFov(v);
       const value = Number(state.fov.toFixed(1));
       if (fovInput) fovInput.value = value;
-      if (fovSlider) fovSlider.value = value;
+      if (fovSlider) { fovSlider.value = value; updateRangeVisual(fovSlider); }
       draw();
     }
     function project(v, b, radius, fovRad) {
@@ -1056,14 +1109,9 @@
       $('#alphaMsg').textContent = state.result;
       draw();
     }
-    function zoomToSelectedX() {
-      if (!state.selectedVec) {
-        state.result = 'place X first';
-        $('#alphaMsg').textContent = state.result;
-        return;
-      }
-      state.orient = makeBasisFromForward(state.selectedVec);
-      setFov(20);
+    function zoomAlpha(delta) {
+      if (state.selectedVec) state.orient = makeBasisFromForward(state.selectedVec);
+      setFov(Math.max(20, Math.min(190, state.fov + delta)));
       canvas.focus();
     }
 
@@ -1072,6 +1120,7 @@
       const value = Number(state.magLimit.toFixed(1));
       $('#alphaMag').value = value;
       $('#alphaMagSlider').value = value;
+      updateRangeVisual($('#alphaMagSlider'));
       draw();
     }
     $('#alphaFov').addEventListener('input', e => setFov(parseFloat(e.target.value) || 140));
@@ -1079,7 +1128,8 @@
     $('#alphaMag').addEventListener('input', e => setAlphaMag(e.target.value));
     $('#alphaMagSlider').addEventListener('input', e => setAlphaMag(e.target.value));
     $('#alphaSubmit').addEventListener('click', submitGuess);
-    $('#alphaZoomX').addEventListener('click', zoomToSelectedX);
+    $('#alphaZoomIn').addEventListener('click', () => zoomAlpha(-10));
+    $('#alphaZoomOut').addEventListener('click', () => zoomAlpha(10));
     $('#alphaNew').addEventListener('click', newTarget);
     $('#alphaCentre').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(140); canvas.focus(); });
     $('#alphaRollCCW').addEventListener('click', () => rollFrame(-1));
@@ -1164,7 +1214,8 @@
 
   function renderSkyRegions() {
     const state = states.skyregions || (states.skyregions = { loaded: false, loading: false, error: '', fov: 140, message: '', selected: '', showBoundaries: true, showStars: true, magLimit: 5.0, orient: null });
-    app.innerHTML = `<h2>Constellation Regions</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="regionFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}> boundaries</label><label><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}> stars</label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="regionMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label>Search constellation<input id="regionSearch" list="regionSearchList" autocomplete="off" placeholder="full constellation name"></label><datalist id="regionSearchList">${DATA.constellations.map(c => `<option value="${esc(c.name)}"></option>`).join('')}</datalist><div class="controls"><button type="button" id="regionSearchBtn">search</button></div><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
+    app.innerHTML = `<h2>Constellation Regions</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="regionFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}><span>boundaries</span></label><label class="checkline"><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}><span>stars</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="regionMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label>Search constellation<input id="regionSearch" list="regionSearchList" autocomplete="off" placeholder="full constellation name"></label><datalist id="regionSearchList">${DATA.constellations.map(c => `<option value="${esc(c.name)}"></option>`).join('')}</datalist><div class="controls"><button type="button" id="regionSearchBtn">search</button></div><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
+    initRangeVisuals(app);
     const canvas = $('#regionCanvas'), ctx = canvas.getContext('2d');
     const fovInput = $('#regionFov');
     const fovSlider = $('#regionFovSlider');
@@ -1214,7 +1265,7 @@
       state.fov = clampFov(v);
       const value = Number(state.fov.toFixed(1));
       if (fovInput) fovInput.value = value;
-      if (fovSlider) fovSlider.value = value;
+      if (fovSlider) { fovSlider.value = value; updateRangeVisual(fovSlider); }
       draw();
     }
     function project(v, b, radius, fovRad) {
@@ -1386,6 +1437,7 @@
       const value = Number(state.magLimit.toFixed(1));
       $('#regionMag').value = value;
       $('#regionMagSlider').value = value;
+      updateRangeVisual($('#regionMagSlider'));
       draw();
     }
     fovInput.addEventListener('input', e => setFov(parseFloat(e.target.value) || 140));

@@ -117,3 +117,118 @@ ul { margin-top: 6px; padding-left: 22px; }
   padding-left: 0;
   padding-right: 0;
 }
+
+
+/* Checkbox rows in sphere sidebars */
+.checkline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+.checkline input[type='checkbox'] {
+  width: auto;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  flex: 0 0 auto;
+  accent-color: #111;
+}
+.checkline span { line-height: 1.2; }
+
+/* Decorative black-white sliders with yellow star thumb */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  height: 26px;
+  cursor: pointer;
+}
+input[type='range']:focus { outline: none; }
+input[type='range']::-webkit-slider-runnable-track {
+  height: 12px;
+  border: 1px solid #111;
+  border-radius: 999px;
+  background: linear-gradient(to right, #111 0%, #111 var(--pct, 50%), #fff var(--pct, 50%), #fff 100%);
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -6px;
+  border: 0;
+  background: center / contain no-repeat url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,4 61,36 96,36 67,56 78,91 50,70 22,91 33,56 4,36 39,36' fill='%23ffd84d' stroke='%23111' stroke-width='6' stroke-linejoin='round'/></svg>");
+}
+input[type='range']::-moz-range-track {
+  height: 12px;
+  border: 1px solid #111;
+  border-radius: 999px;
+  background: #fff;
+}
+input[type='range']::-moz-range-progress {
+  height: 12px;
+  border: 1px solid #111;
+  border-radius: 999px;
+  background: #111;
+}
+input[type='range']::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  background: center / contain no-repeat url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,4 61,36 96,36 67,56 78,91 50,70 22,91 33,56 4,36 39,36' fill='%23ffd84d' stroke='%23111' stroke-width='6' stroke-linejoin='round'/></svg>");
+}
+
+
+.zoomable-image { cursor: zoom-in; }
+.image-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+}
+.image-modal.hidden { display: none; }
+.image-modal-img {
+  max-width: min(96vw, 1400px);
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  border: 1px solid #333;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+.image-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  font-size: 28px;
+  line-height: 1;
+  padding: 0;
+  border: 1px solid #333;
+  background: #fff;
+}
+.main-chart-crop {
+  width: 100%;
+  overflow: hidden;
+}
+.main-chart-crop .chart-main-img {
+  display: block;
+  width: 100%;
+  transform: translateY(-8%);
+  margin-bottom: -8%;
+}
+.alpha-pin-hint {
+  margin-top: 8px;
+  text-align: center;
+}
