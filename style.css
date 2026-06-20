@@ -92,3 +92,28 @@ ul { margin-top: 6px; padding-left: 22px; }
   .answer-details .chart-img { max-height: 40vh; object-fit: contain; }
   .chart-img { display: block; margin: 0 auto; }
 }
+
+
+/* Sphere control stability: reserve space for long target names so buttons do not jump. */
+.sky-layout aside .prompt {
+  min-height: 3.1em;
+  display: flex;
+  align-items: center;
+}
+
+
+/* FOV/magnitude slider + exact text input pair. */
+.slider-text-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 78px;
+  gap: 8px;
+  align-items: center;
+}
+.slider-text-row input {
+  width: 100%;
+  max-width: none;
+}
+.slider-text-row input[type="range"] {
+  padding-left: 0;
+  padding-right: 0;
+}
