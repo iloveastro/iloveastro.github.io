@@ -54,3 +54,41 @@ ul { margin-top: 6px; padding-left: 22px; }
 .sky-nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-width: 170px; margin: 8px 0 10px; }
 .sky-nav-grid button { min-height: 34px; padding: 4px 0; }
 #skyCentre { font-weight: 700; }
+
+
+/* Mobile quiz comfort: keep the answer area compact so the chart/photo sits higher. */
+.answer-details summary { cursor: pointer; font-weight: 700; }
+.answer-details[open] > summary { margin-bottom: 6px; }
+@media (min-width: 851px) {
+  .answer-details[open] > summary { display: none; }
+}
+@media (max-width: 850px) {
+  main { padding: 8px; }
+  .layout { grid-template-columns: 1fr; gap: 8px; }
+  .layout > aside {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 8px;
+    box-shadow: 0 1px 0 #ccc;
+  }
+  .layout > aside h2 { font-size: 18px; margin-bottom: 6px; }
+  .layout > aside label { margin: 5px 0 2px; }
+  .layout > aside .prompt { font-size: 16px; margin: 5px 0 6px; }
+  .layout > aside .answer-input { margin-top: 4px; }
+  .layout > aside .message { min-height: 0; margin: 4px 0; }
+  .layout > aside .controls { margin-top: 5px; }
+  .layout > aside .stats { margin-top: 6px; gap: 4px; }
+  .layout > aside .stat { padding: 2px 4px; font-size: 12px; }
+  .layout > aside .stat strong { font-size: 14px; }
+  .layout > .panel { padding: 6px; }
+  .last-card { margin-top: 6px; padding-top: 6px; }
+  .answer-details:not([open]) { border-top: 1px solid #ddd; padding-top: 6px; }
+  .answer-details[open] {
+    max-height: 45vh;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .answer-details .chart-img { max-height: 40vh; object-fit: contain; }
+  .chart-img { display: block; margin: 0 auto; }
+}

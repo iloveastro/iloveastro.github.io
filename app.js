@@ -204,7 +204,13 @@
         el('button', { type: 'button', onclick: reveal }, [document.createTextNode('reveal')])
       ]));
       aside.append(el('div', { class: 'stats', html: formatScore(gameId) }));
-      if (state.last) aside.append(el('div', { class: 'last-card', html: state.last }));
+      if (state.last) {
+        const isMobile = window.matchMedia && window.matchMedia('(max-width: 850px)').matches;
+        const details = el('details', { class: 'last-card answer-details', ...(isMobile ? {} : { open: 'open' }) });
+        details.append(el('summary', {}, [document.createTextNode('answer info')]));
+        details.append(el('div', { class: 'answer-details-body', html: state.last }));
+        aside.append(details);
+      }
       const main = el('section', { class: 'panel', html: q.visual || '' });
       app.append(el('div', { class: 'layout' }, [aside, main]));
     }
@@ -1024,7 +1030,7 @@
     function submitGuess() {
       if (!state.target || !state.selectedVec || state.submitted) return;
       const angle = angularDeg(state.selectedVec, state.target.star.v);
-      const score = angle >= 45 ? 0 : Math.max(0, Math.min(5000, Math.round(5000 * (1 - Math.pow(angle / 45, 2.63)))));
+      const score = angle >= 45 ? 0 : Math.max(0, Math.min(5000, Math.round(5000 * (1 - angle / 45))));
       state.submitted = true;
       recordPointScore('alphapin', score);
       state.result = `score: ${score}/5000 · angle from α: ${angle.toFixed(1)}°`;
