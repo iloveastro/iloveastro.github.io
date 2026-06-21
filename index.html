@@ -17,6 +17,20 @@
         <button type="button" data-save-slot="2">save 2</button>
         <button type="button" data-save-slot="3">save 3</button>
         <hr>
+        <div class="small">defaults</div>
+        <label class="save-slider-label">default FOV
+          <div class="slider-text-row">
+            <input id="defaultFovSlider" type="range" min="20" max="190" step="5">
+            <input id="defaultFovInput" type="number" min="20" max="190" step="5">
+          </div>
+        </label>
+        <label class="save-slider-label">default magnitude
+          <div class="slider-text-row">
+            <input id="defaultMagSlider" type="range" min="4" max="6" step="0.1">
+            <input id="defaultMagInput" type="number" min="4" max="6" step="0.1">
+          </div>
+        </label>
+        <hr>
         <button id="resetProgress" type="button">clear current save</button>
         <button id="clearAllSaves" type="button">clear all saves</button>
       </div>

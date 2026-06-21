@@ -181,6 +181,30 @@
     return `<div class="stat"><strong>${p.seen}</strong>seen</div><div class="stat"><strong>${average}</strong>avg score</div><div class="stat"><strong>${p.bestScore || 0}</strong>best score</div>`;
   }
 
+  const DEFAULT_SETTINGS_KEY = 'iloveastroDefaultSkySettings';
+  function clampNumber(value, min, max, fallback) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(min, Math.min(max, n));
+  }
+  function loadDefaultSkySettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(DEFAULT_SETTINGS_KEY) || '{}') || {};
+      return {
+        fov: clampNumber(saved.fov, 20, 190, 140),
+        mag: clampNumber(saved.mag, 4, 6, 5.0)
+      };
+    } catch {
+      return { fov: 140, mag: 5.0 };
+    }
+  }
+  const defaultSkySettings = loadDefaultSkySettings();
+  function defaultFov() { return clampNumber(defaultSkySettings.fov, 20, 190, 140); }
+  function defaultMag() { return clampNumber(defaultSkySettings.mag, 4, 6, 5.0); }
+  function saveDefaultSkySettings() {
+    localStorage.setItem(DEFAULT_SETTINGS_KEY, JSON.stringify({ fov: defaultFov(), mag: defaultMag() }));
+  }
+
   const games = [
     { id: 'charts', title: 'Charts' },
     { id: 'skyguessr', title: 'SkyGuessr' },
@@ -274,6 +298,33 @@
       saveMenuButton.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
     saveMenu.querySelectorAll('[data-save-slot]').forEach(btn => btn.addEventListener('click', () => switchSave(btn.dataset.saveSlot)));
+
+    const fovSlider = $('#defaultFovSlider');
+    const fovInput = $('#defaultFovInput');
+    const magSlider = $('#defaultMagSlider');
+    const magInput = $('#defaultMagInput');
+    function syncDefaultControls() {
+      if (fovSlider) { fovSlider.value = defaultFov(); updateRangeVisual(fovSlider); }
+      if (fovInput) fovInput.value = defaultFov();
+      if (magSlider) { magSlider.value = defaultMag().toFixed(1); updateRangeVisual(magSlider); }
+      if (magInput) magInput.value = defaultMag().toFixed(1);
+    }
+    function setDefaultFov(value) {
+      defaultSkySettings.fov = Math.round(clampNumber(value, 20, 190, 140) / 5) * 5;
+      saveDefaultSkySettings();
+      syncDefaultControls();
+    }
+    function setDefaultMag(value) {
+      defaultSkySettings.mag = Math.round(clampNumber(value, 4, 6, 5.0) * 10) / 10;
+      saveDefaultSkySettings();
+      syncDefaultControls();
+    }
+    if (fovSlider) fovSlider.addEventListener('input', e => setDefaultFov(e.target.value));
+    if (fovInput) fovInput.addEventListener('input', e => setDefaultFov(e.target.value));
+    if (magSlider) magSlider.addEventListener('input', e => setDefaultMag(e.target.value));
+    if (magInput) magInput.addEventListener('input', e => setDefaultMag(e.target.value));
+    syncDefaultControls();
+
     $('#resetProgress').addEventListener('click', clearCurrentSave);
     $('#clearAllSaves').addEventListener('click', clearAllSaves);
     document.addEventListener('click', e => {
@@ -831,10 +882,46 @@
     return targets;
   }
 
+  function setupSphereFullscreen() {
+    const layout = document.querySelector('.sky-layout');
+    const panel = layout ? layout.querySelector('.sky-panel') : null;
+    if (!layout || !panel) return;
+    const button = el('button', { type: 'button', class: 'sphere-fullscreen-button', title: 'toggle full screen' }, [document.createTextNode('⛶')]);
+    panel.append(button);
+    function isFull() {
+      return document.fullscreenElement === layout || layout.classList.contains('sphere-fullscreen');
+    }
+    function update() {
+      button.textContent = isFull() ? '×' : '⛶';
+      button.title = isFull() ? 'minimise' : 'full screen';
+    }
+    button.addEventListener('click', async () => {
+      if (isFull()) {
+        layout.classList.remove('sphere-fullscreen');
+        if (document.fullscreenElement) {
+          try { await document.exitFullscreen(); } catch {}
+        }
+        update();
+        return;
+      }
+      layout.classList.add('sphere-fullscreen');
+      update();
+      if (layout.requestFullscreen) {
+        try { await layout.requestFullscreen(); } catch {}
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement !== layout) layout.classList.remove('sphere-fullscreen');
+      update();
+    }, { once: true });
+    update();
+  }
+
   function renderSkyGuessr() {
-    const state = states.skyguessr || (states.skyguessr = { loaded: false, loading: false, error: '', fov: 140, magLimit: 5.0, autoMag: false, target: null, answered: false, message: '', score: scoreKey('skyguessr'), orient: null });
+    const state = states.skyguessr || (states.skyguessr = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), autoMag: false, target: null, answered: false, message: '', score: scoreKey('skyguessr'), orient: null });
     app.innerHTML = `<h2>SkyGuessr</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyCanvas" width="900" height="900" tabindex="0" aria-label="celestial sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="skyFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="skyFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="skyAutoMag" type="checkbox" ${state.autoMag !== false ? "checked" : ""}><span>adaptive star density</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="skyMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="skyMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="sky movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="skyCentre">X</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="skyRollCCW">↺ rotate</button><button type="button" id="skyRollCW">rotate ↻</button></div><input id="skyAnswer" autocomplete="off" placeholder="constellation at the X"><div class="controls"><button type="button" id="skyReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="skyNew" class="new-round-button">new location</button></div><div id="skyMsg" class="message">${esc(state.message || '')}</div><div class="stats">${formatScore('skyguessr')}</div></aside></div>`;
     initRangeVisuals(app);
+    setupSphereFullscreen();
     const canvas = $('#skyCanvas'), ctx = canvas.getContext('2d');
     function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { focusCanvas(); } }
     const answer = $('#skyAnswer');
@@ -1051,7 +1138,8 @@
     }
     function newTarget() {
       if (!skyStars.length) return;
-      state.fov = 140;
+      state.fov = defaultFov();
+      state.magLimit = defaultMag();
       state.target = randomSkyTarget();
       randomViewAroundTarget(false);
       state.answered = false; state.message = ''; answer.value = ''; renderSkyGuessr();
@@ -1073,8 +1161,8 @@
       }
     });
     setShiftEnterAction(newTarget);
-    fovInput.addEventListener('input', e => setFov(parseFloat(e.target.value) || 100));
-    fovSlider.addEventListener('input', e => setFov(parseFloat(e.target.value) || 100));
+    fovInput.addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
+    fovSlider.addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
     function turnOffAutoMag() {
       if (state.autoMag !== false) {
         state.autoMag = false;
@@ -1083,7 +1171,7 @@
     }
     function setSkyMag(v) {
       turnOffAutoMag();
-      state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || 5.0));
+      state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || defaultMag()));
       const value = Number(state.magLimit.toFixed(1));
       $('#skyMag').value = value;
       $('#skyMagSlider').value = value;
@@ -1097,7 +1185,7 @@
     $('#skyMagSlider').addEventListener('input', e => setSkyMag(e.target.value));
     $('#skyNew').addEventListener('click', newTarget);
     $('#skyReveal').addEventListener('click', reveal);
-    $('#skyCentre').addEventListener('click', () => { setFov(140); centreOnTarget(true); focusCanvas(); });
+    $('#skyCentre').addEventListener('click', () => { setFov(defaultFov()); centreOnTarget(true); focusCanvas(); });
     $('#skyRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#skyRollCW').addEventListener('click', () => rollFrame(1));
     document.querySelectorAll('[data-move]').forEach(btn => btn.addEventListener('click', () => {
@@ -1173,9 +1261,10 @@
 
 
   function renderAlphaPin() {
-    const state = states.alphapin || (states.alphapin = { loaded: false, loading: false, error: '', fov: 140, magLimit: 5.0, target: null, selectedVec: null, result: '', submitted: false, orient: null });
+    const state = states.alphapin || (states.alphapin = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), target: null, selectedVec: null, result: '', submitted: false, orient: null });
     app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find&nbsp;<strong>${esc(state.target ? state.target.constellation : '...')}</strong>.</div><label>FOV degrees<div class="slider-text-row"><input id="alphaFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="alphaMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">○</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaZoomIn">zoom in</button><button type="button" id="alphaZoomOut">zoom out</button></div><div class="controls new-round-controls"><button type="button" id="alphaNew" class="new-round-button">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div><div class="small alpha-pin-hint">(pin the alpha star)</div></aside></div>`;
     initRangeVisuals(app);
+    setupSphereFullscreen();
     const canvas = $('#alphaCanvas'), ctx = canvas.getContext('2d');
     function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { focusCanvas(); } }
     const fovInput = $('#alphaFov');
@@ -1346,7 +1435,8 @@
       state.selectedVec = null;
       state.submitted = false;
       state.result = '';
-      state.fov = 140;
+      state.fov = defaultFov();
+      state.magLimit = defaultMag();
       randomOrientation();
       renderAlphaPin();
     }
@@ -1367,15 +1457,15 @@
     }
 
     function setAlphaMag(v) {
-      state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || 5.0));
+      state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || defaultMag()));
       const value = Number(state.magLimit.toFixed(1));
       $('#alphaMag').value = value;
       $('#alphaMagSlider').value = value;
       updateRangeVisual($('#alphaMagSlider'));
       draw();
     }
-    $('#alphaFov').addEventListener('input', e => setFov(parseFloat(e.target.value) || 140));
-    $('#alphaFovSlider').addEventListener('input', e => setFov(parseFloat(e.target.value) || 140));
+    $('#alphaFov').addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
+    $('#alphaFovSlider').addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
     $('#alphaMag').addEventListener('input', e => setAlphaMag(e.target.value));
     $('#alphaMagSlider').addEventListener('input', e => setAlphaMag(e.target.value));
     $('#alphaSubmit').addEventListener('click', submitGuess);
@@ -1383,7 +1473,7 @@
     $('#alphaZoomOut').addEventListener('click', () => zoomAlpha(10));
     $('#alphaNew').addEventListener('click', newTarget);
     setShiftEnterAction(newTarget);
-    $('#alphaCentre').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(140); focusCanvas(); });
+    $('#alphaCentre').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(defaultFov()); focusCanvas(); });
     $('#alphaRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#alphaRollCW').addEventListener('click', () => rollFrame(1));
     document.querySelectorAll('[data-amove]').forEach(btn => btn.addEventListener('click', () => {
@@ -1466,9 +1556,10 @@
   }
 
   function renderSkyRegions() {
-    const state = states.skyregions || (states.skyregions = { loaded: false, loading: false, error: '', fov: 140, message: '', selected: '', showBoundaries: true, showStars: true, magLimit: 5.0, orient: null });
+    const state = states.skyregions || (states.skyregions = { loaded: false, loading: false, error: '', fov: defaultFov(), message: '', selected: '', showBoundaries: true, showStars: true, magLimit: defaultMag(), orient: null });
     app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="regionFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}><span>boundaries</span></label><label class="checkline"><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}><span>stars</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="regionMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label>Search constellation<input id="regionSearch" list="regionSearchList" autocomplete="off" placeholder="full constellation name"></label><datalist id="regionSearchList">${DATA.constellations.map(c => `<option value="${esc(c.name)}"></option>`).join('')}</datalist><div class="controls"><button type="button" id="regionSearchBtn">search</button></div><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
     initRangeVisuals(app);
+    setupSphereFullscreen();
     const canvas = $('#regionCanvas'), ctx = canvas.getContext('2d');
     function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { focusCanvas(); } }
     const fovInput = $('#regionFov');
@@ -1587,7 +1678,7 @@
       state.selected = name;
       state.message = regionMessage(name, v);
       $('#regionMsg').innerHTML = state.message;
-      setFov(140);
+      setFov(defaultFov());
       focusCanvas();
       return true;
     }
@@ -1687,22 +1778,22 @@
     }
 
     function setRegionMag(v) {
-      state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || 5.0));
+      state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || defaultMag()));
       const value = Number(state.magLimit.toFixed(1));
       $('#regionMag').value = value;
       $('#regionMagSlider').value = value;
       updateRangeVisual($('#regionMagSlider'));
       draw();
     }
-    fovInput.addEventListener('input', e => setFov(parseFloat(e.target.value) || 140));
-    fovSlider.addEventListener('input', e => setFov(parseFloat(e.target.value) || 140));
+    fovInput.addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
+    fovSlider.addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
     boundsInput.addEventListener('change', e => { state.showBoundaries = e.target.checked; draw(); });
     $('#regionStars').addEventListener('change', e => { state.showStars = e.target.checked; draw(); });
     $('#regionMag').addEventListener('input', e => setRegionMag(e.target.value));
     $('#regionMagSlider').addEventListener('input', e => setRegionMag(e.target.value));
     $('#regionSearchBtn').addEventListener('click', runRegionSearch);
     $('#regionSearch').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runRegionSearch(); } });
-    $('#regionReset').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(140); focusCanvas(); });
+    $('#regionReset').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(defaultFov()); focusCanvas(); });
     $('#regionRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#regionRollCW').addEventListener('click', () => rollFrame(1));
     $('#regionClear').addEventListener('click', () => { state.selected = ''; state.message = ''; $('#regionMsg').innerHTML = ''; draw(); focusCanvas(); });

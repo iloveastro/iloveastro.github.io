@@ -341,3 +341,89 @@ input[type='range']::-moz-range-thumb {
   border-top: 1px solid #ddd;
   margin: 8px 0;
 }
+
+
+.save-menu-panel {
+  max-height: min(86vh, 560px);
+  overflow: auto;
+}
+.save-slider-label {
+  display: block;
+  width: 230px;
+  max-width: 70vw;
+  margin: 6px 0;
+}
+.save-slider-label .slider-text-row {
+  grid-template-columns: minmax(110px, 1fr) 64px;
+}
+
+.sky-panel {
+  position: relative;
+}
+.sphere-fullscreen-button {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 30;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  background: rgba(255,255,255,0.92);
+}
+.sky-layout.sphere-fullscreen,
+.sky-layout:fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 12px;
+  align-items: stretch;
+  padding: 10px;
+  background: white;
+  overflow: hidden;
+}
+.sky-layout.sphere-fullscreen .sky-panel,
+.sky-layout:fullscreen .sky-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.sky-layout.sphere-fullscreen aside,
+.sky-layout:fullscreen aside {
+  max-height: calc(100vh - 20px);
+  overflow: auto;
+}
+.sky-layout.sphere-fullscreen #skyCanvas,
+.sky-layout.sphere-fullscreen #alphaCanvas,
+.sky-layout.sphere-fullscreen #regionCanvas,
+.sky-layout:fullscreen #skyCanvas,
+.sky-layout:fullscreen #alphaCanvas,
+.sky-layout:fullscreen #regionCanvas {
+  width: min(calc(100vw - 380px), calc(100vh - 24px));
+  max-width: none;
+  height: auto;
+}
+@media (max-width: 850px) {
+  .sky-layout.sphere-fullscreen,
+  .sky-layout:fullscreen {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    overflow: auto;
+  }
+  .sky-layout.sphere-fullscreen #skyCanvas,
+  .sky-layout.sphere-fullscreen #alphaCanvas,
+  .sky-layout.sphere-fullscreen #regionCanvas,
+  .sky-layout:fullscreen #skyCanvas,
+  .sky-layout:fullscreen #alphaCanvas,
+  .sky-layout:fullscreen #regionCanvas {
+    width: min(100%, calc(100vh - 220px));
+  }
+  .sky-layout.sphere-fullscreen aside,
+  .sky-layout:fullscreen aside {
+    max-height: 210px;
+  }
+}
