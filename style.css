@@ -266,3 +266,9 @@ input[type='range']::-moz-range-thumb {
 @media (max-width: 850px) {
   .sky-race-layout { grid-template-columns: 1fr; }
 }
+
+
+.sky-race-task {
+  font-size: 18px;
+  margin: 4px 0 10px;
+}

@@ -1618,9 +1618,9 @@
         state.done = true;
         const actual = state.route.length - 1;
         const optimal = Math.max(1, state.optimalPath.length - 1);
-        const score = actual <= optimal ? 100 : actual >= 2 * optimal ? 0 : Math.max(0, Math.min(100, Math.round(100 * (2 * optimal - actual) / optimal)));
+        const score = Math.max(0, Math.min(100, 100 - 20 * Math.max(0, actual - optimal)));
         recordPointScore('skyrace', score);
-        state.message = `done: ${actual} clicks · optimal: ${optimal} clicks · score: ${score}/100`;
+        state.message = `done: ${actual} clicks · optimal: ${optimal} clicks · score: ${score}/100<br>optimal path: ${state.optimalPath.map(esc).join(' → ')}`;
       }
       draw();
     }
@@ -1628,7 +1628,7 @@
       if (!state.current) { newRace(); return; }
       const ns = neighbours(state.current);
       const routeText = state.route.map(esc).join(' → ');
-      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="small">Like WikiRace, but through neighbouring constellations.</p><p><strong>start:</strong> ${esc(state.start)}</p><p><strong>target:</strong> ${esc(state.target)}</p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p><div class="message">${esc(state.message)}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Neighbours</h3><div id="skyRaceNeighbours" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-neighbour="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
+      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Neighbours</h3><div id="skyRaceNeighbours" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-neighbour="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
       $('#skyRaceNew').addEventListener('click', newRace);
       document.querySelectorAll('[data-race-neighbour]').forEach(btn => btn.addEventListener('click', () => jump(btn.dataset.raceNeighbour)));
     }
