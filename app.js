@@ -119,14 +119,7 @@
   function answerMatches(input, answers) {
     const n = norm(input), c = compact(input);
     if (!n) return false;
-    const exact = answers.some(a => norm(a) === n || compact(a) === c);
-    if (exact) return true;
-    if (c.length < 4 || /\d/.test(c)) return false;
-    if (strictAnswers.has(c)) return false; // e.g. lepus must not count as lupus.
-    return answers.some(a => {
-      const ac = compact(a);
-      return ac.length >= 4 && !/\d/.test(ac) && oneSubstitutionTypo(c, ac);
-    });
+    return answers.some(a => norm(a) === n || compact(a) === c);
   }
   const rand = arr => arr[Math.floor(Math.random() * arr.length)];
   const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
@@ -360,11 +353,11 @@
     app.innerHTML = '';
     const timeText = new Date(timerState.seconds * 1000).toISOString().slice(14, 19);
     const found = [...timerState.found].sort();
-    const input = el('input', { id: 'timerInput', autocomplete: 'off', placeholder: 'type constellation names; correct names mark automatically' });
+    const input = el('input', { id: 'timerInput', autocomplete: 'off', placeholder: 'type constellation names' });
     input.addEventListener('input', () => timerCheck(input));
     app.append(el('section', { class: 'panel' }, [
       el('h2', {}, [document.createTextNode('88 Timer')]),
-      el('p', { html: `<strong id="timerClock">${timeText}</strong> ${found.length}/88` }),
+      el('p', { html: `<strong id="timerClock">${timeText}</strong> <span id="timerProgress">${found.length}/88</span>` }),
       el('div', { class: 'controls' }, [el('button', { type: 'button', onclick: timerStart }, [document.createTextNode('start / restart')]), el('button', { type: 'button', onclick: timerStop }, [document.createTextNode('stop')])]),
       input,
       el('div', { id: 'timerMsg', class: 'message' }),
@@ -377,25 +370,35 @@
   function timerStart() { clearInterval(timerState.interval); timerState.running = true; timerState.seconds = 0; timerState.found = new Set(); timerState.interval = setInterval(timerTick, 1000); renderTimer(); }
   function timerStop() { clearInterval(timerState.interval); timerState.running = false; const msg = $('#timerMsg'); if (msg) msg.textContent = `stopped at ${timerState.found.size}/88`; }
   function findConstellationInput(raw) {
-    const n = norm(raw), c = compact(raw);
+    const n = norm(raw);
     if (!n) return null;
-    const exact = DATA.constellations.find(x => norm(x.name) === n || (x.name === 'Boötes' && n === 'bootes'));
-    if (exact) return exact;
-    if (c.length < 4 || /\d/.test(c) || strictAnswers.has(c)) return null;
-    return DATA.constellations.find(x => oneSubstitutionTypo(c, compact(x.name)) || (x.name === 'Boötes' && oneSubstitutionTypo(c, 'bootes')));
+    return DATA.constellations.find(x => norm(x.name) === n) || null;
+  }
+  function updateTimerDisplay() {
+    const found = [...timerState.found].sort();
+    const progress = $('#timerProgress');
+    const list = $('#foundList');
+    if (progress) progress.textContent = `${found.length}/88`;
+    if (list) list.innerHTML = found.map(n => `<span class="pill">${esc(n)}</span>`).join('');
   }
   function timerCheck(input) {
     const raw = input.value, n = norm(raw);
     const hit = findConstellationInput(raw);
     if (!hit) return;
-    const exactShort = norm(hit.name) === n || (hit.name === 'Boötes' && n === 'bootes');
     const longer = DATA.constellations.some(c => !timerState.found.has(c.name) && norm(c.name).startsWith(n) && norm(c.name) !== n);
     const forced = /[,;\s]$/.test(raw);
-    if (exactShort && longer && !forced) return;
-    if (timerState.found.has(hit.name)) { input.value = ''; return; }
-    timerState.found.add(hit.name); input.value = '';
-    if (timerState.found.size === 88) { clearInterval(timerState.interval); timerState.running = false; record('timer', true); }
-    renderTimer();
+    if (longer && !forced) return;
+    input.value = '';
+    if (timerState.found.has(hit.name)) return;
+    timerState.found.add(hit.name);
+    updateTimerDisplay();
+    if (timerState.found.size === 88) {
+      clearInterval(timerState.interval);
+      timerState.running = false;
+      record('timer', true);
+      const msg = $('#timerMsg');
+      if (msg) msg.textContent = 'complete';
+    }
   }
 
   function renderAtlas() {
@@ -1668,7 +1671,8 @@
   }
 
   function renderTables() {
-    const state = states.tables || (states.tables = { mode: 'constellations' });
+    const state = states.tables || (states.tables = { mode: 'constellations', sort: {} });
+    if (!state.sort) state.sort = {};
     const tableModes = [
       { id: 'constellations', label: 'constellations' },
       { id: 'stars', label: 'stars' },
@@ -1677,18 +1681,79 @@
     ];
     app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableWrap" class="table-wrap"></div>`;
     const search = $('#tableSearch'), wrap = $('#tableWrap');
-    function table(headers, rows) {
-      const q = norm(search.value);
-      const filtered = rows.filter(r => !q || norm(r.join(' ')).includes(q));
-      wrap.innerHTML = `<table><thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${filtered.map(r => `<tr>${r.map(x => `<td>${esc(x || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+
+    function naturalCompare(a, b) {
+      return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
     }
+    function dsoCodeParts(value) {
+      const m = String(value || '').match(/^([A-Za-z]+)\s*0*(\d+)?(.*)$/);
+      if (!m) return { prefix: String(value || ''), number: Infinity, rest: '' };
+      return { prefix: m[1].toUpperCase(), number: m[2] ? parseInt(m[2], 10) : Infinity, rest: m[3] || '' };
+    }
+    function dsoCodeCompare(a, b) {
+      const x = dsoCodeParts(a), y = dsoCodeParts(b);
+      return naturalCompare(x.prefix, y.prefix) || (x.number - y.number) || naturalCompare(x.rest, y.rest);
+    }
+    function compareValues(a, b, kind) {
+      if (kind === 'dsoCode') return dsoCodeCompare(a, b);
+      return naturalCompare(a, b);
+    }
+
+    function table(columns, rows) {
+      const q = norm(search.value);
+      let filtered = rows.filter(r => !q || norm(r.join(' ')).includes(q));
+      const sort = state.sort[state.mode];
+      if (sort && columns[sort.index] && columns[sort.index].sortable) {
+        const col = columns[sort.index];
+        const dir = sort.dir === 'desc' ? -1 : 1;
+        filtered = filtered.slice().sort((a, b) => dir * compareValues(a[sort.index], b[sort.index], col.sortType));
+      }
+      wrap.innerHTML = `<table><thead><tr>${columns.map((col, i) => {
+        if (!col.sortable) return `<th>${esc(col.label)}</th>`;
+        const active = sort && sort.index === i;
+        const mark = active ? (sort.dir === 'desc' ? ' ↓' : ' ↑') : '';
+        return `<th><button type="button" class="table-sort ${active ? 'active' : ''}" data-sort-index="${i}">${esc(col.label)}${mark}</button></th>`;
+      }).join('')}</tr></thead><tbody>${filtered.map(r => `<tr>${r.map(x => `<td>${esc(x || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+      document.querySelectorAll('[data-sort-index]').forEach(btn => btn.addEventListener('click', () => {
+        const index = Number(btn.dataset.sortIndex);
+        const current = state.sort[state.mode];
+        state.sort[state.mode] = current && current.index === index && current.dir === 'asc' ? { index, dir: 'desc' } : { index, dir: 'asc' };
+        redraw();
+      }));
+    }
+
     function redraw() {
       document.querySelectorAll('[data-table-mode]').forEach(btn => btn.classList.toggle('active', btn.dataset.tableMode === state.mode));
-      if (state.mode === 'stars') table(['star', 'designation', 'constellation', 'note'], DATA.stars.map(s => [s.name, s.designation, s.constellation, s.note]));
-      else if (state.mode === 'dso') table(['code', 'common name', 'type', 'constellation'], DATA.dso.map(o => [o.code, o.commonName, o.type, o.constellation]));
-      else if (state.mode === 'asterisms') table(['asterism', 'constellations', 'member stars', 'description'], DATA.asterisms.map(a => [a.name, a.constellations.join(', '), (a.members || []).join(', '), a.clue]));
-      else table(['constellation', 'meaning', 'asterisms'], DATA.constellations.map(c => [c.name, DATA.constellationInfo[c.name].meaning, DATA.constellationInfo[c.name].asterisms.join(', ')]));
+      if (state.mode === 'stars') {
+        table([
+          { label: 'star', sortable: true },
+          { label: 'designation', sortable: true },
+          { label: 'constellation', sortable: true },
+          { label: 'note', sortable: false }
+        ], DATA.stars.map(s => [s.name, s.designation, s.constellation, s.note]));
+      } else if (state.mode === 'dso') {
+        table([
+          { label: 'code', sortable: true, sortType: 'dsoCode' },
+          { label: 'common name', sortable: true },
+          { label: 'type', sortable: true },
+          { label: 'constellation', sortable: true }
+        ], DATA.dso.map(o => [o.code, o.commonName, o.type, o.constellation]));
+      } else if (state.mode === 'asterisms') {
+        table([
+          { label: 'asterism', sortable: true },
+          { label: 'constellations', sortable: false },
+          { label: 'member stars', sortable: false },
+          { label: 'description', sortable: false }
+        ], DATA.asterisms.map(a => [a.name, a.constellations.join(', '), (a.members || []).join(', '), a.clue]));
+      } else {
+        table([
+          { label: 'constellation', sortable: true },
+          { label: 'meaning', sortable: false },
+          { label: 'asterisms', sortable: false }
+        ], DATA.constellations.map(c => [c.name, DATA.constellationInfo[c.name].meaning, DATA.constellationInfo[c.name].asterisms.join(', ')]));
+      }
     }
+
     document.querySelectorAll('[data-table-mode]').forEach(btn => btn.addEventListener('click', () => {
       state.mode = btn.dataset.tableMode;
       redraw();

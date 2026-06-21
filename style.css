@@ -287,3 +287,18 @@ input[type='range']::-moz-range-thumb {
 .atlas-page-nav button {
   min-width: 38px;
 }
+
+
+.table-sort {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+  font-weight: 700;
+}
+.table-sort:hover,
+.table-sort.active {
+  background: transparent;
+  text-decoration: underline;
+}
