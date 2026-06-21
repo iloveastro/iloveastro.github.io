@@ -1579,9 +1579,9 @@
       const path = skyRacePath(start, target);
       if (!path) continue;
       const clicks = path.length - 1;
-      if (clicks < 2) continue; // never start with neighbouring constellations as the goal.
+      if (clicks < 3) continue; // keep every round at least 3 optimal clicks.
       if (!fallback || clicks < fallback.path.length - 1) fallback = { start, target, path };
-      if (clicks <= 6) return { start, target, path };
+      if (clicks <= 7) return { start, target, path };
     }
     if (fallback) return fallback;
     const start = names[0];
