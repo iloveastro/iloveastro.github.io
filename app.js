@@ -349,15 +349,35 @@
   }
 
   let timerState = states.timer || (states.timer = { running: false, seconds: 0, interval: null, found: new Set(), next: () => {} });
+  function timerTimeText(seconds) {
+    const s = Math.max(0, Number(seconds) || 0);
+    const mm = String(Math.floor(s / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
+  }
+  function timerBestText() {
+    const p = scoreKey('timer');
+    return p.bestTime ? timerTimeText(p.bestTime) : '—';
+  }
+  function timerAutoStart(raw) {
+    if (timerState.running || timerState.found.size || !norm(raw)) return;
+    clearInterval(timerState.interval);
+    timerState.running = true;
+    timerState.seconds = 0;
+    timerState.interval = setInterval(timerTick, 1000);
+  }
   function renderTimer() {
     app.innerHTML = '';
-    const timeText = new Date(timerState.seconds * 1000).toISOString().slice(14, 19);
+    const timeText = timerTimeText(timerState.seconds);
     const found = [...timerState.found].sort();
     const input = el('input', { id: 'timerInput', autocomplete: 'off', placeholder: 'type constellation names' });
-    input.addEventListener('input', () => timerCheck(input));
+    input.addEventListener('input', () => {
+      timerAutoStart(input.value);
+      timerCheck(input);
+    });
     app.append(el('section', { class: 'panel' }, [
       el('h2', {}, [document.createTextNode('88 Timer')]),
-      el('p', { html: `<strong id="timerClock">${timeText}</strong> <span id="timerProgress">${found.length}/88</span>` }),
+      el('p', { html: `<strong id="timerClock">${timeText}</strong> <span id="timerProgress">${found.length}/88</span> · best: <strong id="timerBest">${timerBestText()}</strong>` }),
       el('div', { class: 'controls' }, [el('button', { type: 'button', onclick: timerStart }, [document.createTextNode('start / restart')]), el('button', { type: 'button', onclick: timerStop }, [document.createTextNode('stop')])]),
       input,
       el('div', { id: 'timerMsg', class: 'message' }),
@@ -366,7 +386,7 @@
 ]));
     setTimeout(() => $('#timerInput') && $('#timerInput').focus(), 0);
   }
-  function timerTick() { timerState.seconds++; const clock = $('#timerClock'); if (clock) clock.textContent = new Date(timerState.seconds * 1000).toISOString().slice(14, 19); }
+  function timerTick() { timerState.seconds++; const clock = $('#timerClock'); if (clock) clock.textContent = timerTimeText(timerState.seconds); }
   function timerStart() { clearInterval(timerState.interval); timerState.running = true; timerState.seconds = 0; timerState.found = new Set(); timerState.interval = setInterval(timerTick, 1000); renderTimer(); }
   function timerStop() { clearInterval(timerState.interval); timerState.running = false; const msg = $('#timerMsg'); if (msg) msg.textContent = `stopped at ${timerState.found.size}/88`; }
   function findConstellationInput(raw) {
@@ -395,7 +415,12 @@
     if (timerState.found.size === 88) {
       clearInterval(timerState.interval);
       timerState.running = false;
+      const p = scoreKey('timer');
+      if (!p.bestTime || timerState.seconds < p.bestTime) p.bestTime = timerState.seconds;
       record('timer', true);
+      saveProgress();
+      const best = $('#timerBest');
+      if (best) best.textContent = timerBestText();
       const msg = $('#timerMsg');
       if (msg) msg.textContent = 'complete';
     }
@@ -1682,7 +1707,14 @@
     app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableWrap" class="table-wrap"></div>`;
     const search = $('#tableSearch'), wrap = $('#tableWrap');
 
+    function alphaSortGroup(value) {
+      const s = String(value || '').trim();
+      if (!s) return 2;
+      return /^[A-Za-zÀ-ÖØ-öø-ÿ]/.test(s) ? 0 : 1;
+    }
     function naturalCompare(a, b) {
+      const ga = alphaSortGroup(a), gb = alphaSortGroup(b);
+      if (ga !== gb) return ga - gb;
       return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
     }
     function dsoCodeParts(value) {
