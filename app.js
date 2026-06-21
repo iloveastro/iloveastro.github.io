@@ -223,6 +223,7 @@
   const app = $('#app');
   const tabs = $('#tabs');
   const states = {};
+  let sphereFullscreenActive = false;
   let activeShiftEnterHandler = null;
   function setShiftEnterAction(action) {
     if (activeShiftEnterHandler) document.removeEventListener('keydown', activeShiftEnterHandler);
@@ -888,32 +889,15 @@
     if (!layout || !panel) return;
     const button = el('button', { type: 'button', class: 'sphere-fullscreen-button', title: 'toggle full screen' }, [document.createTextNode('⛶')]);
     panel.append(button);
-    function isFull() {
-      return document.fullscreenElement === layout || layout.classList.contains('sphere-fullscreen');
-    }
     function update() {
-      button.textContent = isFull() ? '×' : '⛶';
-      button.title = isFull() ? 'minimise' : 'full screen';
+      layout.classList.toggle('sphere-fullscreen', sphereFullscreenActive);
+      button.textContent = sphereFullscreenActive ? '×' : '⛶';
+      button.title = sphereFullscreenActive ? 'minimise' : 'full screen';
     }
-    button.addEventListener('click', async () => {
-      if (isFull()) {
-        layout.classList.remove('sphere-fullscreen');
-        if (document.fullscreenElement) {
-          try { await document.exitFullscreen(); } catch {}
-        }
-        update();
-        return;
-      }
-      layout.classList.add('sphere-fullscreen');
+    button.addEventListener('click', () => {
+      sphereFullscreenActive = !sphereFullscreenActive;
       update();
-      if (layout.requestFullscreen) {
-        try { await layout.requestFullscreen(); } catch {}
-      }
     });
-    document.addEventListener('fullscreenchange', () => {
-      if (document.fullscreenElement !== layout) layout.classList.remove('sphere-fullscreen');
-      update();
-    }, { once: true });
     update();
   }
 
