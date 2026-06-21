@@ -175,13 +175,12 @@
     { id: 'charts', title: 'Charts' },
     { id: 'skyguessr', title: 'SkyGuessr' },
     { id: 'skyregions', title: 'Regions' },
+    { id: 'skyrace', title: 'SkyRace' },
     { id: 'alphapin', title: 'Find Constellation' },
     { id: 'neighbours', title: 'Neighbours' },
     { id: 'stars', title: 'Stars' },
-    { id: 'stargroups', title: 'Star groups' },
     { id: 'asterisms', title: 'Asterisms' },
     { id: 'dso', title: 'DSOs' },
-    { id: 'dsogroups', title: 'DSO groups' },
     { id: 'timer', title: '88 timer' },
     { id: 'atlas', title: 'Atlas' },
     { id: 'tables', title: 'Tables' }
@@ -290,9 +289,11 @@
     { id: 'starToConstellation', label: 'star -> constellation' },
     { id: 'designationToStar', label: 'designation -> star' },
     { id: 'starToDesignation', label: 'star -> designation' },
-    { id: 'constellationToStar', label: 'constellation -> any listed star' }
+    { id: 'constellationToStar', label: 'constellation -> any listed star' },
+    { id: 'groupToConstellation', label: 'star group -> constellation' }
   ];
   function starQuestion(mode) {
+    if (mode === 'groupToConstellation') return starGroupQuestion();
     const s = rand(DATA.stars);
     if (mode === 'designationToStar') return { prompt: `Which named star has designation <strong>${esc(s.designation)}</strong>?`, answers: [s.name], card: () => `<h3>${esc(s.name)}</h3><p>${esc(s.designation)}. ${esc(s.constellation)}. ${esc(s.note)}.</p>${infoCard(s.constellation)}` };
     if (mode === 'starToDesignation') return { prompt: `What is the designation of <strong>${esc(s.name)}</strong>?`, answers: [s.designation], card: () => `<h3>${esc(s.name)}</h3><p>${esc(s.designation)}. ${esc(s.constellation)}. ${esc(s.note)}.</p>${infoCard(s.constellation)}` };
@@ -326,12 +327,14 @@
     { id: 'nameToCode', label: 'common name -> number' },
     { id: 'objectToConstellation', label: 'object -> constellation' },
     { id: 'constellationToObject', label: 'constellation -> any listed DSO' },
-    { id: 'objectToType', label: 'object -> type' }
+    { id: 'objectToType', label: 'object -> type' },
+    { id: 'groupToConstellation', label: 'DSO group -> constellation' }
   ];
   const namedDSO = DATA.dso.filter(o => o.commonName && o.commonName.trim());
   function dsoLabel(o) { return o.commonName ? `${o.code} - ${esc(o.commonName)}` : esc(o.code); }
   function dsoAnswers(o) { return [o.code, o.commonName].filter(Boolean); }
   function dsoQuestion(mode) {
+    if (mode === 'groupToConstellation') return dsoGroupQuestion();
     if (mode === 'nameToCode') { const o = rand(namedDSO); return { prompt: `What catalogue number is <strong>${esc(o.commonName)}</strong>?`, answers: [o.code], card: () => `<h3>${dsoLabel(o)}</h3><p>${esc(o.type)}. ${esc(o.constellation)}.</p>${infoCard(o.constellation)}` }; }
     if (mode === 'objectToConstellation') { const o = rand(DATA.dso); return { prompt: `Which constellation contains <strong>${dsoLabel(o)}</strong>?`, answers: [o.constellation], card: () => `<h3>${dsoLabel(o)}</h3><p>${esc(o.type)}. ${esc(o.constellation)}.</p>${infoCard(o.constellation)}` }; }
     if (mode === 'constellationToObject') {
@@ -1533,6 +1536,105 @@
     draw(); setTimeout(() => canvas.focus(), 0);
   }
 
+
+  function skyRaceGraph() {
+    const names = new Set(DATA.constellations.map(c => c.name));
+    const graph = new Map([...names].map(name => [name, new Set()]));
+    DATA.constellations.forEach(c => {
+      const info = DATA.constellationInfo[c.name] || {};
+      (info.neighbours || []).forEach(n => {
+        if (!names.has(n) || n === c.name) return;
+        graph.get(c.name).add(n);
+        graph.get(n).add(c.name);
+      });
+    });
+    return graph;
+  }
+  const SKY_RACE_GRAPH = skyRaceGraph();
+
+  function skyRacePath(start, target) {
+    if (start === target) return [start];
+    const queue = [[start]];
+    const seen = new Set([start]);
+    while (queue.length) {
+      const path = queue.shift();
+      const here = path[path.length - 1];
+      for (const next of (SKY_RACE_GRAPH.get(here) || [])) {
+        if (seen.has(next)) continue;
+        const newer = [...path, next];
+        if (next === target) return newer;
+        seen.add(next);
+        queue.push(newer);
+      }
+    }
+    return null;
+  }
+
+  function skyRacePair() {
+    const names = [...SKY_RACE_GRAPH.entries()].filter(([, ns]) => ns.size).map(([name]) => name);
+    let fallback = null;
+    for (let i = 0; i < 1000; i++) {
+      const start = rand(names), target = rand(names);
+      if (start === target) continue;
+      const path = skyRacePath(start, target);
+      if (!path) continue;
+      const clicks = path.length - 1;
+      if (clicks < 2) continue; // never start with neighbouring constellations as the goal.
+      if (!fallback || clicks < fallback.path.length - 1) fallback = { start, target, path };
+      if (clicks <= 6) return { start, target, path };
+    }
+    if (fallback) return fallback;
+    const start = names[0];
+    const target = names.find(n => n !== start && !(SKY_RACE_GRAPH.get(start) || new Set()).has(n)) || names[1];
+    return { start, target, path: skyRacePath(start, target) || [start, target] };
+  }
+
+  function renderSkyRace() {
+    const state = states.skyrace || (states.skyrace = { start: '', target: '', current: '', route: [], optimalPath: [], done: false, message: '' });
+    function newRace() {
+      const pair = skyRacePair();
+      state.start = pair.start;
+      state.target = pair.target;
+      state.current = pair.start;
+      state.route = [pair.start];
+      state.optimalPath = pair.path;
+      state.done = false;
+      state.message = '';
+      draw();
+    }
+    function neighbours(name) {
+      return [...(SKY_RACE_GRAPH.get(name) || [])].sort((a, b) => a.localeCompare(b));
+    }
+    function currentChart() {
+      const chart = chartByName.get(state.current);
+      if (!chart) return `<p>No chart available for ${esc(state.current)}.</p>`;
+      return chartImg(chart, true, 'chart-img sky-race-chart', `${state.current} labelled chart`);
+    }
+    function jump(next) {
+      if (state.done || !neighbours(state.current).includes(next)) return;
+      state.current = next;
+      state.route.push(next);
+      if (next === state.target) {
+        state.done = true;
+        const actual = state.route.length - 1;
+        const optimal = Math.max(1, state.optimalPath.length - 1);
+        const score = actual <= optimal ? 100 : actual >= 2 * optimal ? 0 : Math.max(0, Math.min(100, Math.round(100 * (2 * optimal - actual) / optimal)));
+        recordPointScore('skyrace', score);
+        state.message = `done: ${actual} clicks · optimal: ${optimal} clicks · score: ${score}/100`;
+      }
+      draw();
+    }
+    function draw() {
+      if (!state.current) { newRace(); return; }
+      const ns = neighbours(state.current);
+      const routeText = state.route.map(esc).join(' → ');
+      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="small">Like WikiRace, but through neighbouring constellations.</p><p><strong>start:</strong> ${esc(state.start)}</p><p><strong>target:</strong> ${esc(state.target)}</p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p><div class="message">${esc(state.message)}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Neighbours</h3><div id="skyRaceNeighbours" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-neighbour="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
+      $('#skyRaceNew').addEventListener('click', newRace);
+      document.querySelectorAll('[data-race-neighbour]').forEach(btn => btn.addEventListener('click', () => jump(btn.dataset.raceNeighbour)));
+    }
+    draw();
+  }
+
   function renderTables() {
     app.innerHTML = '<h2>Tables</h2><select id="tableMode"><option value="constellations">constellations</option><option value="stars">stars</option><option value="dso">Messier + Caldwell</option><option value="asterisms">asterisms</option></select><input id="tableSearch" placeholder="search"><div id="tableWrap" class="table-wrap"></div>';
     const mode = $('#tableMode'), search = $('#tableSearch'), wrap = $('#tableWrap');
@@ -1554,13 +1656,12 @@
     if (activeGame === 'charts') makeQuestionGame('charts', 'Charts', { make: chartQuestion });
     else if (activeGame === 'skyguessr') renderSkyGuessr();
     else if (activeGame === 'skyregions') renderSkyRegions();
+    else if (activeGame === 'skyrace') renderSkyRace();
     else if (activeGame === 'alphapin') renderAlphaPin();
     else if (activeGame === 'neighbours') makeQuestionGame('neighbours', 'Neighbours', { make: neighbourQuestion });
     else if (activeGame === 'stars') makeQuestionGame('stars', 'Stars', { modes: starModes, defaultMode: 'starToConstellation', make: starQuestion });
-    else if (activeGame === 'stargroups') makeQuestionGame('stargroups', 'Star groups', { make: starGroupQuestion });
     else if (activeGame === 'asterisms') makeQuestionGame('asterisms', 'Asterisms', { modes: asterismModes, defaultMode: 'clueToName', make: asterismQuestion });
     else if (activeGame === 'dso') makeQuestionGame('dso', 'Messier + Caldwell', { modes: dsoModes, defaultMode: 'codeToName', make: dsoQuestion });
-    else if (activeGame === 'dsogroups') makeQuestionGame('dsogroups', 'DSO groups', { make: dsoGroupQuestion });
     else if (activeGame === 'timer') renderTimer();
     else if (activeGame === 'atlas') renderAtlas();
     else if (activeGame === 'tables') renderTables();
