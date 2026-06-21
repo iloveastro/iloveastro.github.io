@@ -1602,7 +1602,7 @@
       state.message = '';
       draw();
     }
-    function neighbours(name) {
+    function borderingConstellations(name) {
       return [...(SKY_RACE_GRAPH.get(name) || [])].sort((a, b) => a.localeCompare(b));
     }
     function currentChart() {
@@ -1611,7 +1611,7 @@
       return chartImg(chart, true, 'chart-img sky-race-chart', `${state.current} labelled chart`);
     }
     function jump(next) {
-      if (state.done || !neighbours(state.current).includes(next)) return;
+      if (state.done || !borderingConstellations(state.current).includes(next)) return;
       state.current = next;
       state.route.push(next);
       if (next === state.target) {
@@ -1626,11 +1626,11 @@
     }
     function draw() {
       if (!state.current) { newRace(); return; }
-      const ns = neighbours(state.current);
+      const ns = borderingConstellations(state.current);
       const routeText = state.route.map(esc).join(' → ');
-      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Neighbours</h3><div id="skyRaceNeighbours" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-neighbour="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
+      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p><h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
       $('#skyRaceNew').addEventListener('click', newRace);
-      document.querySelectorAll('[data-race-neighbour]').forEach(btn => btn.addEventListener('click', () => jump(btn.dataset.raceNeighbour)));
+      document.querySelectorAll('[data-race-border]').forEach(btn => btn.addEventListener('click', () => jump(btn.dataset.raceBorder)));
     }
     draw();
   }
