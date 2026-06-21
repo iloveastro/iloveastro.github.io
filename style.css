@@ -313,3 +313,31 @@ input[type='range']::-moz-range-thumb {
 .table-options .checkline {
   margin: 0;
 }
+
+
+.save-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+.save-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  min-width: 170px;
+  padding: 8px;
+  border: 1px solid #333;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.save-menu-panel button {
+  display: block;
+  width: 100%;
+  margin: 4px 0;
+  text-align: left;
+}
+.save-menu-panel hr {
+  border: 0;
+  border-top: 1px solid #ddd;
+  margin: 8px 0;
+}

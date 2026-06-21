@@ -9,7 +9,18 @@
 <body>
   <header>
     <h1>iloveastro</h1>
-    <button id="resetProgress" type="button">reset</button>
+    <div class="save-menu">
+      <button id="saveMenuButton" type="button" aria-expanded="false" aria-controls="saveMenu">☰</button>
+      <div id="saveMenu" class="save-menu-panel" hidden>
+        <div class="small">scores</div>
+        <button type="button" data-save-slot="1">save 1</button>
+        <button type="button" data-save-slot="2">save 2</button>
+        <button type="button" data-save-slot="3">save 3</button>
+        <hr>
+        <button id="resetProgress" type="button">clear current save</button>
+        <button id="clearAllSaves" type="button">clear all saves</button>
+      </div>
+    </div>
   </header>
   <nav id="tabs" aria-label="games"></nav>
   <main id="app"></main>

@@ -135,8 +135,25 @@
   DATA.charts.forEach(c => { if (!chartsByName.has(c.name)) chartsByName.set(c.name, []); chartsByName.get(c.name).push(c); });
   const chartByName = new Map();
   DATA.charts.forEach(c => { if (!chartByName.has(c.name)) chartByName.set(c.name, c); });
-  const progress = JSON.parse(localStorage.getItem('iloveastroProgress') || '{}');
-  function saveProgress() { localStorage.setItem('iloveastroProgress', JSON.stringify(progress)); }
+  const SAVE_SLOTS = ['1', '2', '3'];
+  const LEGACY_PROGRESS_KEY = 'iloveastroProgress';
+  const ACTIVE_SAVE_KEY = 'iloveastroActiveSave';
+  const saveSlotKey = slot => `iloveastroProgress.save${slot}`;
+  let activeSave = SAVE_SLOTS.includes(localStorage.getItem(ACTIVE_SAVE_KEY)) ? localStorage.getItem(ACTIVE_SAVE_KEY) : '1';
+
+  function loadProgress(slot = activeSave) {
+    const key = saveSlotKey(slot);
+    if (slot === '1' && !localStorage.getItem(key) && localStorage.getItem(LEGACY_PROGRESS_KEY)) {
+      localStorage.setItem(key, localStorage.getItem(LEGACY_PROGRESS_KEY));
+    }
+    try {
+      return JSON.parse(localStorage.getItem(key) || '{}') || {};
+    } catch {
+      return {};
+    }
+  }
+  let progress = loadProgress(activeSave);
+  function saveProgress() { localStorage.setItem(saveSlotKey(activeSave), JSON.stringify(progress)); }
   function scoreKey(game) { if (!progress[game]) progress[game] = { seen: 0, correct: 0 }; return progress[game]; }
   function record(game, ok) { const p = scoreKey(game); p.seen++; if (ok) p.correct++; saveProgress(); }
   function formatScore(game) { const p = scoreKey(game); const acc = p.seen ? Math.round(100 * p.correct / p.seen) : 0; return `<div class="stat"><strong>${p.seen}</strong>seen</div><div class="stat"><strong>${p.correct}</strong>correct</div><div class="stat"><strong>${acc}%</strong>accuracy</div>`; }
@@ -182,21 +199,88 @@
   const app = $('#app');
   const tabs = $('#tabs');
   const states = {};
+  let activeShiftEnterHandler = null;
+  function setShiftEnterAction(action) {
+    if (activeShiftEnterHandler) document.removeEventListener('keydown', activeShiftEnterHandler);
+    activeShiftEnterHandler = null;
+    if (!action) return;
+    activeShiftEnterHandler = e => {
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        action();
+      }
+    };
+    document.addEventListener('keydown', activeShiftEnterHandler);
+  }
 
   function setupTabs() {
     tabs.innerHTML = '';
     games.forEach(g => tabs.append(el('button', { type: 'button', class: g.id === activeGame ? 'active' : '', onclick: () => switchGame(g.id) }, [document.createTextNode(g.title)])));
   }
   function switchGame(id) { activeGame = id; setupTabs(); render(); }
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.shiftKey) {
-      const s = states[activeGame];
-      if (s && s.next) { e.preventDefault(); s.next(); }
-    }
-  });
-  $('#resetProgress').addEventListener('click', () => {
-    if (confirm('Reset saved scores?')) { Object.keys(progress).forEach(k => delete progress[k]); saveProgress(); render(); }
-  });
+
+  function setupSaveMenu() {
+    const button = $('#saveMenuButton');
+    const menu = $('#saveMenu');
+    if (!button || !menu) return;
+    menu.querySelectorAll('[data-save-slot]').forEach(slotButton => {
+      const selected = slotButton.dataset.saveSlot === activeSave;
+      slotButton.classList.toggle('active', selected);
+      slotButton.textContent = `save ${slotButton.dataset.saveSlot}${selected ? ' ✓' : ''}`;
+    });
+  }
+  function closeSaveMenu() {
+    const button = $('#saveMenuButton');
+    const menu = $('#saveMenu');
+    if (!button || !menu) return;
+    menu.hidden = true;
+    button.setAttribute('aria-expanded', 'false');
+  }
+  function switchSave(slot) {
+    if (!SAVE_SLOTS.includes(slot) || slot === activeSave) return;
+    saveProgress();
+    activeSave = slot;
+    localStorage.setItem(ACTIVE_SAVE_KEY, activeSave);
+    progress = loadProgress(activeSave);
+    closeSaveMenu();
+    setupSaveMenu();
+    render();
+  }
+  function clearCurrentSave() {
+    if (!confirm(`Clear scores in save ${activeSave}?`)) return;
+    progress = {};
+    saveProgress();
+    closeSaveMenu();
+    setupSaveMenu();
+    render();
+  }
+  function clearAllSaves() {
+    if (!confirm('Clear all three saves?')) return;
+    SAVE_SLOTS.forEach(slot => localStorage.removeItem(saveSlotKey(slot)));
+    localStorage.removeItem(LEGACY_PROGRESS_KEY);
+    progress = {};
+    saveProgress();
+    closeSaveMenu();
+    setupSaveMenu();
+    render();
+  }
+
+  const saveMenuButton = $('#saveMenuButton');
+  const saveMenu = $('#saveMenu');
+  if (saveMenuButton && saveMenu) {
+    saveMenuButton.addEventListener('click', () => {
+      const open = saveMenu.hidden;
+      saveMenu.hidden = !open;
+      saveMenuButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    saveMenu.querySelectorAll('[data-save-slot]').forEach(btn => btn.addEventListener('click', () => switchSave(btn.dataset.saveSlot)));
+    $('#resetProgress').addEventListener('click', clearCurrentSave);
+    $('#clearAllSaves').addEventListener('click', clearAllSaves);
+    document.addEventListener('click', e => {
+      if (!saveMenu.hidden && !e.target.closest('.save-menu')) closeSaveMenu();
+    });
+    setupSaveMenu();
+  }
 
   function makeQuestionGame(gameId, title, options) {
     const state = states[gameId] || (states[gameId] = { current: null, answered: false, last: '', mode: options.defaultMode || '', next: () => newQuestion() });
@@ -237,7 +321,13 @@
       aside.append(el('div', { class: 'prompt', html: q.prompt }));
       const input = el('input', { id: `${gameId}Input`, class: 'answer-input', autocomplete: 'off', placeholder: q.placeholder || 'type answer' });
       input.addEventListener('input', () => correct(input.value));
-      input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault(); });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          newQuestion();
+        } else if (e.key === 'Enter') e.preventDefault();
+      });
       aside.append(input);
       aside.append(el('div', { class: 'message' }));
       aside.append(el('div', { class: 'controls' }, [
@@ -256,6 +346,7 @@
       enableAnswerImageZoom(app);
     }
     state.next = newQuestion;
+    setShiftEnterAction(newQuestion);
     if (!state.current) newQuestion(); else draw();
   }
 
@@ -402,6 +493,27 @@
     if (list) list.innerHTML = missing.length ? `<h3>missing</h3>${missing.map(n => `<span class="pill">${esc(n)}</span>`).join('')}` : '';
     focusTimerInput();
   }
+  function timerClear() {
+    clearInterval(timerState.interval);
+    timerState.running = false;
+    timerState.seconds = 0;
+    timerState.found = new Set();
+    timerState.hintName = null;
+    timerState.hintLength = 0;
+    const input = $('#timerInput');
+    const clock = $('#timerClock');
+    const progress = $('#timerProgress');
+    const foundList = $('#foundList');
+    const missingList = $('#missingList');
+    const msg = $('#timerMsg');
+    if (input) input.value = '';
+    if (clock) clock.textContent = timerTimeText(0);
+    if (progress) progress.textContent = '0/88';
+    if (foundList) foundList.innerHTML = '';
+    if (missingList) missingList.innerHTML = '';
+    if (msg) msg.textContent = '';
+    focusTimerInput();
+  }
   function renderTimer() {
     app.innerHTML = '';
     const timeText = timerTimeText(timerState.seconds);
@@ -411,6 +523,13 @@
       timerAutoStart(input.value);
       timerCheck(input);
     });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        timerAutoStart(input.value);
+        timerCheck(input);
+      }
+    });
     const keepFocus = e => e.preventDefault();
     app.append(el('section', { class: 'panel' }, [
       el('h2', {}, [document.createTextNode('88 Timer')]),
@@ -418,6 +537,7 @@
       el('div', { class: 'controls' }, [
         el('button', { type: 'button', onclick: timerStart }, [document.createTextNode('start / restart')]),
         el('button', { type: 'button', onclick: timerStop }, [document.createTextNode('stop')]),
+        el('button', { type: 'button', onclick: timerClear }, [document.createTextNode('clear')]),
         el('button', { type: 'button', onpointerdown: keepFocus, onclick: timerHint }, [document.createTextNode('hint')]),
         el('button', { type: 'button', onclick: timerGiveUp }, [document.createTextNode('give up')])
       ]),
@@ -931,6 +1051,14 @@
     }
 
     answer.addEventListener('input', () => solved(answer.value));
+    answer.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        newTarget();
+      }
+    });
+    setShiftEnterAction(newTarget);
     fovInput.addEventListener('input', e => setFov(parseFloat(e.target.value) || 100));
     fovSlider.addEventListener('input', e => setFov(parseFloat(e.target.value) || 100));
     function turnOffAutoMag() {
@@ -1234,6 +1362,7 @@
     $('#alphaZoomIn').addEventListener('click', () => zoomAlpha(-10));
     $('#alphaZoomOut').addEventListener('click', () => zoomAlpha(10));
     $('#alphaNew').addEventListener('click', newTarget);
+    setShiftEnterAction(newTarget);
     $('#alphaCentre').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(140); focusCanvas(); });
     $('#alphaRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#alphaRollCW').addEventListener('click', () => rollFrame(1));
@@ -1306,7 +1435,8 @@
       if (['ArrowRight','d','D'].includes(e.key)) { e.preventDefault(); move(step, 0); }
       if (['ArrowUp','w','W'].includes(e.key)) { e.preventDefault(); move(0, -step); }
       if (['ArrowDown','s','S'].includes(e.key)) { e.preventDefault(); move(0, step); }
-      if (e.key === 'Enter') { e.preventDefault(); submitGuess(); }
+      if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); e.stopPropagation(); newTarget(); }
+      else if (e.key === 'Enter') { e.preventDefault(); submitGuess(); }
     });
     if (!state.loaded && !state.loading) {
       state.loading = true;
@@ -1756,6 +1886,7 @@
       const splitNote = state.current === SERPENS_CAPUT || state.current === SERPENS_CAUDA ? '<p class="small">Serpens is treated as Caput and Cauda for border jumps.</p>' : '';
       app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p>${splitNote}<h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
       $('#skyRaceNew').addEventListener('click', newRace);
+      setShiftEnterAction(newRace);
       document.querySelectorAll('[data-race-border]').forEach(btn => btn.addEventListener('click', () => jump(btn.dataset.raceBorder)));
     }
     draw();
@@ -1890,6 +2021,7 @@
   }
 
   function render() {
+    setShiftEnterAction(null);
     if (activeGame === 'charts') makeQuestionGame('charts', 'Charts', { make: chartQuestion });
     else if (activeGame === 'skyguessr') renderSkyGuessr();
     else if (activeGame === 'skyregions') renderSkyRegions();
