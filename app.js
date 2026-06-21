@@ -174,12 +174,11 @@
   const games = [
     { id: 'charts', title: 'Charts' },
     { id: 'skyguessr', title: 'SkyGuessr' },
+    { id: 'skyrace', title: 'SkyRace' },
     { id: 'skyregions', title: 'Sky Map' },
-    { id: 'skyrace', title: 'Sky Route' },
     { id: 'alphapin', title: 'Find Constellation' },
     { id: 'neighbours', title: 'Neighbours' },
     { id: 'stars', title: 'Stars' },
-    { id: 'asterisms', title: 'Asterisms' },
     { id: 'dso', title: 'DSOs' },
     { id: 'timer', title: '88 Timer' },
     { id: 'atlas', title: 'Atlas' },
@@ -418,6 +417,8 @@
   }
   function renderConstellationPage(name) {
     const info = DATA.constellationInfo[name], charts = chartsByName.get(name) || [];
+    const relatedAsterisms = DATA.asterisms.filter(a => (a.constellations || []).includes(name));
+    const asterismRows = relatedAsterisms.length ? relatedAsterisms.map(a => `<tr><td>${esc(a.name)}</td><td>${(a.members || []).map(esc).join(', ') || '—'}</td><td>${esc(a.clue || '')}</td></tr>`).join('') : '<tr><td colspan="3">No listed asterism in the current catalogue.</td></tr>';
     const starRows = info.stars.length ? info.stars.map(s => `<tr><td>${esc(s.name)}</td><td>${esc(s.designation)}</td><td>${esc(s.note)}</td></tr>`).join('') : '<tr><td colspan="3">No star in the current curated named-star list.</td></tr>';
     const dsoRows = info.dsos.length ? info.dsos.map(o => `<tr><td>${esc(o.code)}</td><td>${esc(o.commonName)}</td><td>${esc(o.type)}</td></tr>`).join('') : '<tr><td colspan="3">No Messier/Caldwell object in the current list.</td></tr>';
     const chartHtml = charts.length ? charts.map((ch, i) => `<div class="chart-detail-box"><h3>${esc(ch.displayName || name)}${charts.length > 1 ? ` chart ${i + 1}` : ''}</h3>${chartImg(ch, true, 'chart-img detail-chart', `${ch.displayName || name} labelled chart`)}</div>`).join('') : '';
@@ -427,7 +428,7 @@
     const hereIndex = order.indexOf(name);
     const prevName = order[(hereIndex - 1 + order.length) % order.length];
     const nextName = order[(hereIndex + 1) % order.length];
-    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><p>${info.asterisms.length ? info.asterisms.map(esc).join(', ') : 'none listed yet'}</p>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table></section>`;
+    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table></section>`;
     $('#backAtlas').addEventListener('click', renderAtlas);
     $('#prevAtlas').addEventListener('click', () => renderConstellationPage(prevName));
     $('#nextAtlas').addEventListener('click', () => renderConstellationPage(nextName));
@@ -1659,7 +1660,7 @@
       const ns = borderingConstellations(state.current);
       const routeText = state.route.map(esc).join(' → ');
       const splitNote = state.current === SERPENS_CAPUT || state.current === SERPENS_CAUDA ? '<p class="small">Serpens is treated as Caput and Cauda for border jumps.</p>' : '';
-      app.innerHTML = `<h2>Sky Route</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p>${splitNote}<h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
+      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p>${splitNote}<h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
       $('#skyRaceNew').addEventListener('click', newRace);
       document.querySelectorAll('[data-race-border]').forEach(btn => btn.addEventListener('click', () => jump(btn.dataset.raceBorder)));
     }
@@ -1685,7 +1686,7 @@
       document.querySelectorAll('[data-table-mode]').forEach(btn => btn.classList.toggle('active', btn.dataset.tableMode === state.mode));
       if (state.mode === 'stars') table(['star', 'designation', 'constellation', 'note'], DATA.stars.map(s => [s.name, s.designation, s.constellation, s.note]));
       else if (state.mode === 'dso') table(['code', 'common name', 'type', 'constellation'], DATA.dso.map(o => [o.code, o.commonName, o.type, o.constellation]));
-      else if (state.mode === 'asterisms') table(['asterism', 'constellations', 'clue'], DATA.asterisms.map(a => [a.name, a.constellations.join(', '), a.clue]));
+      else if (state.mode === 'asterisms') table(['asterism', 'constellations', 'member stars', 'description'], DATA.asterisms.map(a => [a.name, a.constellations.join(', '), (a.members || []).join(', '), a.clue]));
       else table(['constellation', 'meaning', 'asterisms'], DATA.constellations.map(c => [c.name, DATA.constellationInfo[c.name].meaning, DATA.constellationInfo[c.name].asterisms.join(', ')]));
     }
     document.querySelectorAll('[data-table-mode]').forEach(btn => btn.addEventListener('click', () => {
@@ -1705,7 +1706,6 @@
     else if (activeGame === 'alphapin') renderAlphaPin();
     else if (activeGame === 'neighbours') makeQuestionGame('neighbours', 'Neighbours', { make: neighbourQuestion });
     else if (activeGame === 'stars') makeQuestionGame('stars', 'Stars', { modes: starModes, defaultMode: 'starToConstellation', make: starQuestion });
-    else if (activeGame === 'asterisms') makeQuestionGame('asterisms', 'Asterisms', { modes: asterismModes, defaultMode: 'clueToName', make: asterismQuestion });
     else if (activeGame === 'dso') makeQuestionGame('dso', 'DSOs', { modes: dsoModes, defaultMode: 'codeToName', make: dsoQuestion });
     else if (activeGame === 'timer') renderTimer();
     else if (activeGame === 'atlas') renderAtlas();
