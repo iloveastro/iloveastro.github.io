@@ -1869,37 +1869,90 @@
     return name === SERPENS_CAPUT || name === SERPENS_CAUDA ? 'Serpens' : name;
   }
 
-  function skyRaceGraph() {
+  function skyRaceEmptyGraph() {
     const names = new Set(DATA.constellations.map(c => c.name).filter(name => name !== 'Serpens'));
     names.add(SERPENS_CAPUT);
     names.add(SERPENS_CAUDA);
-
-    const graph = new Map([...names].map(name => [name, new Set()]));
-    const addEdge = (a, b) => {
-      if (!graph.has(a) || !graph.has(b) || a === b) return;
-      graph.get(a).add(b);
-      graph.get(b).add(a);
-    };
-
+    return new Map([...names].map(name => [name, new Set()]));
+  }
+  function skyRaceAddEdge(graph, a, b) {
+    if (!graph.has(a) || !graph.has(b) || a === b) return;
+    graph.get(a).add(b);
+    graph.get(b).add(a);
+  }
+  function skyRaceCoordKey(coord) {
+    const lon = Math.round(raToLon180(coord[0]) * 100000) / 100000;
+    const lat = Math.round(Number(coord[1]) * 100000) / 100000;
+    return `${lon},${lat}`;
+  }
+  function skyRaceSegmentKey(a, b) {
+    const ka = skyRaceCoordKey(a), kb = skyRaceCoordKey(b);
+    return ka < kb ? `${ka}|${kb}` : `${kb}|${ka}`;
+  }
+  function skyRaceFallbackGraph() {
+    const graph = skyRaceEmptyGraph();
     DATA.constellations.forEach(c => {
       if (c.name === 'Serpens') return;
       const info = DATA.constellationInfo[c.name] || {};
       (info.neighbours || []).forEach(n => {
-        if (n === 'Serpens') {
-          if (SERPENS_CAPUT_BORDERS.has(c.name)) addEdge(c.name, SERPENS_CAPUT);
-          if (SERPENS_CAUDA_BORDERS.has(c.name)) addEdge(c.name, SERPENS_CAUDA);
-          return;
-        }
-        if (!names.has(n) || n === c.name) return;
-        addEdge(c.name, n);
+        if (n === 'Serpens') return;
+        skyRaceAddEdge(graph, c.name, n);
+      });
+    });
+    SERPENS_CAPUT_BORDERS.forEach(n => skyRaceAddEdge(graph, SERPENS_CAPUT, n));
+    SERPENS_CAUDA_BORDERS.forEach(n => skyRaceAddEdge(graph, SERPENS_CAUDA, n));
+    return graph;
+  }
+  function skyRaceGraphFromBounds(features) {
+    const graph = skyRaceEmptyGraph();
+    const bySegment = new Map();
+
+    (features || []).forEach(feature => {
+      const name = feature.name;
+      if (!graph.has(name)) return;
+      feature.rings.forEach(poly => {
+        poly.forEach(ring => {
+          for (let i = 0; i < ring.length; i++) {
+            const a = ring[i], b = ring[(i + 1) % ring.length];
+            if (!a || !b || (a[0] === b[0] && a[1] === b[1])) continue;
+            const key = skyRaceSegmentKey(a, b);
+            if (!bySegment.has(key)) bySegment.set(key, new Set());
+            bySegment.get(key).add(name);
+          }
+        });
       });
     });
 
-    SERPENS_CAPUT_BORDERS.forEach(n => addEdge(SERPENS_CAPUT, n));
-    SERPENS_CAUDA_BORDERS.forEach(n => addEdge(SERPENS_CAUDA, n));
-    return graph;
+    bySegment.forEach(names => {
+      const arr = [...names].filter(name => graph.has(name));
+      for (let i = 0; i < arr.length; i++) {
+        for (let j = i + 1; j < arr.length; j++) skyRaceAddEdge(graph, arr[i], arr[j]);
+      }
+    });
+
+    SERPENS_CAPUT_BORDERS.forEach(n => skyRaceAddEdge(graph, SERPENS_CAPUT, n));
+    SERPENS_CAUDA_BORDERS.forEach(n => skyRaceAddEdge(graph, SERPENS_CAUDA, n));
+
+    const edgeCount = [...graph.values()].reduce((sum, ns) => sum + ns.size, 0) / 2;
+    return edgeCount > 150 ? graph : skyRaceFallbackGraph();
   }
-  const SKY_RACE_GRAPH = skyRaceGraph();
+  let SKY_RACE_GRAPH = null;
+  let skyRaceGraphPromise = null;
+  function ensureSkyRaceGraph() {
+    if (SKY_RACE_GRAPH) return Promise.resolve(SKY_RACE_GRAPH);
+    if (!skyRaceGraphPromise) {
+      skyRaceGraphPromise = loadConstellationBounds()
+        .then(features => {
+          SKY_RACE_GRAPH = skyRaceGraphFromBounds(features);
+          return SKY_RACE_GRAPH;
+        })
+        .catch(() => {
+          SKY_RACE_GRAPH = skyRaceFallbackGraph();
+          return SKY_RACE_GRAPH;
+        });
+    }
+    return skyRaceGraphPromise;
+  }
 
   function skyRacePath(start, target) {
     if (start === target) return [start];
@@ -1940,6 +1993,11 @@
 
   function renderSkyRace() {
     const state = states.skyrace || (states.skyrace = { start: '', target: '', current: '', route: [], optimalPath: [], done: false, message: '' });
+    if (!SKY_RACE_GRAPH) {
+      app.innerHTML = '<h2>SkyRace</h2><section class="panel"><p>loading borders...</p></section>';
+      ensureSkyRaceGraph().then(() => renderSkyRace());
+      return;
+    }
     function newRace() {
       const pair = skyRacePair();
       state.start = pair.start;
