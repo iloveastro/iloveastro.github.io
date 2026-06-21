@@ -535,8 +535,6 @@
       el('h2', {}, [document.createTextNode('88 Timer')]),
       el('p', { html: `<strong id="timerClock">${timeText}</strong> <span id="timerProgress">${found.length}/88</span> · best: <strong id="timerBest">${timerBestText()}</strong>` }),
       el('div', { class: 'controls' }, [
-        el('button', { type: 'button', onclick: timerStart }, [document.createTextNode('start / restart')]),
-        el('button', { type: 'button', onclick: timerStop }, [document.createTextNode('stop')]),
         el('button', { type: 'button', onclick: timerClear }, [document.createTextNode('clear')]),
         el('button', { type: 'button', onpointerdown: keepFocus, onclick: timerHint }, [document.createTextNode('hint')]),
         el('button', { type: 'button', onclick: timerGiveUp }, [document.createTextNode('give up')])
@@ -550,17 +548,6 @@
     setTimeout(() => $('#timerInput') && $('#timerInput').focus(), 0);
   }
   function timerTick() { timerState.seconds++; const clock = $('#timerClock'); if (clock) clock.textContent = timerTimeText(timerState.seconds); }
-  function timerStart() {
-    clearInterval(timerState.interval);
-    timerState.running = true;
-    timerState.seconds = 0;
-    timerState.found = new Set();
-    timerState.hintName = null;
-    timerState.hintLength = 0;
-    timerState.interval = setInterval(timerTick, 1000);
-    renderTimer();
-  }
-  function timerStop() { clearInterval(timerState.interval); timerState.running = false; const msg = $('#timerMsg'); if (msg) msg.textContent = `stopped at ${timerState.found.size}/88`; }
   function findConstellationInput(raw) {
     const n = norm(raw);
     if (!n) return null;
@@ -869,10 +856,20 @@
       if (mag && state.autoMag !== false) mag.value = value;
       if (slider && state.autoMag !== false) { slider.value = value; updateRangeVisual(slider); }
     }
-    function targetPool() {
-      const base = effectiveMag();
-      const limit = Math.min(5.0, Math.max(4.0, base + 0.2));
-      return skyStars.filter(s => s.mag <= limit && s.constellation);
+    function randomUnitVec() {
+      const z = Math.random() * 2 - 1;
+      const a = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.max(0, 1 - z * z));
+      return { x: r * Math.cos(a), y: r * Math.sin(a), z };
+    }
+    function randomSkyTarget() {
+      for (let i = 0; i < 80; i++) {
+        const v = randomUnitVec();
+        const constellation = officialConstellationAtVec(v);
+        if (constellation) return { v, constellation };
+      }
+      const fallback = rand(skyStars.filter(s => s.constellation));
+      return fallback ? { v: fallback.v, constellation: fallback.constellation } : null;
     }
     function makeBasisFromForward(forward) {
       const f = normVec(forward);
@@ -935,9 +932,8 @@
     }
     function ensureTarget() {
       if (!state.target && skyStars.length) {
-        const candidates = targetPool();
-        state.target = rand(candidates.length ? candidates : skyStars.filter(s => s.constellation));
-        centreOnTarget(false);
+        state.target = randomSkyTarget();
+        randomViewAroundTarget(false);
         state.answered = false;
       }
     }
@@ -999,14 +995,29 @@
       setOrientationForward(state.target.v);
       if (redraw) draw();
     }
-    function offsetFromTarget() {
-      if (!state.target) return;
-      setOrientationForward(state.target.v);
+    function randomRoll() {
       const b = ensureOrientation();
-      const yaw = (Math.random() - 0.5) * Math.min(18, state.fov * 0.22) * Math.PI / 180;
-      const pitch = (Math.random() - 0.5) * Math.min(12, state.fov * 0.15) * Math.PI / 180;
-      rotateBasis(b.up, yaw);
-      rotateBasis(ensureOrientation().right, pitch);
+      rotateBasis(b.f, Math.random() * Math.PI * 2);
+    }
+    function randomViewAroundTarget(redraw = true) {
+      if (!state.target) return;
+      const targetBasis = makeBasisFromForward(state.target.v);
+      const maxOffset = (state.fov * Math.PI / 180) * 0.46;
+      const offset = Math.sqrt(Math.random()) * maxOffset;
+      const angle = Math.random() * Math.PI * 2;
+      const side = {
+        x: targetBasis.right.x * Math.cos(angle) + targetBasis.up.x * Math.sin(angle),
+        y: targetBasis.right.y * Math.cos(angle) + targetBasis.up.y * Math.sin(angle),
+        z: targetBasis.right.z * Math.cos(angle) + targetBasis.up.z * Math.sin(angle)
+      };
+      const forward = normVec({
+        x: state.target.v.x * Math.cos(offset) + side.x * Math.sin(offset),
+        y: state.target.v.y * Math.cos(offset) + side.y * Math.sin(offset),
+        z: state.target.v.z * Math.cos(offset) + side.z * Math.sin(offset)
+      });
+      setOrientationForward(forward);
+      randomRoll();
+      if (redraw) draw();
     }
     function nearbyAnswers() {
       if (!state.target) return [];
@@ -1022,24 +1033,27 @@
     function solved(value) {
       if (!state.target || state.answered) return;
       const target = state.target.constellation;
+      const msg = $('#skyMsg');
       if (answerMatches(value, [target])) {
         state.answered = true;
         record('skyguessr', true);
         state.message = `correct: ${target}`;
-        $('#skyMsg').textContent = state.message;
+        if (msg) msg.textContent = state.message;
         return;
       }
       if (answerMatches(value, nearbyAnswers())) {
         state.message = 'close';
-        $('#skyMsg').textContent = state.message;
+        if (msg) msg.textContent = state.message;
+        return;
       }
+      state.message = '';
+      if (msg) msg.textContent = '';
     }
     function newTarget() {
       if (!skyStars.length) return;
-      const candidates = targetPool();
-      state.target = rand(candidates.length ? candidates : skyStars.filter(s => s.constellation));
-      offsetFromTarget();
       state.fov = 140;
+      state.target = randomSkyTarget();
+      randomViewAroundTarget(false);
       state.answered = false; state.message = ''; answer.value = ''; renderSkyGuessr();
     }
     function reveal() {
@@ -1145,7 +1159,13 @@
     });
     if (!state.loaded && !state.loading) {
       state.loading = true;
-      loadSkyData().then(() => { state.loaded = true; state.loading = false; ensureTarget(); draw(); answer.focus(); }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
+      Promise.all([loadSkyData(), loadConstellationBounds()]).then(() => {
+        state.loaded = true;
+        state.loading = false;
+        ensureTarget();
+        draw();
+        answer.focus();
+      }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
     }
     ensureTarget(); draw(); setTimeout(() => answer.focus(), 0);
   }
