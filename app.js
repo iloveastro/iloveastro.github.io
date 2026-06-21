@@ -174,14 +174,14 @@
   const games = [
     { id: 'charts', title: 'Charts' },
     { id: 'skyguessr', title: 'SkyGuessr' },
-    { id: 'skyregions', title: 'Regions' },
-    { id: 'skyrace', title: 'SkyRace' },
+    { id: 'skyregions', title: 'Sky Map' },
+    { id: 'skyrace', title: 'Sky Route' },
     { id: 'alphapin', title: 'Find Constellation' },
     { id: 'neighbours', title: 'Neighbours' },
     { id: 'stars', title: 'Stars' },
     { id: 'asterisms', title: 'Asterisms' },
     { id: 'dso', title: 'DSOs' },
-    { id: 'timer', title: '88 timer' },
+    { id: 'timer', title: '88 Timer' },
     { id: 'atlas', title: 'Atlas' },
     { id: 'tables', title: 'Tables' }
   ];
@@ -364,7 +364,7 @@
     const input = el('input', { id: 'timerInput', autocomplete: 'off', placeholder: 'type constellation names; correct names mark automatically' });
     input.addEventListener('input', () => timerCheck(input));
     app.append(el('section', { class: 'panel' }, [
-      el('h2', {}, [document.createTextNode('Name all 88 constellations')]),
+      el('h2', {}, [document.createTextNode('88 Timer')]),
       el('p', { html: `<strong id="timerClock">${timeText}</strong> ${found.length}/88` }),
       el('div', { class: 'controls' }, [el('button', { type: 'button', onclick: timerStart }, [document.createTextNode('start / restart')]), el('button', { type: 'button', onclick: timerStop }, [document.createTextNode('stop')])]),
       input,
@@ -424,9 +424,12 @@
     const atlasNotes = (info.atlasNotes || []).length ? `<h3>Sky picture</h3>${info.atlasNotes.map(x => `<p>${esc(x)}</p>`).join('')}` : '';
     const facts = (info.funFacts || []).filter(Boolean);
     const order = DATA.constellations.map(c => c.name);
-    const nextName = order[(order.indexOf(name) + 1) % order.length];
-    app.innerHTML = `<div class="controls"><button type="button" id="backAtlas">← atlas</button><button type="button" id="nextAtlas">next constellation →</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><p>${info.asterisms.length ? info.asterisms.map(esc).join(', ') : 'none listed yet'}</p>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table></section>`;
+    const hereIndex = order.indexOf(name);
+    const prevName = order[(hereIndex - 1 + order.length) % order.length];
+    const nextName = order[(hereIndex + 1) % order.length];
+    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><p>${info.asterisms.length ? info.asterisms.map(esc).join(', ') : 'none listed yet'}</p>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table></section>`;
     $('#backAtlas').addEventListener('click', renderAtlas);
+    $('#prevAtlas').addEventListener('click', () => renderConstellationPage(prevName));
     $('#nextAtlas').addEventListener('click', () => renderConstellationPage(nextName));
     document.querySelectorAll('[data-const]').forEach(b => b.addEventListener('click', () => renderConstellationPage(b.dataset.const)));
   }
@@ -1219,7 +1222,7 @@
 
   function renderSkyRegions() {
     const state = states.skyregions || (states.skyregions = { loaded: false, loading: false, error: '', fov: 140, message: '', selected: '', showBoundaries: true, showStars: true, magLimit: 5.0, orient: null });
-    app.innerHTML = `<h2>Constellation Regions</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="regionFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}><span>boundaries</span></label><label class="checkline"><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}><span>stars</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="regionMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label>Search constellation<input id="regionSearch" list="regionSearchList" autocomplete="off" placeholder="full constellation name"></label><datalist id="regionSearchList">${DATA.constellations.map(c => `<option value="${esc(c.name)}"></option>`).join('')}</datalist><div class="controls"><button type="button" id="regionSearchBtn">search</button></div><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="regionFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}><span>boundaries</span></label><label class="checkline"><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}><span>stars</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="regionMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label>Search constellation<input id="regionSearch" list="regionSearchList" autocomplete="off" placeholder="full constellation name"></label><datalist id="regionSearchList">${DATA.constellations.map(c => `<option value="${esc(c.name)}"></option>`).join('')}</datalist><div class="controls"><button type="button" id="regionSearchBtn">search</button></div><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
     initRangeVisuals(app);
     const canvas = $('#regionCanvas'), ctx = canvas.getContext('2d');
     function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { focusCanvas(); } }
@@ -1537,17 +1540,43 @@
   }
 
 
+  const SERPENS_CAPUT = 'Serpens Caput';
+  const SERPENS_CAUDA = 'Serpens Cauda';
+  const SERPENS_CAPUT_BORDERS = new Set(['Boötes', 'Corona Borealis', 'Hercules', 'Libra', 'Ophiuchus', 'Virgo']);
+  const SERPENS_CAUDA_BORDERS = new Set(['Aquila', 'Ophiuchus', 'Sagittarius', 'Scutum']);
+
+  function skyRaceBaseName(name) {
+    return name === SERPENS_CAPUT || name === SERPENS_CAUDA ? 'Serpens' : name;
+  }
+
   function skyRaceGraph() {
-    const names = new Set(DATA.constellations.map(c => c.name));
+    const names = new Set(DATA.constellations.map(c => c.name).filter(name => name !== 'Serpens'));
+    names.add(SERPENS_CAPUT);
+    names.add(SERPENS_CAUDA);
+
     const graph = new Map([...names].map(name => [name, new Set()]));
+    const addEdge = (a, b) => {
+      if (!graph.has(a) || !graph.has(b) || a === b) return;
+      graph.get(a).add(b);
+      graph.get(b).add(a);
+    };
+
     DATA.constellations.forEach(c => {
+      if (c.name === 'Serpens') return;
       const info = DATA.constellationInfo[c.name] || {};
       (info.neighbours || []).forEach(n => {
+        if (n === 'Serpens') {
+          if (SERPENS_CAPUT_BORDERS.has(c.name)) addEdge(c.name, SERPENS_CAPUT);
+          if (SERPENS_CAUDA_BORDERS.has(c.name)) addEdge(c.name, SERPENS_CAUDA);
+          return;
+        }
         if (!names.has(n) || n === c.name) return;
-        graph.get(c.name).add(n);
-        graph.get(n).add(c.name);
+        addEdge(c.name, n);
       });
     });
+
+    SERPENS_CAPUT_BORDERS.forEach(n => addEdge(SERPENS_CAPUT, n));
+    SERPENS_CAUDA_BORDERS.forEach(n => addEdge(SERPENS_CAUDA, n));
     return graph;
   }
   const SKY_RACE_GRAPH = skyRaceGraph();
@@ -1606,7 +1635,8 @@
       return [...(SKY_RACE_GRAPH.get(name) || [])].sort((a, b) => a.localeCompare(b));
     }
     function currentChart() {
-      const chart = chartByName.get(state.current);
+      const baseName = skyRaceBaseName(state.current);
+      const chart = chartByName.get(baseName);
       if (!chart) return `<p>No chart available for ${esc(state.current)}.</p>`;
       return chartImg(chart, true, 'chart-img sky-race-chart', `${state.current} labelled chart`);
     }
@@ -1628,7 +1658,8 @@
       if (!state.current) { newRace(); return; }
       const ns = borderingConstellations(state.current);
       const routeText = state.route.map(esc).join(' → ');
-      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p><h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
+      const splitNote = state.current === SERPENS_CAPUT || state.current === SERPENS_CAUDA ? '<p class="small">Serpens is treated as Caput and Cauda for border jumps.</p>' : '';
+      app.innerHTML = `<h2>Sky Route</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p>${splitNote}<h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
       $('#skyRaceNew').addEventListener('click', newRace);
       document.querySelectorAll('[data-race-border]').forEach(btn => btn.addEventListener('click', () => jump(btn.dataset.raceBorder)));
     }
@@ -1636,20 +1667,34 @@
   }
 
   function renderTables() {
-    app.innerHTML = '<h2>Tables</h2><select id="tableMode"><option value="constellations">constellations</option><option value="stars">stars</option><option value="dso">Messier + Caldwell</option><option value="asterisms">asterisms</option></select><input id="tableSearch" placeholder="search"><div id="tableWrap" class="table-wrap"></div>';
-    const mode = $('#tableMode'), search = $('#tableSearch'), wrap = $('#tableWrap');
+    const state = states.tables || (states.tables = { mode: 'constellations' });
+    const tableModes = [
+      { id: 'constellations', label: 'constellations' },
+      { id: 'stars', label: 'stars' },
+      { id: 'dso', label: 'DSOs' },
+      { id: 'asterisms', label: 'asterisms' }
+    ];
+    app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableWrap" class="table-wrap"></div>`;
+    const search = $('#tableSearch'), wrap = $('#tableWrap');
     function table(headers, rows) {
       const q = norm(search.value);
       const filtered = rows.filter(r => !q || norm(r.join(' ')).includes(q));
       wrap.innerHTML = `<table><thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${filtered.map(r => `<tr>${r.map(x => `<td>${esc(x || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     }
     function redraw() {
-      if (mode.value === 'stars') table(['star', 'designation', 'constellation', 'note'], DATA.stars.map(s => [s.name, s.designation, s.constellation, s.note]));
-      else if (mode.value === 'dso') table(['code', 'common name', 'type', 'constellation'], DATA.dso.map(o => [o.code, o.commonName, o.type, o.constellation]));
-      else if (mode.value === 'asterisms') table(['asterism', 'constellations', 'clue'], DATA.asterisms.map(a => [a.name, a.constellations.join(', '), a.clue]));
+      document.querySelectorAll('[data-table-mode]').forEach(btn => btn.classList.toggle('active', btn.dataset.tableMode === state.mode));
+      if (state.mode === 'stars') table(['star', 'designation', 'constellation', 'note'], DATA.stars.map(s => [s.name, s.designation, s.constellation, s.note]));
+      else if (state.mode === 'dso') table(['code', 'common name', 'type', 'constellation'], DATA.dso.map(o => [o.code, o.commonName, o.type, o.constellation]));
+      else if (state.mode === 'asterisms') table(['asterism', 'constellations', 'clue'], DATA.asterisms.map(a => [a.name, a.constellations.join(', '), a.clue]));
       else table(['constellation', 'meaning', 'asterisms'], DATA.constellations.map(c => [c.name, DATA.constellationInfo[c.name].meaning, DATA.constellationInfo[c.name].asterisms.join(', ')]));
     }
-    mode.addEventListener('change', redraw); search.addEventListener('input', redraw); redraw(); search.focus();
+    document.querySelectorAll('[data-table-mode]').forEach(btn => btn.addEventListener('click', () => {
+      state.mode = btn.dataset.tableMode;
+      redraw();
+    }));
+    search.addEventListener('input', redraw);
+    redraw();
+    search.focus();
   }
 
   function render() {
@@ -1661,7 +1706,7 @@
     else if (activeGame === 'neighbours') makeQuestionGame('neighbours', 'Neighbours', { make: neighbourQuestion });
     else if (activeGame === 'stars') makeQuestionGame('stars', 'Stars', { modes: starModes, defaultMode: 'starToConstellation', make: starQuestion });
     else if (activeGame === 'asterisms') makeQuestionGame('asterisms', 'Asterisms', { modes: asterismModes, defaultMode: 'clueToName', make: asterismQuestion });
-    else if (activeGame === 'dso') makeQuestionGame('dso', 'Messier + Caldwell', { modes: dsoModes, defaultMode: 'codeToName', make: dsoQuestion });
+    else if (activeGame === 'dso') makeQuestionGame('dso', 'DSOs', { modes: dsoModes, defaultMode: 'codeToName', make: dsoQuestion });
     else if (activeGame === 'timer') renderTimer();
     else if (activeGame === 'atlas') renderAtlas();
     else if (activeGame === 'tables') renderTables();

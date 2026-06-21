@@ -272,3 +272,18 @@ input[type='range']::-moz-range-thumb {
   font-size: 18px;
   margin: 4px 0 10px;
 }
+
+
+.table-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.table-tabs button.active {
+  background: #eee;
+  font-weight: 700;
+}
+.atlas-page-nav button {
+  min-width: 38px;
+}
