@@ -633,6 +633,7 @@
     app.innerHTML = `<h2>SkyGuessr</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyCanvas" width="900" height="900" tabindex="0" aria-label="celestial sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="skyFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="skyFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="skyAutoMag" type="checkbox" ${state.autoMag !== false ? "checked" : ""}><span>adaptive star density</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="skyMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="skyMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="sky movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="skyCentre">X</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="skyRollCCW">↺ rotate</button><button type="button" id="skyRollCW">rotate ↻</button></div><input id="skyAnswer" autocomplete="off" placeholder="constellation at the X"><div class="controls"><button type="button" id="skyReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="skyNew" class="new-round-button">new location</button></div><div id="skyMsg" class="message">${esc(state.message || '')}</div><div class="stats">${formatScore('skyguessr')}</div></aside></div>`;
     initRangeVisuals(app);
     const canvas = $('#skyCanvas'), ctx = canvas.getContext('2d');
+    function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { focusCanvas(); } }
     const answer = $('#skyAnswer');
     const fovInput = $('#skyFov');
     const fovSlider = $('#skyFovSlider');
@@ -769,13 +770,13 @@
     function moveButton(x, y) {
       const px = Math.min(canvas.width, canvas.height) * 0.05;
       move(x * px, y * px, 1);
-      canvas.focus();
+      focusCanvas();
     }
     function rollFrame(direction) {
       const b = ensureOrientation();
       rotateBasis(b.f, direction * 10 * Math.PI / 180);
       draw();
-      canvas.focus();
+      focusCanvas();
     }
     function centreOnTarget(redraw = true) {
       if (!state.target) return;
@@ -853,7 +854,7 @@
     $('#skyMagSlider').addEventListener('input', e => setSkyMag(e.target.value));
     $('#skyNew').addEventListener('click', newTarget);
     $('#skyReveal').addEventListener('click', reveal);
-    $('#skyCentre').addEventListener('click', () => { setFov(140); centreOnTarget(true); canvas.focus(); });
+    $('#skyCentre').addEventListener('click', () => { setFov(140); centreOnTarget(true); focusCanvas(); });
     $('#skyRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#skyRollCW').addEventListener('click', () => rollFrame(1));
     document.querySelectorAll('[data-move]').forEach(btn => btn.addEventListener('click', () => {
@@ -876,7 +877,7 @@
     canvas.addEventListener('pointerdown', e => {
       activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       canvas.setPointerCapture(e.pointerId);
-      canvas.focus();
+      focusCanvas();
       if (activePointers.size === 1) lastDrag = { x: e.clientX, y: e.clientY };
       if (activePointers.size >= 2) lastPinchDistance = pointerDistance();
     });
@@ -927,6 +928,7 @@
     app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find&nbsp;<strong>${esc(state.target ? state.target.constellation : '...')}</strong>.</div><label>FOV degrees<div class="slider-text-row"><input id="alphaFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="alphaMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">○</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaZoomIn">zoom in</button><button type="button" id="alphaZoomOut">zoom out</button></div><div class="controls new-round-controls"><button type="button" id="alphaNew" class="new-round-button">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div><div class="small alpha-pin-hint">(pin the alpha star)</div></aside></div>`;
     initRangeVisuals(app);
     const canvas = $('#alphaCanvas'), ctx = canvas.getContext('2d');
+    function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { focusCanvas(); } }
     const fovInput = $('#alphaFov');
     const fovSlider = $('#alphaFovSlider');
 
@@ -1080,13 +1082,13 @@
     function moveButton(x, y) {
       const px = Math.min(canvas.width, canvas.height) * 0.05;
       move(x * px, y * px, 1);
-      canvas.focus();
+      focusCanvas();
     }
     function rollFrame(direction) {
       const b = ensureOrientation();
       rotateBasis(b.f, direction * 10 * Math.PI / 180);
       draw();
-      canvas.focus();
+      focusCanvas();
     }
     function newTarget() {
       const targets = skyAlphaTargets();
@@ -1112,7 +1114,7 @@
     function zoomAlpha(delta) {
       if (state.selectedVec) state.orient = makeBasisFromForward(state.selectedVec);
       setFov(Math.max(20, Math.min(190, state.fov + delta)));
-      canvas.focus();
+      focusCanvas();
     }
 
     function setAlphaMag(v) {
@@ -1131,7 +1133,7 @@
     $('#alphaZoomIn').addEventListener('click', () => zoomAlpha(-10));
     $('#alphaZoomOut').addEventListener('click', () => zoomAlpha(10));
     $('#alphaNew').addEventListener('click', newTarget);
-    $('#alphaCentre').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(140); canvas.focus(); });
+    $('#alphaCentre').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(140); focusCanvas(); });
     $('#alphaRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#alphaRollCW').addEventListener('click', () => rollFrame(1));
     document.querySelectorAll('[data-amove]').forEach(btn => btn.addEventListener('click', () => {
@@ -1166,7 +1168,7 @@
     canvas.addEventListener('pointerdown', e => {
       activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       canvas.setPointerCapture(e.pointerId);
-      canvas.focus();
+      focusCanvas();
       totalDrag = 0;
       if (activePointers.size === 1) lastDrag = { x: e.clientX, y: e.clientY };
       if (activePointers.size >= 2) lastPinchDistance = pointerDistance();
@@ -1217,6 +1219,7 @@
     app.innerHTML = `<h2>Constellation Regions</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="regionFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}><span>boundaries</span></label><label class="checkline"><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}><span>stars</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="regionMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label>Search constellation<input id="regionSearch" list="regionSearchList" autocomplete="off" placeholder="full constellation name"></label><datalist id="regionSearchList">${DATA.constellations.map(c => `<option value="${esc(c.name)}"></option>`).join('')}</datalist><div class="controls"><button type="button" id="regionSearchBtn">search</button></div><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
     initRangeVisuals(app);
     const canvas = $('#regionCanvas'), ctx = canvas.getContext('2d');
+    function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { focusCanvas(); } }
     const fovInput = $('#regionFov');
     const fovSlider = $('#regionFovSlider');
     const boundsInput = $('#regionBounds');
@@ -1334,7 +1337,7 @@
       state.message = regionMessage(name, v);
       $('#regionMsg').innerHTML = state.message;
       setFov(140);
-      canvas.focus();
+      focusCanvas();
       return true;
     }
     function vecAtCanvasPoint(x, y) {
@@ -1423,13 +1426,13 @@
     function moveButton(x, y) {
       const px = Math.min(canvas.width, canvas.height) * 0.05;
       move(x * px, y * px, 1);
-      canvas.focus();
+      focusCanvas();
     }
     function rollFrame(direction) {
       const b = ensureOrientation();
       rotateBasis(b.f, direction * 10 * Math.PI / 180);
       draw();
-      canvas.focus();
+      focusCanvas();
     }
 
     function setRegionMag(v) {
@@ -1448,10 +1451,10 @@
     $('#regionMagSlider').addEventListener('input', e => setRegionMag(e.target.value));
     $('#regionSearchBtn').addEventListener('click', runRegionSearch);
     $('#regionSearch').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runRegionSearch(); } });
-    $('#regionReset').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(140); canvas.focus(); });
+    $('#regionReset').addEventListener('click', () => { state.orient = makeBasisFromForward(vecFromRaDec(0, 0)); setFov(140); focusCanvas(); });
     $('#regionRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#regionRollCW').addEventListener('click', () => rollFrame(1));
-    $('#regionClear').addEventListener('click', () => { state.selected = ''; state.message = ''; $('#regionMsg').innerHTML = ''; draw(); canvas.focus(); });
+    $('#regionClear').addEventListener('click', () => { state.selected = ''; state.message = ''; $('#regionMsg').innerHTML = ''; draw(); focusCanvas(); });
     document.querySelectorAll('[data-rmove]').forEach(btn => btn.addEventListener('click', () => {
       const [x, y] = btn.dataset.rmove.split(',').map(Number);
       moveButton(x, y);
@@ -1485,7 +1488,7 @@
     canvas.addEventListener('pointerdown', e => {
       activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       canvas.setPointerCapture(e.pointerId);
-      canvas.focus();
+      focusCanvas();
       totalDrag = 0;
       if (activePointers.size === 1) lastDrag = { x: e.clientX, y: e.clientY };
       if (activePointers.size >= 2) lastPinchDistance = pointerDistance();
@@ -1525,7 +1528,7 @@
     });
     if (!state.loaded && !state.loading) {
       state.loading = true;
-      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => { state.loaded = true; state.loading = false; draw(); canvas.focus(); }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => { state.loaded = true; state.loading = false; draw(); focusCanvas(); }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
     }
     draw(); setTimeout(() => canvas.focus(), 0);
   }
