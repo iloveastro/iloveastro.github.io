@@ -97,8 +97,6 @@ ul { margin-top: 6px; padding-left: 22px; }
 /* Sphere control stability: reserve space for long target names so buttons do not jump. */
 .sky-layout aside .prompt {
   min-height: 3.1em;
-  display: flex;
-  align-items: center;
 }
 
 
@@ -231,4 +229,20 @@ input[type='range']::-moz-range-thumb {
 .alpha-pin-hint {
   margin-top: 8px;
   text-align: center;
+}
+
+
+/* Make reset/new-round actions visually distinct from answer/zoom actions. */
+.new-round-controls {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #ddd;
+}
+.new-round-button {
+  border-style: double;
+  min-width: 150px;
+  background: #fafafa;
+}
+.new-round-button:hover {
+  background: #eee;
 }
