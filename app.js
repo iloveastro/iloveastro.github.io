@@ -348,7 +348,10 @@
     const q = rand(makers)(); q.prompt = `<span class="small">mixed</span><br>${q.prompt}`; return q;
   }
 
-  let timerState = states.timer || (states.timer = { running: false, seconds: 0, interval: null, found: new Set(), next: () => {} });
+  let timerState = states.timer || (states.timer = { running: false, seconds: 0, interval: null, found: new Set(), next: () => {}, hintName: null, hintLength: 0 });
+  if (!timerState.found) timerState.found = new Set();
+  if (!('hintName' in timerState)) timerState.hintName = null;
+  if (!('hintLength' in timerState)) timerState.hintLength = 0;
   function timerTimeText(seconds) {
     const s = Math.max(0, Number(seconds) || 0);
     const mm = String(Math.floor(s / 60)).padStart(2, '0');
@@ -359,12 +362,45 @@
     const p = scoreKey('timer');
     return p.bestTime ? timerTimeText(p.bestTime) : '—';
   }
+  function timerMissingNames() {
+    return DATA.constellations.map(c => c.name).filter(name => !timerState.found.has(name));
+  }
+  function focusTimerInput() {
+    const input = $('#timerInput');
+    if (!input) return;
+    try { input.focus({ preventScroll: true }); } catch { input.focus(); }
+  }
   function timerAutoStart(raw) {
     if (timerState.running || timerState.found.size || !norm(raw)) return;
     clearInterval(timerState.interval);
     timerState.running = true;
     timerState.seconds = 0;
     timerState.interval = setInterval(timerTick, 1000);
+  }
+  function timerHint() {
+    const input = $('#timerInput');
+    if (!input) return;
+    const missing = timerMissingNames();
+    if (!missing.length) return;
+    if (!timerState.hintName || timerState.found.has(timerState.hintName)) {
+      timerState.hintName = rand(missing);
+      timerState.hintLength = 0;
+    }
+    timerState.hintLength = Math.min(timerState.hintName.length, (timerState.hintLength || 0) + 1);
+    input.value = timerState.hintName.slice(0, timerState.hintLength);
+    focusTimerInput();
+  }
+  function timerGiveUp() {
+    clearInterval(timerState.interval);
+    timerState.running = false;
+    timerState.hintName = null;
+    timerState.hintLength = 0;
+    const missing = timerMissingNames();
+    const msg = $('#timerMsg');
+    const list = $('#missingList');
+    if (msg) msg.textContent = missing.length ? `missing: ${missing.length}` : 'complete';
+    if (list) list.innerHTML = missing.length ? `<h3>missing</h3>${missing.map(n => `<span class="pill">${esc(n)}</span>`).join('')}` : '';
+    focusTimerInput();
   }
   function renderTimer() {
     app.innerHTML = '';
@@ -375,19 +411,35 @@
       timerAutoStart(input.value);
       timerCheck(input);
     });
+    const keepFocus = e => e.preventDefault();
     app.append(el('section', { class: 'panel' }, [
       el('h2', {}, [document.createTextNode('88 Timer')]),
       el('p', { html: `<strong id="timerClock">${timeText}</strong> <span id="timerProgress">${found.length}/88</span> · best: <strong id="timerBest">${timerBestText()}</strong>` }),
-      el('div', { class: 'controls' }, [el('button', { type: 'button', onclick: timerStart }, [document.createTextNode('start / restart')]), el('button', { type: 'button', onclick: timerStop }, [document.createTextNode('stop')])]),
+      el('div', { class: 'controls' }, [
+        el('button', { type: 'button', onclick: timerStart }, [document.createTextNode('start / restart')]),
+        el('button', { type: 'button', onclick: timerStop }, [document.createTextNode('stop')]),
+        el('button', { type: 'button', onpointerdown: keepFocus, onclick: timerHint }, [document.createTextNode('hint')]),
+        el('button', { type: 'button', onclick: timerGiveUp }, [document.createTextNode('give up')])
+      ]),
       input,
       el('div', { id: 'timerMsg', class: 'message' }),
       el('h3', {}, [document.createTextNode('found')]),
       el('div', { id: 'foundList', html: found.map(n => `<span class="pill">${esc(n)}</span>`).join('') }),
+      el('div', { id: 'missingList' }),
 ]));
     setTimeout(() => $('#timerInput') && $('#timerInput').focus(), 0);
   }
   function timerTick() { timerState.seconds++; const clock = $('#timerClock'); if (clock) clock.textContent = timerTimeText(timerState.seconds); }
-  function timerStart() { clearInterval(timerState.interval); timerState.running = true; timerState.seconds = 0; timerState.found = new Set(); timerState.interval = setInterval(timerTick, 1000); renderTimer(); }
+  function timerStart() {
+    clearInterval(timerState.interval);
+    timerState.running = true;
+    timerState.seconds = 0;
+    timerState.found = new Set();
+    timerState.hintName = null;
+    timerState.hintLength = 0;
+    timerState.interval = setInterval(timerTick, 1000);
+    renderTimer();
+  }
   function timerStop() { clearInterval(timerState.interval); timerState.running = false; const msg = $('#timerMsg'); if (msg) msg.textContent = `stopped at ${timerState.found.size}/88`; }
   function findConstellationInput(raw) {
     const n = norm(raw);
@@ -405,12 +457,21 @@
     const raw = input.value, n = norm(raw);
     const hit = findConstellationInput(raw);
     if (!hit) return;
+
     const longer = DATA.constellations.some(c => !timerState.found.has(c.name) && norm(c.name).startsWith(n) && norm(c.name) !== n);
-    const forced = /[,;\s]$/.test(raw);
-    if (longer && !forced) return;
+
+    if (timerState.found.has(hit.name)) {
+      if (longer) return; // keep prefixes so longer names can be completed, e.g. Leo Minor or Triangulum Australe.
+      input.value = '';
+      return;
+    }
+
     input.value = '';
-    if (timerState.found.has(hit.name)) return;
     timerState.found.add(hit.name);
+    if (timerState.hintName === hit.name) {
+      timerState.hintName = null;
+      timerState.hintLength = 0;
+    }
     updateTimerDisplay();
     if (timerState.found.size === 88) {
       clearInterval(timerState.interval);
@@ -664,7 +725,7 @@
   }
 
   function renderSkyGuessr() {
-    const state = states.skyguessr || (states.skyguessr = { loaded: false, loading: false, error: '', fov: 140, magLimit: 5.0, autoMag: true, target: null, answered: false, message: '', score: scoreKey('skyguessr'), orient: null });
+    const state = states.skyguessr || (states.skyguessr = { loaded: false, loading: false, error: '', fov: 140, magLimit: 5.0, autoMag: false, target: null, answered: false, message: '', score: scoreKey('skyguessr'), orient: null });
     app.innerHTML = `<h2>SkyGuessr</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyCanvas" width="900" height="900" tabindex="0" aria-label="celestial sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="skyFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="skyFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="skyAutoMag" type="checkbox" ${state.autoMag !== false ? "checked" : ""}><span>adaptive star density</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="skyMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="skyMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="sky movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="skyCentre">X</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="skyRollCCW">↺ rotate</button><button type="button" id="skyRollCW">rotate ↻</button></div><input id="skyAnswer" autocomplete="off" placeholder="constellation at the X"><div class="controls"><button type="button" id="skyReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="skyNew" class="new-round-button">new location</button></div><div id="skyMsg" class="message">${esc(state.message || '')}</div><div class="stats">${formatScore('skyguessr')}</div></aside></div>`;
     initRangeVisuals(app);
     const canvas = $('#skyCanvas'), ctx = canvas.getContext('2d');
@@ -827,25 +888,31 @@
       rotateBasis(b.up, yaw);
       rotateBasis(ensureOrientation().right, pitch);
     }
-    function allowedAnswers() {
+    function nearbyAnswers() {
       if (!state.target) return [];
       const target = state.target.constellation;
       const centreLimit = Math.max(10, Math.min(18, state.fov * 0.16));
-      const allowed = new Set([target]);
+      const nearby = new Set();
       const targetVec = state.target.v;
-      skyConstCentres.forEach((v, name) => { if (name !== target && angularDeg(targetVec, v) <= centreLimit) allowed.add(name); });
+      skyConstCentres.forEach((v, name) => { if (name !== target && angularDeg(targetVec, v) <= centreLimit) nearby.add(name); });
       const chart = chartByName.get(target);
-      if (chart) (chart.neighbours || []).forEach(n => { const cv = skyConstCentres.get(n); if (cv && angularDeg(targetVec, cv) <= centreLimit + 5) allowed.add(n); });
-      return [...allowed];
+      if (chart) (chart.neighbours || []).forEach(n => { const cv = skyConstCentres.get(n); if (cv && angularDeg(targetVec, cv) <= centreLimit + 5) nearby.add(n); });
+      return [...nearby];
     }
     function solved(value) {
       if (!state.target || state.answered) return;
-      const allowed = allowedAnswers();
-      if (!answerMatches(value, allowed)) return;
-      state.answered = true;
-      record('skyguessr', true);
-      state.message = `correct: ${state.target.constellation}`;
-      $('#skyMsg').textContent = state.message;
+      const target = state.target.constellation;
+      if (answerMatches(value, [target])) {
+        state.answered = true;
+        record('skyguessr', true);
+        state.message = `correct: ${target}`;
+        $('#skyMsg').textContent = state.message;
+        return;
+      }
+      if (answerMatches(value, nearbyAnswers())) {
+        state.message = 'close';
+        $('#skyMsg').textContent = state.message;
+      }
     }
     function newTarget() {
       if (!skyStars.length) return;
@@ -857,10 +924,9 @@
     }
     function reveal() {
       if (!state.target || state.answered) return;
-      const allowed = allowedAnswers();
       state.answered = true;
       record('skyguessr', false);
-      state.message = `answer: ${state.target.constellation}${allowed.length > 1 ? ' / nearby accepted: ' + allowed.slice(1).join(', ') : ''}`;
+      state.message = `answer: ${state.target.constellation}`;
       $('#skyMsg').textContent = state.message;
     }
 
@@ -1696,16 +1762,17 @@
   }
 
   function renderTables() {
-    const state = states.tables || (states.tables = { mode: 'constellations', sort: {} });
+    const state = states.tables || (states.tables = { mode: 'constellations', sort: {}, dsoFilters: { messier: true, caldwell: true, unnamed: true } });
     if (!state.sort) state.sort = {};
+    if (!state.dsoFilters) state.dsoFilters = { messier: true, caldwell: true, unnamed: true };
     const tableModes = [
       { id: 'constellations', label: 'constellations' },
       { id: 'stars', label: 'stars' },
       { id: 'dso', label: 'DSOs' },
       { id: 'asterisms', label: 'asterisms' }
     ];
-    app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableWrap" class="table-wrap"></div>`;
-    const search = $('#tableSearch'), wrap = $('#tableWrap');
+    app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableOptions" class="table-options"></div><div id="tableWrap" class="table-wrap"></div>`;
+    const search = $('#tableSearch'), options = $('#tableOptions'), wrap = $('#tableWrap');
 
     function alphaSortGroup(value) {
       const s = String(value || '').trim();
@@ -1726,9 +1793,36 @@
       const x = dsoCodeParts(a), y = dsoCodeParts(b);
       return naturalCompare(x.prefix, y.prefix) || (x.number - y.number) || naturalCompare(x.rest, y.rest);
     }
-    function compareValues(a, b, kind) {
-      if (kind === 'dsoCode') return dsoCodeCompare(a, b);
-      return naturalCompare(a, b);
+    function compareValues(a, b, kind, dir = 'asc') {
+      if (kind === 'dsoCode') return (dir === 'desc' ? -1 : 1) * dsoCodeCompare(a, b);
+      const ga = alphaSortGroup(a), gb = alphaSortGroup(b);
+      if (ga !== gb) return ga - gb;
+      const base = String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+      return (dir === 'desc' ? -1 : 1) * base;
+    }
+    function dsoKind(code) {
+      const c = compact(code);
+      if (c.startsWith('m')) return 'messier';
+      if (c.startsWith('c') || c.startsWith('caldwell')) return 'caldwell';
+      return 'other';
+    }
+    function passesDsoFilters(o) {
+      const kind = dsoKind(o.code);
+      if (kind === 'messier' && !state.dsoFilters.messier) return false;
+      if (kind === 'caldwell' && !state.dsoFilters.caldwell) return false;
+      if (!String(o.commonName || '').trim() && !state.dsoFilters.unnamed) return false;
+      return true;
+    }
+    function renderTableOptions() {
+      if (state.mode !== 'dso') {
+        options.innerHTML = '';
+        return;
+      }
+      options.innerHTML = `<label class="checkline"><input type="checkbox" data-dso-filter="messier" ${state.dsoFilters.messier ? 'checked' : ''}><span>Messier</span></label><label class="checkline"><input type="checkbox" data-dso-filter="caldwell" ${state.dsoFilters.caldwell ? 'checked' : ''}><span>Caldwell</span></label><label class="checkline"><input type="checkbox" data-dso-filter="unnamed" ${state.dsoFilters.unnamed ? 'checked' : ''}><span>unnamed DSOs</span></label>`;
+      options.querySelectorAll('[data-dso-filter]').forEach(box => box.addEventListener('change', () => {
+        state.dsoFilters[box.dataset.dsoFilter] = box.checked;
+        redraw();
+      }));
     }
 
     function table(columns, rows) {
@@ -1737,8 +1831,7 @@
       const sort = state.sort[state.mode];
       if (sort && columns[sort.index] && columns[sort.index].sortable) {
         const col = columns[sort.index];
-        const dir = sort.dir === 'desc' ? -1 : 1;
-        filtered = filtered.slice().sort((a, b) => dir * compareValues(a[sort.index], b[sort.index], col.sortType));
+        filtered = filtered.slice().sort((a, b) => compareValues(a[sort.index], b[sort.index], col.sortType, sort.dir));
       }
       wrap.innerHTML = `<table><thead><tr>${columns.map((col, i) => {
         if (!col.sortable) return `<th>${esc(col.label)}</th>`;
@@ -1756,6 +1849,7 @@
 
     function redraw() {
       document.querySelectorAll('[data-table-mode]').forEach(btn => btn.classList.toggle('active', btn.dataset.tableMode === state.mode));
+      renderTableOptions();
       if (state.mode === 'stars') {
         table([
           { label: 'star', sortable: true },
@@ -1769,7 +1863,7 @@
           { label: 'common name', sortable: true },
           { label: 'type', sortable: true },
           { label: 'constellation', sortable: true }
-        ], DATA.dso.map(o => [o.code, o.commonName, o.type, o.constellation]));
+        ], DATA.dso.filter(passesDsoFilters).map(o => [o.code, o.commonName, o.type, o.constellation]));
       } else if (state.mode === 'asterisms') {
         table([
           { label: 'asterism', sortable: true },

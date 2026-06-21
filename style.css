@@ -302,3 +302,14 @@ input[type='range']::-moz-range-thumb {
   background: transparent;
   text-decoration: underline;
 }
+
+
+.table-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0;
+}
+.table-options .checkline {
+  margin: 0;
+}
