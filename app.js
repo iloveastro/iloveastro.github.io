@@ -1751,7 +1751,7 @@
       orient: null
     });
 
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="constellation, star, or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
 
     initRangeVisuals(app);
     setupSphereFullscreen();
@@ -1931,12 +1931,17 @@
       const hit = pickFromLayer(canvas._pickLayer, x, y);
       if (!hit) {
         state.message = '';
+        state.searchMarker = null;
         msg.textContent = '';
+        draw();
         return;
       }
 
+      const v = hit.type === 'dso' ? hit.dso.v : hit.star.v;
+      state.searchMarker = { v, payload: hit };
       state.message = hit.type === 'dso' ? dsoInfoHtml(hit.dso) : starInfoHtml(hit.star);
       msg.innerHTML = state.message;
+      draw();
     }
 
     function skySearchKey(value) {
@@ -1985,15 +1990,6 @@
       if (!query) return null;
       const candidates = [];
 
-      DATA.constellations.forEach(c => {
-        addSearchCandidate(candidates, query, [c.name, c.abbr, ...(c.aliases || [])], {
-          kind: 'constellation',
-          name: c.name,
-          v: skyConstCentres.get(c.name),
-          priority: 0
-        });
-      });
-
       skyStars.forEach(star => {
         addSearchCandidate(candidates, query, starSearchLabels(star), {
           kind: 'star',
@@ -2017,9 +2013,7 @@
     }
 
     function searchMessage(result) {
-      if (result.kind === 'star') return starInfoHtml(result.star);
-      if (result.kind === 'dso') return dsoInfoHtml(result.dso);
-      return `<strong>${esc(result.name)}</strong><br>constellation`;
+      return result.kind === 'dso' ? dsoInfoHtml(result.dso) : starInfoHtml(result.star);
     }
 
     function runMapSearch() {
@@ -2039,11 +2033,11 @@
 
       state.orient = localBasisFromForward(result.v);
       state.message = searchMessage(result);
-      state.searchMarker = result.kind === 'constellation' ? null : {
+      state.searchMarker = {
         v: result.v,
         payload: result.kind === 'star' ? { type: 'star', star: result.star } : { type: 'dso', dso: result.dso }
       };
-      searchInput.value = result.kind === 'constellation' ? result.name : String(result.label || searchInput.value);
+      searchInput.value = String(result.label || searchInput.value);
       msg.innerHTML = state.message;
       draw();
       focusCanvas();
@@ -2051,7 +2045,6 @@
 
     function populateMapSearchList() {
       const values = [];
-      DATA.constellations.forEach(c => values.push(c.name));
       skyStars.forEach(star => {
         const name = starDisplayName(star);
         const designation = starDesignation(star);
@@ -2098,13 +2091,19 @@
     });
 
     $('#mapCentre').addEventListener('click', () => {
+      state.searchMarker = null;
       state.orient = localBasisFromForward(vecFromRaDec(0, 0));
       setFov(defaultFov());
       focusCanvas();
     });
 
-    $('#mapZoomIn').addEventListener('click', () => { setFov(state.fov * 0.8); focusCanvas(); });
-    $('#mapZoomOut').addEventListener('click', () => { setFov(state.fov * 1.25); focusCanvas(); });
+    function zoomOnSelection(factor) {
+      if (state.searchMarker && state.searchMarker.v) state.orient = localBasisFromForward(state.searchMarker.v);
+      setFov(state.fov * factor);
+      focusCanvas();
+    }
+    $('#mapZoomIn').addEventListener('click', () => zoomOnSelection(0.8));
+    $('#mapZoomOut').addEventListener('click', () => zoomOnSelection(1.25));
     $('#mapRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#mapRollCW').addEventListener('click', () => rollFrame(1));
     $('#mapClear').addEventListener('click', () => {
@@ -3104,7 +3103,7 @@
       const ns = borderingConstellations(state.current);
       const routeText = state.route.map(esc).join(' → ');
       const splitNote = state.current === SERPENS_CAPUT || state.current === SERPENS_CAUDA ? '<p class="small">Serpens is treated as Caput and Cauda for border jumps.</p>' : '';
-      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p>${splitNote}<h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
+      app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p>${splitNote}<h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn ${n === state.target ? 'sky-race-target-option' : ''}" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
       $('#skyRaceNew').addEventListener('click', newRace);
       setShiftEnterAction(newRace);
       document.querySelectorAll('[data-race-border]').forEach(btn => btn.addEventListener('click', () => jump(btn.dataset.raceBorder)));

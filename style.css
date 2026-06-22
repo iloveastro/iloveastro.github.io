@@ -664,3 +664,10 @@ input[type='range']::-moz-range-thumb {
   right: 10px;
   bottom: 10px;
 }
+
+
+.sky-race-target-option {
+  background: #ffeb3b;
+  border-color: #111;
+  font-weight: 700;
+}
