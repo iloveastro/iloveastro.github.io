@@ -1086,6 +1086,11 @@
   function starDisplayName(s) {
     return String(s.name || '').trim();
   }
+  function starDesignation(s) {
+    const symbol = greekBayerSymbol(s.bayer) || greekBayerSymbol(s.bf);
+    if (!symbol) return '';
+    return `${symbol} ${CONSTELLATION_GENITIVE[s.constellation] || s.constellation}`;
+  }
   function starInfoHtml(s) {
     const lines = [];
     const name = starDisplayName(s);
@@ -1644,35 +1649,49 @@
     }
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+
       const pick = buildPickLookup(canvas);
       canvas._pickLayer = pick;
-      if (!state.loaded) { ctx.fillStyle = 'black'; ctx.font = '20px Arial'; ctx.fillText(state.error || 'loading sky...', 24, 40); return; }
+
+      if (!state.loaded) {
+        ctx.fillStyle = 'black';
+        ctx.font = '20px Arial';
+        ctx.fillText(state.error || 'loading sky...', 24, 40);
+        return;
+      }
+
       const radius = Math.min(canvas.width, canvas.height) * 0.48;
       const fovRad = state.fov * Math.PI / 180;
       const b = ensureOrientation();
+
       ctx.save();
       ctx.beginPath();
       ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
       ctx.clip();
 
-      const visible = skyStars.filter(s => s.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
       ctx.fillStyle = 'black';
-      for (const s of visible) {
-        const p = project(s.v, b, radius, fovRad);
-        if (!p) continue;
-        const r = Math.max(0.8, Math.min(4.6, 4.1 - s.mag * 0.54));
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-        ctx.fill();
-        registerPickCircle(pick, p.x, p.y, Math.max(10, r + 7), { type: 'star', star: s });
-      }
+      skyStars
+        .filter(s => s.mag <= state.magLimit)
+        .sort((a, b) => b.mag - a.mag)
+        .forEach(s => {
+          const p = project(s.v, b, radius, fovRad);
+          if (!p) return;
+          const r = Math.max(0.8, Math.min(4.6, 4.1 - s.mag * 0.54));
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          ctx.fill();
+          registerPickCircle(pick, p.x, p.y, Math.max(12, r + 8), { type: 'star', star: s });
+        });
 
       if (state.showDso !== false) {
-        for (const o of buildSkyDsoObjects()) {
+        buildSkyDsoObjects().forEach(o => {
           const p = project(o.v, b, radius, fovRad);
-          if (!p) continue;
+          if (!p) return;
           ctx.fillStyle = o.colour;
           ctx.strokeStyle = 'black';
           ctx.lineWidth = 1;
@@ -1681,10 +1700,11 @@
           ctx.fill();
           ctx.stroke();
           registerPickCircle(pick, p.x, p.y, 11, { type: 'dso', dso: o });
-        }
+        });
       }
 
       ctx.restore();
+
       ctx.strokeStyle = 'black';
       ctx.lineWidth = 2;
       ctx.beginPath();

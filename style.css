@@ -654,3 +654,13 @@ input[type='range']::-moz-range-thumb {
   line-height: 1;
   text-align: center;
 }
+
+
+.atlas-map-canvas-wrap {
+  position: relative;
+}
+.atlas-map-canvas-wrap .atlas-map-zoom-button {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
