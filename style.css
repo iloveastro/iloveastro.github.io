@@ -438,3 +438,12 @@ input[type='range']::-moz-range-thumb {
   border: 1px solid #111;
   border-radius: 50%;
 }
+
+
+#atlasConstMap {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #111;
+  background: white;
+}

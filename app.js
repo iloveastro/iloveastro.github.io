@@ -678,11 +678,16 @@
     const hereIndex = order.indexOf(name);
     const prevName = order[(hereIndex - 1 + order.length) % order.length];
     const nextName = order[(hereIndex + 1) % order.length];
-    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table></section>`;
+    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel"><div class="chart-detail-box"><h3>Star-only map</h3><canvas id="atlasConstMap" width="900" height="900" aria-label="${esc(name)} star-only map"></canvas><p class="small">Stars only, no boundaries.</p></div>${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table></section>`;
     $('#backAtlas').addEventListener('click', renderAtlas);
     $('#prevAtlas').addEventListener('click', () => renderConstellationPage(prevName));
     $('#nextAtlas').addEventListener('click', () => renderConstellationPage(nextName));
     document.querySelectorAll('[data-const]').forEach(b => b.addEventListener('click', () => renderConstellationPage(b.dataset.const)));
+    const atlasCanvas = $('#atlasConstMap');
+    if (atlasCanvas) {
+      drawConstellationStarMap(atlasCanvas, name, { magLimit: 6, rotation: 0 });
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => drawConstellationStarMap(atlasCanvas, name, { magLimit: 6, rotation: 0 }));
+    }
   }
 
 
@@ -974,10 +979,54 @@
   function starDisplayName(s) {
     return String(s.name || '').trim();
   }
-  function starDesignation(s) {
-    const symbol = greekBayerSymbol(s.bayer) || greekBayerSymbol(s.bf);
-    if (!symbol) return '';
-    return `${symbol} ${CONSTELLATION_GENITIVE[s.constellation] || s.constellation}`;
+  function starInfoHtml(s) {
+    const lines = [];
+    const name = starDisplayName(s);
+    const designation = starDesignation(s);
+    if (name) lines.push(`<strong>${esc(name)}</strong>`);
+    if (designation) lines.push(`designation: ${esc(designation)}`);
+    lines.push(`constellation: ${esc(s.constellation)}`);
+    lines.push(`magnitude: ${Number(s.mag).toFixed(2)}`);
+    return lines.join('<br>');
+  }
+  function constellationStarSubset(name, magLimit = 6) {
+    const official = skyStars.filter(s => s.mag <= magLimit && officialConstellationAtVec(s.v) === name);
+    if (official.length) return official;
+    return skyStars.filter(s => s.mag <= magLimit && s.constellation === name);
+  }
+  function drawConstellationStarMap(canvas, name, options = {}) {
+    const ctx = canvas.getContext('2d');
+    const magLimit = Number.isFinite(options.magLimit) ? options.magLimit : 6;
+    const rotation = Number.isFinite(options.rotation) ? options.rotation : 0;
+    const stars = options.stars || constellationStarSubset(name, magLimit);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+    if (!skyStars.length) {
+      ctx.fillStyle = 'black'; ctx.font = '18px Arial'; ctx.fillText('loading stars...', 24, 40);
+      return [];
+    }
+    if (!stars.length) return [];
+    const sum = stars.reduce((v, s) => ({ x: v.x + s.v.x, y: v.y + s.v.y, z: v.z + s.v.z }), { x: 0, y: 0, z: 0 });
+    const centre = normVec(sum);
+    const b = localBasisFromForward(centre);
+    const c = Math.cos(rotation), sr = Math.sin(rotation);
+    const raw = stars.map(star => {
+      const x0 = dot(star.v, b.right), y0 = dot(star.v, b.up);
+      return { star, x: x0 * c - y0 * sr, y: x0 * sr + y0 * c };
+    });
+    const maxAbs = Math.max(0.0001, ...raw.map(p => Math.max(Math.abs(p.x), Math.abs(p.y))));
+    const scale = Math.min(canvas.width, canvas.height) * 0.39 / maxAbs;
+    const drawn = [];
+    ctx.fillStyle = 'black';
+    raw.sort((a, b) => b.star.mag - a.star.mag).forEach(p => {
+      const x = canvas.width / 2 + p.x * scale;
+      const y = canvas.height / 2 - p.y * scale;
+      const r = Math.max(1.2, Math.min(6, 5.2 - p.star.mag * 0.62));
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      drawn.push({ x, y, r: Math.max(6, r + 4), star: p.star });
+    });
+    return drawn;
   }
 
   function setupSphereFullscreen() {
@@ -1453,15 +1502,7 @@
       } else {
         const starHit = nearest(drawnStars);
         if (!starHit) return;
-        const s = starHit.star;
-        const name = starDisplayName(s);
-        const designation = starDesignation(s);
-        const lines = [];
-        if (name) lines.push(`<strong>${esc(name)}</strong>`);
-        if (designation) lines.push(`designation: ${esc(designation)}`);
-        lines.push(`constellation: ${esc(s.constellation)}`);
-        lines.push(`magnitude: ${s.mag.toFixed(2)}`);
-        state.message = lines.join('<br>');
+        state.message = starInfoHtml(starHit.star);
       }
       if (msg) msg.innerHTML = state.message;
     }
@@ -1545,33 +1586,26 @@
       state.message = '';
       state.answered = false;
     }
-    function centreVec(stars) {
-      const sum = stars.reduce((v, s) => ({ x: v.x + s.v.x, y: v.y + s.v.y, z: v.z + s.v.z }), { x: 0, y: 0, z: 0 });
-      return normVec(sum);
-    }
+    let drawnGuessStars = [];
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
       if (!state.loaded) { ctx.fillStyle = 'black'; ctx.font = '20px Arial'; ctx.fillText(state.error || 'loading constellation...', 24, 40); return; }
       if (!state.target) chooseQuestion();
-      if (!state.stars.length) return;
-      const b = localBasisFromForward(centreVec(state.stars));
-      const c = Math.cos(state.rotation), s = Math.sin(state.rotation);
-      const raw = state.stars.map(star => {
-        const x0 = dot(star.v, b.right), y0 = dot(star.v, b.up);
-        return { star, x: x0 * c - y0 * s, y: x0 * s + y0 * c };
-      });
-      const maxAbs = Math.max(0.0001, ...raw.map(p => Math.max(Math.abs(p.x), Math.abs(p.y))));
-      const scale = canvas.width * 0.39 / maxAbs;
-      ctx.fillStyle = 'black';
-      raw.sort((a, b) => b.star.mag - a.star.mag).forEach(p => {
-        const x = canvas.width / 2 + p.x * scale;
-        const y = canvas.height / 2 - p.y * scale;
-        const r = Math.max(1.2, Math.min(6, 5.2 - p.star.mag * 0.62));
-        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-      });
+      drawnGuessStars = drawConstellationStarMap(canvas, state.target, { magLimit: state.magLimit, rotation: state.rotation, stars: state.stars });
     }
+    function selectGuessStar(clientX, clientY) {
+      if (!state.answered) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * canvas.width / rect.width;
+      const y = (clientY - rect.top) * canvas.height / rect.height;
+      const hit = drawnGuessStars.map(p => ({ p, d: Math.hypot(p.x - x, p.y - y) })).filter(x => x.d <= x.p.r).sort((a, b) => a.d - b.d)[0]?.p;
+      if (!hit) return;
+      $('#guessConstMsg').innerHTML = `${state.target}<br>${starInfoHtml(hit.star)}`;
+    }
+    canvas.addEventListener('click', e => selectGuessStar(e.clientX, e.clientY));
+
     function newQuestion() {
       if (!state.loaded) return;
       chooseQuestion();
