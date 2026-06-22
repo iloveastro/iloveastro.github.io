@@ -1251,11 +1251,12 @@
     pickCanvas.height = canvas.height;
     const pickCtx = pickCanvas.getContext('2d', { willReadFrequently: true });
     pickCtx.clearRect(0, 0, pickCanvas.width, pickCanvas.height);
-    return { canvas: pickCanvas, ctx: pickCtx, map: new Map(), nextId: 1 };
+    return { canvas: pickCanvas, ctx: pickCtx, map: new Map(), targets: [], nextId: 1 };
   }
   function registerPickCircle(pick, x, y, r, payload) {
     const id = pick.nextId++;
     pick.map.set(id, payload);
+    pick.targets.push({ x, y, r, payload });
     pick.ctx.beginPath();
     colourIdFill(pick.ctx, id);
     pick.ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -1263,6 +1264,15 @@
   }
   function pickFromLayer(pick, x, y) {
     if (!pick) return null;
+    let best = null;
+    for (const target of pick.targets || []) {
+      const d = Math.hypot(target.x - x, target.y - y);
+      if (d > target.r) continue;
+      const score = d / Math.max(1, target.r);
+      if (!best || score < best.score || (score === best.score && d < best.d)) best = { score, d, payload: target.payload };
+    }
+    if (best) return best.payload;
+
     const px = Math.round(x), py = Math.round(y);
     const probes = [[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1],[2,0],[-2,0],[0,2],[0,-2]];
     for (const [dx, dy] of probes) {
@@ -1731,7 +1741,7 @@
       orient: null
     });
 
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="constellation, star, or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
 
     initRangeVisuals(app);
     setupSphereFullscreen();
@@ -1742,6 +1752,8 @@
     const fovSlider = $('#mapFovSlider');
     const magInput = $('#mapMag');
     const magSlider = $('#mapMagSlider');
+    const searchInput = $('#mapSearch');
+    const searchList = $('#mapSearchList');
     const msg = $('#mapMsg');
 
     function focusCanvas() {
@@ -1881,6 +1893,18 @@
         }
       }
 
+      if (state.searchMarker && state.searchMarker.v) {
+        const p = project(state.searchMarker.v, basis, radius, fovRad);
+        if (p) {
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+          ctx.stroke();
+          registerPickCircle(pick, p.x, p.y, 14, state.searchMarker.payload);
+        }
+      }
+
       ctx.restore();
 
       ctx.strokeStyle = 'black';
@@ -1895,10 +1919,138 @@
       const x = (clientX - rect.left) * canvas.width / rect.width;
       const y = (clientY - rect.top) * canvas.height / rect.height;
       const hit = pickFromLayer(canvas._pickLayer, x, y);
-      if (!hit) return;
+      if (!hit) {
+        state.message = '';
+        msg.textContent = '';
+        return;
+      }
 
       state.message = hit.type === 'dso' ? dsoInfoHtml(hit.dso) : starInfoHtml(hit.star);
       msg.innerHTML = state.message;
+    }
+
+    function skySearchKey(value) {
+      const greekNames = {
+        α: 'alpha', β: 'beta', γ: 'gamma', δ: 'delta', ε: 'epsilon', ζ: 'zeta', η: 'eta', θ: 'theta', ι: 'iota', κ: 'kappa', λ: 'lambda', μ: 'mu', ν: 'nu', ξ: 'xi', ο: 'omicron', π: 'pi', ρ: 'rho', σ: 'sigma', τ: 'tau', υ: 'upsilon', φ: 'phi', χ: 'chi', ψ: 'psi', ω: 'omega'
+      };
+      return compact(String(value || '').replace(/[αβγδεζηθικλμνξοπρστυφχψω]/gi, ch => greekNames[ch.toLowerCase()] || ch));
+    }
+
+    function starSearchLabels(star) {
+      const labels = [starDisplayName(star), starDesignation(star), star.bayer, star.bf];
+      const genitive = CONSTELLATION_GENITIVE[star.constellation] || star.constellation;
+      const abbr = DATA.constellations.find(c => c.name === star.constellation)?.abbr || '';
+      const symbol = greekBayerSymbol(star.bayer) || greekBayerSymbol(star.bf);
+      if (star.bayer) {
+        labels.push(`${star.bayer} ${genitive}`, `${star.bayer} ${star.constellation}`, `${star.bayer} ${abbr}`);
+      }
+      if (symbol) {
+        labels.push(`${symbol} ${genitive}`, `${symbol} ${star.constellation}`, `${symbol} ${abbr}`);
+      }
+      const curated = DATA.stars.find(s => s.constellation === star.constellation && compact(s.name) === compact(star.name));
+      if (curated) labels.push(curated.designation, `${curated.designation} ${curated.name}`);
+      return labels.filter(x => String(x || '').trim());
+    }
+
+    function dsoSearchLabels(dso) {
+      return [dso.code, dso.commonName, ...(dso.aliases || []), ...(dso.accepted || [])].filter(x => String(x || '').trim());
+    }
+
+    function addSearchCandidate(candidates, query, labels, result) {
+      for (const label of labels) {
+        const key = skySearchKey(label);
+        if (!key) continue;
+        let score = Infinity;
+        if (key === query) score = 0;
+        else if (key.startsWith(query)) score = 1;
+        else if (key.includes(query)) score = 2;
+        if (score < Infinity) candidates.push({ ...result, label, score });
+      }
+    }
+
+    function findMapSearchResult(value) {
+      const query = skySearchKey(value);
+      if (!query) return null;
+      const candidates = [];
+
+      DATA.constellations.forEach(c => {
+        addSearchCandidate(candidates, query, [c.name, c.abbr, ...(c.aliases || [])], {
+          kind: 'constellation',
+          name: c.name,
+          v: skyConstCentres.get(c.name),
+          priority: 0
+        });
+      });
+
+      skyStars.forEach(star => {
+        addSearchCandidate(candidates, query, starSearchLabels(star), {
+          kind: 'star',
+          star,
+          v: star.v,
+          priority: 1 + Math.max(-2, Math.min(6, star.mag)) / 100
+        });
+      });
+
+      buildSkyDsoObjects().forEach(dso => {
+        addSearchCandidate(candidates, query, dsoSearchLabels(dso), {
+          kind: 'dso',
+          dso,
+          v: dso.v,
+          priority: 2
+        });
+      });
+
+      candidates.sort((a, b) => a.score - b.score || a.priority - b.priority || String(a.label).localeCompare(String(b.label), undefined, { sensitivity: 'base' }));
+      return candidates[0] || null;
+    }
+
+    function searchMessage(result) {
+      if (result.kind === 'star') return starInfoHtml(result.star);
+      if (result.kind === 'dso') return dsoInfoHtml(result.dso);
+      return `<strong>${esc(result.name)}</strong><br>constellation`;
+    }
+
+    function runMapSearch() {
+      if (!state.loaded) {
+        state.message = 'sky data still loading';
+        msg.textContent = state.message;
+        return;
+      }
+      const result = findMapSearchResult(searchInput.value);
+      if (!result || !result.v) {
+        state.searchMarker = null;
+        state.message = 'not found';
+        msg.textContent = state.message;
+        draw();
+        return;
+      }
+
+      state.orient = localBasisFromForward(result.v);
+      state.message = searchMessage(result);
+      state.searchMarker = result.kind === 'constellation' ? null : {
+        v: result.v,
+        payload: result.kind === 'star' ? { type: 'star', star: result.star } : { type: 'dso', dso: result.dso }
+      };
+      searchInput.value = result.kind === 'constellation' ? result.name : String(result.label || searchInput.value);
+      msg.innerHTML = state.message;
+      draw();
+      focusCanvas();
+    }
+
+    function populateMapSearchList() {
+      const values = [];
+      DATA.constellations.forEach(c => values.push(c.name));
+      skyStars.forEach(star => {
+        const name = starDisplayName(star);
+        const designation = starDesignation(star);
+        if (name) values.push(name);
+        if (designation) values.push(designation);
+      });
+      buildSkyDsoObjects().forEach(dso => {
+        values.push(dso.code);
+        if (String(dso.commonName || '').trim()) values.push(dso.commonName);
+      });
+      searchList.innerHTML = [...new Set(values.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })).map(v => `<option value="${esc(v)}"></option>`).join('');
     }
 
     function move(dx, dy, multiplier = 1) {
@@ -1920,6 +2072,12 @@
     fovSlider.addEventListener('input', e => setFov(e.target.value));
     magInput.addEventListener('input', e => setMag(e.target.value));
     magSlider.addEventListener('input', e => setMag(e.target.value));
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        runMapSearch();
+      }
+    });
 
     $('#mapDso').addEventListener('change', e => {
       state.showDso = e.target.checked;
@@ -1937,7 +2095,9 @@
     $('#mapRollCW').addEventListener('click', () => rollFrame(1));
     $('#mapClear').addEventListener('click', () => {
       state.message = '';
+      state.searchMarker = null;
       msg.textContent = '';
+      draw();
       focusCanvas();
     });
 
@@ -2029,6 +2189,7 @@
         buildSkyDsoObjects();
         state.loaded = true;
         state.loading = false;
+        populateMapSearchList();
         draw();
         focusCanvas();
       }).catch(() => {
@@ -2038,6 +2199,7 @@
       });
     }
 
+    if (state.loaded) populateMapSearchList();
     draw();
     setTimeout(focusCanvas, 0);
   }
