@@ -209,8 +209,10 @@
     { id: 'charts', title: 'Charts' },
     { id: 'skyguessr', title: 'SkyGuessr' },
     { id: 'skyrace', title: 'SkyRace' },
-    { id: 'skyregions', title: 'Sky Map' },
+    { id: 'skymap', title: 'Sky Map' },
+    { id: 'skyregions', title: 'Constellation Map' },
     { id: 'alphapin', title: 'Find Constellation' },
+    { id: 'guessconst', title: 'Guess Constellation' },
     { id: 'neighbours', title: 'Neighbours' },
     { id: 'stars', title: 'Stars' },
     { id: 'dso', title: 'DSOs' },
@@ -883,6 +885,70 @@
     return targets;
   }
 
+  let skyDsoObjects = [];
+  function hashUnit(value, salt = '') {
+    const s = String(value || '') + '|' + salt;
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0) / 4294967296;
+  }
+  function seededUnitVec(seed, attempt = 0) {
+    const z = hashUnit(seed, `z${attempt}`) * 2 - 1;
+    const a = hashUnit(seed, `a${attempt}`) * Math.PI * 2;
+    const r = Math.sqrt(Math.max(0, 1 - z * z));
+    return { x: r * Math.cos(a), y: r * Math.sin(a), z };
+  }
+  function dsoCategory(o) {
+    const t = compact(o.type || '');
+    if (t.includes('nebula')) return 'nebula';
+    if (t.includes('opencluster')) return 'open';
+    if (t.includes('globularcluster')) return 'globular';
+    if (t.includes('galaxy') || t.includes('galaxies')) return 'galaxy';
+    return 'misc';
+  }
+  function dsoColour(o) {
+    const category = dsoCategory(o);
+    if (category === 'nebula') return '#8a2be2';
+    if (category === 'open') return '#d4a600';
+    if (category === 'globular') return '#198754';
+    if (category === 'galaxy') return '#1f6feb';
+    return '#d63384';
+  }
+  function buildSkyDsoObjects() {
+    if (skyDsoObjects.length) return skyDsoObjects;
+    skyDsoObjects = DATA.dso.map(o => {
+      let v = null;
+      if (Number.isFinite(o.ra) && Number.isFinite(o.dec)) v = vecFromRaDec(o.ra, o.dec);
+      if (!v && skyBoundsFeatures.length) {
+        for (let i = 0; i < 220; i++) {
+          const candidate = seededUnitVec(o.code || o.commonName || o.constellation, i);
+          if (officialConstellationAtVec(candidate) === o.constellation) { v = candidate; break; }
+        }
+      }
+      if (!v) v = skyConstCentres.get(o.constellation) || vecFromRaDec(0, 0);
+      return { ...o, v, colour: dsoColour(o), category: dsoCategory(o) };
+    });
+    return skyDsoObjects;
+  }
+  function localBasisFromForward(forward) {
+    const f = normVec(forward);
+    const ref = Math.abs(f.z) > 0.96 ? { x: 0, y: 1, z: 0 } : { x: 0, y: 0, z: 1 };
+    let right = normVec(cross(f, ref));
+    if (!Number.isFinite(right.x)) right = { x: 1, y: 0, z: 0 };
+    let up = normVec(cross(right, f));
+    right = normVec(cross(f, up));
+    return { f, right, up };
+  }
+  function starDisplayName(s) {
+    return String(s.name || '').trim() || String(s.bf || '').trim() || String(s.bayer || '').trim() || 'unnamed star';
+  }
+  function starDesignation(s) {
+    return String(s.bf || '').trim() || String(s.bayer || '').trim() || '—';
+  }
+
   function setupSphereFullscreen() {
     const layout = document.querySelector('.sky-layout');
     const panel = layout ? layout.querySelector('.sky-panel') : null;
@@ -1244,6 +1310,265 @@
 
 
 
+  function renderSkyMap() {
+    const state = states.skymap || (states.skymap = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), showDso: true, message: '', orient: null });
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    initRangeVisuals(app);
+    setupSphereFullscreen();
+    const canvas = $('#skyMapCanvas'), ctx = canvas.getContext('2d');
+    const fovInput = $('#mapFov'), fovSlider = $('#mapFovSlider');
+    let drawnStars = [], drawnDsos = [];
+    function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { canvas.focus(); } }
+    function cleanBasis(b) {
+      const f = normVec(b.f);
+      let right = b.right;
+      const proj = dot(right, f);
+      right = normVec({ x: right.x - proj * f.x, y: right.y - proj * f.y, z: right.z - proj * f.z });
+      if (!Number.isFinite(right.x)) return localBasisFromForward(f);
+      const up = normVec(cross(right, f));
+      return { f, right: normVec(cross(f, up)), up };
+    }
+    function ensureOrientation() {
+      if (!state.orient) state.orient = localBasisFromForward(vecFromRaDec(0, 0));
+      state.orient = cleanBasis(state.orient);
+      return state.orient;
+    }
+    function rotateAround(v, axis, angle) {
+      const c = Math.cos(angle), s = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
+      return normVec({ x: v.x * c + cr.x * s + axis.x * d * (1 - c), y: v.y * c + cr.y * s + axis.y * d * (1 - c), z: v.z * c + cr.z * s + axis.z * d * (1 - c) });
+    }
+    function rotateBasis(axis, angle) {
+      const b = ensureOrientation();
+      state.orient = cleanBasis({ f: rotateAround(b.f, axis, angle), right: rotateAround(b.right, axis, angle), up: rotateAround(b.up, axis, angle) });
+    }
+    function setFov(v) {
+      state.fov = Math.max(20, Math.min(190, v));
+      const value = Number(state.fov.toFixed(1));
+      if (fovInput) fovInput.value = value;
+      if (fovSlider) { fovSlider.value = value; updateRangeVisual(fovSlider); }
+      draw();
+    }
+    function setMag(v) {
+      state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || defaultMag()));
+      const value = Number(state.magLimit.toFixed(1));
+      $('#mapMag').value = value; $('#mapMagSlider').value = value; updateRangeVisual($('#mapMagSlider'));
+      draw();
+    }
+    function project(v, b, radius, fovRad) {
+      const z = dot(v, b.f);
+      const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+      if (ang > fovRad / 2) return null;
+      const x = dot(v, b.right), y = dot(v, b.up);
+      const sin = Math.sin(ang) || 1e-9;
+      const rr = (ang / (fovRad / 2)) * radius;
+      return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
+    }
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+      if (!state.loaded) { ctx.fillStyle = 'black'; ctx.font = '20px Arial'; ctx.fillText(state.error || 'loading sky...', 24, 40); return; }
+      const radius = Math.min(canvas.width, canvas.height) * 0.48;
+      const fovRad = state.fov * Math.PI / 180;
+      const b = ensureOrientation();
+      drawnStars = []; drawnDsos = [];
+      ctx.save(); ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2); ctx.clip();
+      const visible = skyStars.filter(s => s.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
+      ctx.fillStyle = 'black';
+      for (const s of visible) {
+        const p = project(s.v, b, radius, fovRad);
+        if (!p) continue;
+        const r = Math.max(0.8, Math.min(4.6, 4.1 - s.mag * 0.54));
+        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+        drawnStars.push({ ...p, r: Math.max(5, r + 3), star: s });
+      }
+      if (state.showDso !== false) {
+        for (const o of buildSkyDsoObjects()) {
+          const p = project(o.v, b, radius, fovRad);
+          if (!p) continue;
+          ctx.fillStyle = o.colour;
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(p.x, p.y, 5.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          drawnDsos.push({ ...p, r: 10, dso: o });
+        }
+      }
+      ctx.restore();
+      ctx.strokeStyle = 'black'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2); ctx.stroke();
+    }
+    function move(dx, dy, multiplier = 1) {
+      const b = ensureOrientation();
+      const anglePerPx = (state.fov * Math.PI / 180) / Math.min(canvas.width, canvas.height) * multiplier;
+      rotateBasis(b.up, -dx * anglePerPx);
+      rotateBasis(ensureOrientation().right, -dy * anglePerPx);
+      draw();
+    }
+    function rollFrame(direction) { const b = ensureOrientation(); rotateBasis(b.f, direction * 10 * Math.PI / 180); draw(); focusCanvas(); }
+    function selectAt(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * canvas.width / rect.width;
+      const y = (clientY - rect.top) * canvas.height / rect.height;
+      const nearest = arr => arr.map(p => ({ p, d: Math.hypot(p.x - x, p.y - y) })).filter(x => x.d <= x.p.r).sort((a, b) => a.d - b.d)[0]?.p;
+      const dsoHit = state.showDso !== false ? nearest(drawnDsos) : null;
+      const msg = $('#mapMsg');
+      if (dsoHit) {
+        const o = dsoHit.dso;
+        state.message = `<strong>${esc(o.commonName || 'unnamed DSO')}</strong><br>tag: ${esc(o.code)}<br>constellation: ${esc(o.constellation)}<br>type: ${esc(o.type)}`;
+      } else {
+        const starHit = nearest(drawnStars);
+        if (!starHit) return;
+        const s = starHit.star;
+        state.message = `<strong>${esc(starDisplayName(s))}</strong><br>designation: ${esc(starDesignation(s))}<br>constellation: ${esc(s.constellation)}<br>magnitude: ${s.mag.toFixed(2)}`;
+      }
+      if (msg) msg.innerHTML = state.message;
+    }
+    $('#mapFov').addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
+    $('#mapFovSlider').addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
+    $('#mapMag').addEventListener('input', e => setMag(e.target.value));
+    $('#mapMagSlider').addEventListener('input', e => setMag(e.target.value));
+    $('#mapDso').addEventListener('change', e => { state.showDso = e.target.checked; draw(); });
+    $('#mapCentre').addEventListener('click', () => { state.orient = localBasisFromForward(vecFromRaDec(0, 0)); setFov(defaultFov()); focusCanvas(); });
+    $('#mapRollCCW').addEventListener('click', () => rollFrame(-1));
+    $('#mapRollCW').addEventListener('click', () => rollFrame(1));
+    $('#mapClear').addEventListener('click', () => { state.message = ''; $('#mapMsg').textContent = ''; focusCanvas(); });
+    document.querySelectorAll('[data-move]').forEach(btn => btn.addEventListener('click', () => {
+      const [x, y] = btn.dataset.move.split(',').map(Number);
+      move(x * Math.min(canvas.width, canvas.height) * 0.05, y * Math.min(canvas.width, canvas.height) * 0.05, 1);
+      focusCanvas();
+    }));
+    const activePointers = new Map();
+    let lastDrag = null, lastPinchDistance = null, totalDrag = 0;
+    const pointerDistance = () => { const pts = [...activePointers.values()]; return pts.length < 2 ? null : Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y); };
+    function finishPointer(e) {
+      const lastPoint = activePointers.get(e.pointerId);
+      activePointers.delete(e.pointerId);
+      if (lastPoint && totalDrag < 6) selectAt(lastPoint.x, lastPoint.y);
+      lastPinchDistance = activePointers.size >= 2 ? pointerDistance() : null;
+      lastDrag = activePointers.size === 1 ? [...activePointers.values()][0] : null;
+      totalDrag = 0;
+    }
+    canvas.addEventListener('pointerdown', e => { activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId); focusCanvas(); totalDrag = 0; if (activePointers.size === 1) lastDrag = { x: e.clientX, y: e.clientY }; if (activePointers.size >= 2) lastPinchDistance = pointerDistance(); });
+    canvas.addEventListener('pointermove', e => {
+      if (!activePointers.has(e.pointerId)) return;
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (activePointers.size >= 2) { const d = pointerDistance(); if (d && lastPinchDistance) setFov(state.fov * lastPinchDistance / d); lastPinchDistance = d; return; }
+      const p = activePointers.get(e.pointerId);
+      if (!lastDrag) { lastDrag = p; return; }
+      totalDrag += Math.hypot(p.x - lastDrag.x, p.y - lastDrag.y);
+      move(p.x - lastDrag.x, p.y - lastDrag.y, 0.9);
+      lastDrag = p;
+    });
+    canvas.addEventListener('pointerup', finishPointer);
+    canvas.addEventListener('pointercancel', finishPointer);
+    canvas.addEventListener('lostpointercapture', finishPointer);
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) { setFov(state.fov * Math.exp(e.deltaY * 0.002)); return; }
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? canvas.height : 1;
+      move((e.deltaX || (e.shiftKey ? e.deltaY : 0)) * unit, (e.shiftKey ? 0 : e.deltaY) * unit, 0.45);
+    }, { passive: false });
+    canvas.addEventListener('keydown', e => {
+      const step = e.shiftKey ? 28 : 12;
+      if (['ArrowLeft','a','A'].includes(e.key)) { e.preventDefault(); move(-step, 0); }
+      if (['ArrowRight','d','D'].includes(e.key)) { e.preventDefault(); move(step, 0); }
+      if (['ArrowUp','w','W'].includes(e.key)) { e.preventDefault(); move(0, -step); }
+      if (['ArrowDown','s','S'].includes(e.key)) { e.preventDefault(); move(0, step); }
+    });
+    if (!state.loaded && !state.loading) {
+      state.loading = true;
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => {
+        buildSkyDsoObjects();
+        state.loaded = true; state.loading = false; draw(); canvas.focus();
+      }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
+    }
+    draw(); setTimeout(() => canvas.focus(), 0);
+  }
+
+  function renderGuessConstellation() {
+    const state = states.guessconst || (states.guessconst = { loaded: false, loading: false, error: '', target: '', stars: [], rotation: 0, message: '', answered: false, magLimit: defaultMag() });
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="single constellation star map"></canvas></section><aside class="panel"><div class="prompt">Which constellation is this?</div><input id="guessConstInput" autocomplete="off" placeholder="constellation name"><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div class="stats">${formatScore('guessconst')}</div></aside></div>`;
+    const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
+    function starsInConstellation(name) {
+      let stars = skyStars.filter(s => s.mag <= state.magLimit && officialConstellationAtVec(s.v) === name);
+      if (stars.length < 3) stars = skyStars.filter(s => s.mag <= 6 && officialConstellationAtVec(s.v) === name);
+      if (stars.length < 3) stars = skyStars.filter(s => s.constellation === name && s.mag <= 6);
+      return stars;
+    }
+    function chooseQuestion() {
+      const names = shuffle(DATA.constellations.map(c => c.name));
+      for (const name of names) {
+        const stars = starsInConstellation(name);
+        if (stars.length >= 3) {
+          state.target = name;
+          state.stars = stars;
+          state.rotation = Math.random() * Math.PI * 2;
+          state.message = '';
+          state.answered = false;
+          return;
+        }
+      }
+    }
+    function centreVec(stars) {
+      const sum = stars.reduce((v, s) => ({ x: v.x + s.v.x, y: v.y + s.v.y, z: v.z + s.v.z }), { x: 0, y: 0, z: 0 });
+      return normVec(sum);
+    }
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+      if (!state.loaded) { ctx.fillStyle = 'black'; ctx.font = '20px Arial'; ctx.fillText(state.error || 'loading constellation...', 24, 40); return; }
+      if (!state.target || !state.stars.length) chooseQuestion();
+      const b = localBasisFromForward(centreVec(state.stars));
+      const c = Math.cos(state.rotation), s = Math.sin(state.rotation);
+      const raw = state.stars.map(star => {
+        const x0 = dot(star.v, b.right), y0 = dot(star.v, b.up);
+        return { star, x: x0 * c - y0 * s, y: x0 * s + y0 * c };
+      });
+      const maxAbs = Math.max(0.0001, ...raw.map(p => Math.max(Math.abs(p.x), Math.abs(p.y))));
+      const scale = canvas.width * 0.39 / maxAbs;
+      ctx.fillStyle = 'black';
+      raw.sort((a, b) => b.star.mag - a.star.mag).forEach(p => {
+        const x = canvas.width / 2 + p.x * scale;
+        const y = canvas.height / 2 - p.y * scale;
+        const r = Math.max(1.2, Math.min(6, 5.2 - p.star.mag * 0.62));
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+    function newQuestion() {
+      if (!state.loaded) return;
+      chooseQuestion();
+      renderGuessConstellation();
+    }
+    function checkAnswer(value) {
+      if (!state.target || state.answered) return;
+      if (!answerMatches(value, [state.target])) return;
+      state.answered = true;
+      record('guessconst', true);
+      state.message = `correct: ${state.target}`;
+      $('#guessConstMsg').textContent = state.message;
+    }
+    function reveal() {
+      if (!state.target || state.answered) return;
+      state.answered = true;
+      record('guessconst', false);
+      state.message = `answer: ${state.target}`;
+      $('#guessConstMsg').textContent = state.message;
+    }
+    $('#guessConstInput').addEventListener('input', e => checkAnswer(e.target.value));
+    $('#guessConstInput').addEventListener('keydown', e => { if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); e.stopPropagation(); newQuestion(); } });
+    $('#guessConstReveal').addEventListener('click', reveal);
+    $('#guessConstNew').addEventListener('click', newQuestion);
+    setShiftEnterAction(newQuestion);
+    if (!state.loaded && !state.loading) {
+      state.loading = true;
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => {
+        state.loaded = true; state.loading = false; chooseQuestion(); renderGuessConstellation();
+      }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
+    }
+    draw();
+    setTimeout(() => $('#guessConstInput') && $('#guessConstInput').focus(), 0);
+  }
+
   function renderAlphaPin() {
     const state = states.alphapin || (states.alphapin = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), target: null, selectedVec: null, result: '', submitted: false, orient: null });
     app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find&nbsp;<strong>${esc(state.target ? state.target.constellation : '...')}</strong>.</div><label>FOV degrees<div class="slider-text-row"><input id="alphaFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="alphaMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">○</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaZoomIn">zoom in</button><button type="button" id="alphaZoomOut">zoom out</button></div><div class="controls new-round-controls"><button type="button" id="alphaNew" class="new-round-button">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div><div class="small alpha-pin-hint">(pin the alpha star)</div></aside></div>`;
@@ -1541,7 +1866,7 @@
 
   function renderSkyRegions() {
     const state = states.skyregions || (states.skyregions = { loaded: false, loading: false, error: '', fov: defaultFov(), message: '', selected: '', showBoundaries: true, showStars: true, magLimit: defaultMag(), orient: null });
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="regionFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}><span>boundaries</span></label><label class="checkline"><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}><span>stars</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="regionMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label>Search constellation<input id="regionSearch" list="regionSearchList" autocomplete="off" placeholder="full constellation name"></label><datalist id="regionSearchList">${DATA.constellations.map(c => `<option value="${esc(c.name)}"></option>`).join('')}</datalist><div class="controls"><button type="button" id="regionSearchBtn">search</button></div><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
+    app.innerHTML = `<h2>Constellation Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="regionCanvas" width="900" height="900" tabindex="0" aria-label="constellation region sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="regionFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="regionFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="regionBounds" type="checkbox" ${state.showBoundaries !== false ? "checked" : ""}><span>boundaries</span></label><label class="checkline"><input id="regionStars" type="checkbox" ${state.showStars !== false ? "checked" : ""}><span>stars</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="regionMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="regionMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label>Search constellation<input id="regionSearch" list="regionSearchList" autocomplete="off" placeholder="full constellation name"></label><datalist id="regionSearchList">${DATA.constellations.map(c => `<option value="${esc(c.name)}"></option>`).join('')}</datalist><div class="controls"><button type="button" id="regionSearchBtn">search</button></div><div class="sky-nav-grid" aria-label="region movement controls"><button type="button" data-rmove="-1,-1">↖</button><button type="button" data-rmove="0,-1">↑</button><button type="button" data-rmove="1,-1">↗</button><button type="button" data-rmove="-1,0">←</button><button type="button" id="regionReset">○</button><button type="button" data-rmove="1,0">→</button><button type="button" data-rmove="-1,1">↙</button><button type="button" data-rmove="0,1">↓</button><button type="button" data-rmove="1,1">↘</button></div><div class="controls"><button type="button" id="regionRollCCW">↺ rotate</button><button type="button" id="regionRollCW">rotate ↻</button><button type="button" id="regionClear">deselect</button></div><div id="regionMsg" class="message">${state.message || ''} </div></aside></div>`;
     initRangeVisuals(app);
     setupSphereFullscreen();
     const canvas = $('#regionCanvas'), ctx = canvas.getContext('2d');
@@ -2177,9 +2502,11 @@
     setShiftEnterAction(null);
     if (activeGame === 'charts') makeQuestionGame('charts', 'Charts', { make: chartQuestion });
     else if (activeGame === 'skyguessr') renderSkyGuessr();
+    else if (activeGame === 'skymap') renderSkyMap();
     else if (activeGame === 'skyregions') renderSkyRegions();
     else if (activeGame === 'skyrace') renderSkyRace();
     else if (activeGame === 'alphapin') renderAlphaPin();
+    else if (activeGame === 'guessconst') renderGuessConstellation();
     else if (activeGame === 'neighbours') makeQuestionGame('neighbours', 'Neighbours', { make: neighbourQuestion });
     else if (activeGame === 'stars') makeQuestionGame('stars', 'Stars', { modes: starModes, defaultMode: 'starToConstellation', make: starQuestion });
     else if (activeGame === 'dso') makeQuestionGame('dso', 'DSOs', { modes: dsoModes, defaultMode: 'codeToName', make: dsoQuestion });

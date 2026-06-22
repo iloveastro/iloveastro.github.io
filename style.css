@@ -48,8 +48,8 @@ ul { margin-top: 6px; padding-left: 22px; }
 
 .sky-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 14px; align-items: start; }
 .sky-panel { position: relative; padding: 8px; }
-#skyCanvas, #alphaCanvas, #regionCanvas { width: min(100%, 72vh, 760px); height: auto; aspect-ratio: 1 / 1; display: block; margin: 0 auto; background: white; border: 1px solid #111; touch-action: none; }
-@media (max-width: 900px) { .sky-layout { grid-template-columns: 1fr; } #skyCanvas, #alphaCanvas, #regionCanvas { width: min(100%, 62vh); } }
+#skyCanvas, #alphaCanvas, #regionCanvas, #skyMapCanvas, #guessConstCanvas { width: min(100%, 72vh, 760px); height: auto; aspect-ratio: 1 / 1; display: block; margin: 0 auto; background: white; border: 1px solid #111; touch-action: none; }
+@media (max-width: 900px) { .sky-layout { grid-template-columns: 1fr; } #skyCanvas, #alphaCanvas, #regionCanvas, #skyMapCanvas, #guessConstCanvas { width: min(100%, 62vh); } }
 
 .sky-nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-width: 170px; margin: 8px 0 10px; }
 .sky-nav-grid button { min-height: 34px; padding: 4px 0; }
@@ -396,7 +396,8 @@ input[type='range']::-moz-range-thumb {
 }
 .sky-layout.sphere-fullscreen #skyCanvas,
 .sky-layout.sphere-fullscreen #alphaCanvas,
-.sky-layout.sphere-fullscreen #regionCanvas {
+.sky-layout.sphere-fullscreen #regionCanvas,
+.sky-layout.sphere-fullscreen #skyMapCanvas {
   width: min(calc(100vw - 380px), calc(100vh - 24px));
   max-width: none;
   height: auto;
@@ -409,10 +410,31 @@ input[type='range']::-moz-range-thumb {
   }
   .sky-layout.sphere-fullscreen #skyCanvas,
   .sky-layout.sphere-fullscreen #alphaCanvas,
-  .sky-layout.sphere-fullscreen #regionCanvas {
+  .sky-layout.sphere-fullscreen #regionCanvas,
+  .sky-layout.sphere-fullscreen #skyMapCanvas {
     width: min(100%, calc(100vh - 220px));
   }
   .sky-layout.sphere-fullscreen aside {
     max-height: 210px;
   }
+}
+
+
+.dso-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 8px 0;
+}
+.dso-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.dso-legend b {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #111;
+  border-radius: 50%;
 }
