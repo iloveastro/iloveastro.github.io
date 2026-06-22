@@ -671,18 +671,36 @@
     const asterismRows = relatedAsterisms.length ? relatedAsterisms.map(a => `<tr><td>${esc(a.name)}</td><td>${(a.members || []).map(esc).join(', ') || '—'}</td><td>${esc(a.clue || '')}</td></tr>`).join('') : '<tr><td colspan="3">No listed asterism in the current catalogue.</td></tr>';
     const starRows = info.stars.length ? info.stars.map(s => `<tr><td>${esc(s.name)}</td><td>${esc(s.designation)}</td><td>${esc(s.note)}</td></tr>`).join('') : '<tr><td colspan="3">No star in the current curated named-star list.</td></tr>';
     const dsoRows = info.dsos.length ? info.dsos.map(o => `<tr><td>${esc(o.code)}</td><td>${esc(o.commonName)}</td><td>${esc(o.type)}</td></tr>`).join('') : '<tr><td colspan="3">No Messier/Caldwell object in the current list.</td></tr>';
-    const chartHtml = charts.length ? charts.map((ch, i) => `<div class="chart-detail-box"><h3>${esc(ch.displayName || name)}${charts.length > 1 ? ` chart ${i + 1}` : ''}</h3>${chartImg(ch, true, 'chart-img detail-chart', `${ch.displayName || name} labelled chart`)}</div>`).join('') : '';
+    const chartHtml = charts.length ? charts.map((ch, i) => `<div class="chart-detail-box atlas-chart-box"><h3>${esc(ch.displayName || name)}${charts.length > 1 ? ` chart ${i + 1}` : ''}</h3>${chartImg(ch, true, 'chart-img detail-chart atlas-zoomable-chart', `${ch.displayName || name} labelled chart`)}</div>`).join('') : '';
     const atlasNotes = (info.atlasNotes || []).length ? `<h3>Sky picture</h3>${info.atlasNotes.map(x => `<p>${esc(x)}</p>`).join('')}` : '';
     const facts = (info.funFacts || []).filter(Boolean);
     const order = DATA.constellations.map(c => c.name);
     const hereIndex = order.indexOf(name);
     const prevName = order[(hereIndex - 1 + order.length) % order.length];
     const nextName = order[(hereIndex + 1) % order.length];
-    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table><div class="atlas-map-controls"><label>Limiting magnitude<div class="slider-text-row"><input id="atlasMapMagSlider" type="range" min="4" max="6" step="0.1" value="6"><input id="atlasMapMag" type="number" min="4" max="6" step="0.1" value="6"></div></label><label class="checkline"><input id="atlasMapDso" type="checkbox"><span>DSOs</span></label></div><canvas id="atlasConstMap" width="900" height="900" aria-label="${esc(name)} star map"></canvas><div id="atlasConstMsg" class="message"></div></section>`;
+    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table><div class="atlas-map-layout"><div class="atlas-map-controls"><label>Limiting magnitude<div class="slider-text-row"><input id="atlasMapMagSlider" type="range" min="4" max="6" step="0.1" value="6"><input id="atlasMapMag" type="number" min="4" max="6" step="0.1" value="6"></div></label><label class="checkline"><input id="atlasMapDso" type="checkbox"><span>DSOs</span></label><div id="atlasConstMsg" class="message"></div></div><canvas id="atlasConstMap" width="900" height="900" aria-label="${esc(name)} star map"></canvas></div></section>`;
     $('#backAtlas').addEventListener('click', renderAtlas);
     $('#prevAtlas').addEventListener('click', () => renderConstellationPage(prevName));
     $('#nextAtlas').addEventListener('click', () => renderConstellationPage(nextName));
     document.querySelectorAll('[data-const]').forEach(b => b.addEventListener('click', () => renderConstellationPage(b.dataset.const)));
+    function openAtlasImageZoom(img) {
+      const overlay = el('div', { class: 'image-zoom-overlay' });
+      const close = el('button', { type: 'button', class: 'image-zoom-close', 'aria-label': 'close zoom' }, [document.createTextNode('×')]);
+      const zoomImg = el('img', { src: img.currentSrc || img.src, alt: img.alt || 'zoomed chart' });
+      overlay.append(close, zoomImg);
+      function closeZoom() {
+        overlay.remove();
+        document.removeEventListener('keydown', escClose);
+      }
+      function escClose(e) {
+        if (e.key === 'Escape') closeZoom();
+      }
+      overlay.addEventListener('click', e => { if (e.target === overlay) closeZoom(); });
+      close.addEventListener('click', closeZoom);
+      document.addEventListener('keydown', escClose);
+      document.body.append(overlay);
+    }
+    document.querySelectorAll('.atlas-zoomable-chart').forEach(img => img.addEventListener('click', () => openAtlasImageZoom(img)));
     initRangeVisuals(app);
     const atlasCanvas = $('#atlasConstMap');
     if (atlasCanvas) {
