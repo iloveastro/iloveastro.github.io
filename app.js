@@ -1109,6 +1109,43 @@
     if (official.length) return official;
     return skyStars.filter(s => s.mag <= magLimit && s.constellation === name);
   }
+  function colourIdFill(ctx, id) {
+    const r = id & 255, g = (id >> 8) & 255, b = (id >> 16) & 255;
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+  }
+  function colourIdRead(data) {
+    return (data[0] || 0) + ((data[1] || 0) << 8) + ((data[2] || 0) << 16);
+  }
+  function buildPickLookup(canvas) {
+    const pickCanvas = document.createElement('canvas');
+    pickCanvas.width = canvas.width;
+    pickCanvas.height = canvas.height;
+    const pickCtx = pickCanvas.getContext('2d', { willReadFrequently: true });
+    pickCtx.clearRect(0, 0, pickCanvas.width, pickCanvas.height);
+    return { canvas: pickCanvas, ctx: pickCtx, map: new Map(), nextId: 1 };
+  }
+  function registerPickCircle(pick, x, y, r, payload) {
+    const id = pick.nextId++;
+    pick.map.set(id, payload);
+    pick.ctx.beginPath();
+    colourIdFill(pick.ctx, id);
+    pick.ctx.arc(x, y, r, 0, Math.PI * 2);
+    pick.ctx.fill();
+  }
+  function pickFromLayer(pick, x, y) {
+    if (!pick) return null;
+    const px = Math.round(x), py = Math.round(y);
+    const probes = [[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1],[2,0],[-2,0],[0,2],[0,-2]];
+    for (const [dx, dy] of probes) {
+      const sx = px + dx, sy = py + dy;
+      if (sx < 0 || sy < 0 || sx >= pick.canvas.width || sy >= pick.canvas.height) continue;
+      const data = pick.ctx.getImageData(sx, sy, 1, 1).data;
+      const id = colourIdRead(data);
+      if (id && pick.map.has(id)) return pick.map.get(id);
+    }
+    return null;
+  }
+
   function drawConstellationStarMap(canvas, name, options = {}) {
     const ctx = canvas.getContext('2d');
     const magLimit = Number.isFinite(options.magLimit) ? options.magLimit : 6;
@@ -1117,14 +1154,22 @@
     const showDso = options.showDso === true;
     const dsos = showDso ? buildSkyDsoObjects().filter(o => o.constellation === name) : [];
     const vectors = [...stars.map(s => s.v), ...dsos.map(o => o.v)];
+    const pick = buildPickLookup(canvas);
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+
     if (!skyStars.length) {
       ctx.fillStyle = 'black'; ctx.font = '18px Arial'; ctx.fillText('loading stars...', 24, 40);
+      canvas._pickLayer = pick;
       return [];
     }
-    if (!vectors.length) return [];
+    if (!vectors.length) {
+      canvas._pickLayer = pick;
+      return [];
+    }
+
     const sum = vectors.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
     const centre = normVec(sum);
     const b = localBasisFromForward(centre);
@@ -1139,14 +1184,20 @@
     const scale = Math.min(canvas.width, canvas.height) * 0.39 / maxAbs;
     const drawn = [];
     const drawnDsos = [];
+
     ctx.fillStyle = 'black';
     rawStars.sort((a, b) => b.star.mag - a.star.mag).forEach(p => {
       const x = canvas.width / 2 + p.x * scale;
       const y = canvas.height / 2 - p.y * scale;
       const r = Math.max(1.2, Math.min(6, 5.2 - p.star.mag * 0.62));
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-      drawn.push({ x, y, r: Math.max(6, r + 4), star: p.star });
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      const hitR = Math.max(10, r + 7);
+      registerPickCircle(pick, x, y, hitR, { type: 'star', star: p.star });
+      drawn.push({ x, y, r: hitR, star: p.star });
     });
+
     if (showDso) {
       rawDsos.forEach(p => {
         const x = canvas.width / 2 + p.x * scale;
@@ -1154,10 +1205,16 @@
         ctx.fillStyle = p.dso.colour;
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(x, y, 5.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        drawnDsos.push({ x, y, r: 10, dso: p.dso });
+        ctx.beginPath();
+        ctx.arc(x, y, 5.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        registerPickCircle(pick, x, y, 11, { type: 'dso', dso: p.dso });
+        drawnDsos.push({ x, y, r: 11, dso: p.dso });
       });
     }
+
+    canvas._pickLayer = pick;
     drawn.dsos = drawnDsos;
     return drawn;
   }
@@ -1165,39 +1222,11 @@
     const magLimit = Number.isFinite(options.magLimit) ? options.magLimit : 6;
     const rotation = Number.isFinite(options.rotation) ? options.rotation : 0;
     const showDso = options.showDso === true;
-    const stars = options.stars || constellationStarSubset(name, magLimit);
-    const dsos = showDso ? buildSkyDsoObjects().filter(o => o.constellation === name) : [];
-    const vectors = [...stars.map(s => s.v), ...dsos.map(o => o.v)];
-    if (!vectors.length) return null;
-
+    if (!canvas._pickLayer) drawConstellationStarMap(canvas, name, { magLimit, rotation, showDso });
     const rect = canvas.getBoundingClientRect();
-    const clickX = (clientX - rect.left) * canvas.width / rect.width;
-    const clickY = (clientY - rect.top) * canvas.height / rect.height;
-
-    const sum = vectors.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
-    const centre = normVec(sum);
-    const b = localBasisFromForward(centre);
-    const c = Math.cos(rotation), sr = Math.sin(rotation);
-    const toMapPoint = (v, item) => {
-      const x0 = dot(v, b.right), y0 = dot(v, b.up);
-      return { ...item, x: x0 * c - y0 * sr, y: x0 * sr + y0 * c };
-    };
-    const rawStars = stars.map(star => toMapPoint(star.v, { type: 'star', star }));
-    const rawDsos = dsos.map(dso => toMapPoint(dso.v, { type: 'dso', dso }));
-    const allRaw = [...rawStars, ...rawDsos];
-    const maxAbs = Math.max(0.0001, ...allRaw.map(p => Math.max(Math.abs(p.x), Math.abs(p.y))));
-    const scale = Math.min(canvas.width, canvas.height) * 0.39 / maxAbs;
-
-    let best = null;
-    allRaw.forEach(p => {
-      const x = canvas.width / 2 + p.x * scale;
-      const y = canvas.height / 2 - p.y * scale;
-      const visualRadius = p.type === 'star' ? Math.max(1.2, Math.min(6, 5.2 - p.star.mag * 0.62)) : 5.2;
-      const hitRadius = Math.max(14, visualRadius + 8);
-      const d = Math.hypot(x - clickX, y - clickY);
-      if (d <= hitRadius && (!best || d < best.d)) best = { ...p, d };
-    });
-    return best;
+    const x = (clientX - rect.left) * canvas.width / rect.width;
+    const y = (clientY - rect.top) * canvas.height / rect.height;
+    return pickFromLayer(canvas._pickLayer, x, y);
   }
 
   function setupSphereFullscreen() {
@@ -1568,7 +1597,6 @@
     setupSphereFullscreen();
     const canvas = $('#skyMapCanvas'), ctx = canvas.getContext('2d');
     const fovInput = $('#mapFov'), fovSlider = $('#mapFovSlider');
-    let drawnStars = [], drawnDsos = [];
     function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { canvas.focus(); } }
     function cleanBasis(b) {
       const f = normVec(b.f);
@@ -1618,21 +1646,29 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+      const pick = buildPickLookup(canvas);
+      canvas._pickLayer = pick;
       if (!state.loaded) { ctx.fillStyle = 'black'; ctx.font = '20px Arial'; ctx.fillText(state.error || 'loading sky...', 24, 40); return; }
       const radius = Math.min(canvas.width, canvas.height) * 0.48;
       const fovRad = state.fov * Math.PI / 180;
       const b = ensureOrientation();
-      drawnStars = []; drawnDsos = [];
-      ctx.save(); ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2); ctx.clip();
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+      ctx.clip();
+
       const visible = skyStars.filter(s => s.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
       ctx.fillStyle = 'black';
       for (const s of visible) {
         const p = project(s.v, b, radius, fovRad);
         if (!p) continue;
         const r = Math.max(0.8, Math.min(4.6, 4.1 - s.mag * 0.54));
-        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
-        drawnStars.push({ ...p, r: Math.max(5, r + 3), star: s });
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        registerPickCircle(pick, p.x, p.y, Math.max(10, r + 7), { type: 'star', star: s });
       }
+
       if (state.showDso !== false) {
         for (const o of buildSkyDsoObjects()) {
           const p = project(o.v, b, radius, fovRad);
@@ -1640,12 +1676,20 @@
           ctx.fillStyle = o.colour;
           ctx.strokeStyle = 'black';
           ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(p.x, p.y, 5.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          drawnDsos.push({ ...p, r: 10, dso: o });
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 5.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          registerPickCircle(pick, p.x, p.y, 11, { type: 'dso', dso: o });
         }
       }
+
       ctx.restore();
-      ctx.strokeStyle = 'black'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+      ctx.stroke();
     }
     function move(dx, dy, multiplier = 1) {
       const b = ensureOrientation();
@@ -1657,33 +1701,11 @@
     function rollFrame(direction) { const b = ensureOrientation(); rotateBasis(b.f, direction * 10 * Math.PI / 180); draw(); focusCanvas(); }
     function selectAt(clientX, clientY) {
       const rect = canvas.getBoundingClientRect();
-      const clickX = (clientX - rect.left) * canvas.width / rect.width;
-      const clickY = (clientY - rect.top) * canvas.height / rect.height;
-      const radius = Math.min(canvas.width, canvas.height) * 0.48;
-      const fovRad = state.fov * Math.PI / 180;
-      const b = ensureOrientation();
-      let best = null;
-
-      skyStars.filter(s => s.mag <= state.magLimit).forEach(s => {
-        const p = project(s.v, b, radius, fovRad);
-        if (!p) return;
-        const visualRadius = Math.max(0.8, Math.min(4.6, 4.1 - s.mag * 0.54));
-        const hitRadius = Math.max(14, visualRadius + 8);
-        const d = Math.hypot(p.x - clickX, p.y - clickY);
-        if (d <= hitRadius && (!best || d < best.d)) best = { type: 'star', star: s, d };
-      });
-
-      if (state.showDso !== false) {
-        buildSkyDsoObjects().forEach(o => {
-          const p = project(o.v, b, radius, fovRad);
-          if (!p) return;
-          const d = Math.hypot(p.x - clickX, p.y - clickY);
-          if (d <= 14 && (!best || d < best.d)) best = { type: 'dso', dso: o, d };
-        });
-      }
-
-      if (!best) return;
-      state.message = best.type === 'dso' ? dsoInfoHtml(best.dso) : starInfoHtml(best.star);
+      const x = (clientX - rect.left) * canvas.width / rect.width;
+      const y = (clientY - rect.top) * canvas.height / rect.height;
+      const hit = pickFromLayer(canvas._pickLayer, x, y);
+      if (!hit) return;
+      state.message = hit.type === 'dso' ? dsoInfoHtml(hit.dso) : starInfoHtml(hit.star);
       const msg = $('#mapMsg');
       if (msg) msg.innerHTML = state.message;
     }
