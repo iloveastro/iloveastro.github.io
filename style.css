@@ -447,3 +447,13 @@ input[type='range']::-moz-range-thumb {
   border: 1px solid #111;
   background: white;
 }
+
+
+.atlas-map-controls {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+.atlas-map-controls label {
+  margin: 0;
+}
