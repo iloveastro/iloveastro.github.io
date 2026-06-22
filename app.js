@@ -1596,64 +1596,113 @@
 
 
   function renderSkyMap() {
-    const state = states.skymap || (states.skymap = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), showDso: true, message: '', orient: null });
+    const state = states.skymap || (states.skymap = {
+      loaded: false,
+      loading: false,
+      error: '',
+      fov: defaultFov(),
+      magLimit: defaultMag(),
+      showDso: true,
+      message: '',
+      orient: null
+    });
+
     app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+
     initRangeVisuals(app);
     setupSphereFullscreen();
-    const canvas = $('#skyMapCanvas'), ctx = canvas.getContext('2d');
-    const fovInput = $('#mapFov'), fovSlider = $('#mapFovSlider');
-    function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { canvas.focus(); } }
+
+    const canvas = $('#skyMapCanvas');
+    const ctx = canvas.getContext('2d');
+    const fovInput = $('#mapFov');
+    const fovSlider = $('#mapFovSlider');
+    const magInput = $('#mapMag');
+    const magSlider = $('#mapMagSlider');
+    const msg = $('#mapMsg');
+
+    function focusCanvas() {
+      try { canvas.focus({ preventScroll: true }); }
+      catch { canvas.focus(); }
+    }
+
     function cleanBasis(b) {
       const f = normVec(b.f);
-      let right = b.right;
+      let right = b.right || { x: 1, y: 0, z: 0 };
       const proj = dot(right, f);
       right = normVec({ x: right.x - proj * f.x, y: right.y - proj * f.y, z: right.z - proj * f.z });
       if (!Number.isFinite(right.x)) return localBasisFromForward(f);
       const up = normVec(cross(right, f));
       return { f, right: normVec(cross(f, up)), up };
     }
+
     function ensureOrientation() {
       if (!state.orient) state.orient = localBasisFromForward(vecFromRaDec(0, 0));
       state.orient = cleanBasis(state.orient);
       return state.orient;
     }
+
     function rotateAround(v, axis, angle) {
       const c = Math.cos(angle), s = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
-      return normVec({ x: v.x * c + cr.x * s + axis.x * d * (1 - c), y: v.y * c + cr.y * s + axis.y * d * (1 - c), z: v.z * c + cr.z * s + axis.z * d * (1 - c) });
+      return normVec({
+        x: v.x * c + cr.x * s + axis.x * d * (1 - c),
+        y: v.y * c + cr.y * s + axis.y * d * (1 - c),
+        z: v.z * c + cr.z * s + axis.z * d * (1 - c)
+      });
     }
+
     function rotateBasis(axis, angle) {
       const b = ensureOrientation();
-      state.orient = cleanBasis({ f: rotateAround(b.f, axis, angle), right: rotateAround(b.right, axis, angle), up: rotateAround(b.up, axis, angle) });
+      state.orient = cleanBasis({
+        f: rotateAround(b.f, axis, angle),
+        right: rotateAround(b.right, axis, angle),
+        up: rotateAround(b.up, axis, angle)
+      });
     }
-    function setFov(v) {
-      state.fov = Math.max(20, Math.min(190, v));
-      const value = Number(state.fov.toFixed(1));
-      if (fovInput) fovInput.value = value;
-      if (fovSlider) { fovSlider.value = value; updateRangeVisual(fovSlider); }
+
+    function setFov(value) {
+      state.fov = Math.max(20, Math.min(190, parseFloat(value) || defaultFov()));
+      const v = Number(state.fov.toFixed(1));
+      fovInput.value = v;
+      fovSlider.value = v;
+      updateRangeVisual(fovSlider);
       draw();
     }
-    function setMag(v) {
-      state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || defaultMag()));
-      const value = Number(state.magLimit.toFixed(1));
-      $('#mapMag').value = value; $('#mapMagSlider').value = value; updateRangeVisual($('#mapMagSlider'));
+
+    function setMag(value) {
+      state.magLimit = Math.max(4, Math.min(6, parseFloat(value) || defaultMag()));
+      const v = Number(state.magLimit.toFixed(1));
+      magInput.value = v;
+      magSlider.value = v;
+      updateRangeVisual(magSlider);
       draw();
     }
-    function project(v, b, radius, fovRad) {
-      const z = dot(v, b.f);
+
+    function project(v, basis, radius, fovRad) {
+      const z = dot(v, basis.f);
       const ang = Math.acos(Math.max(-1, Math.min(1, z)));
       if (ang > fovRad / 2) return null;
-      const x = dot(v, b.right), y = dot(v, b.up);
+      const x = dot(v, basis.right);
+      const y = dot(v, basis.up);
       const sin = Math.sin(ang) || 1e-9;
       const rr = (ang / (fovRad / 2)) * radius;
-      return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
+      return {
+        x: canvas.width / 2 + rr * x / sin,
+        y: canvas.height / 2 - rr * y / sin,
+        z
+      };
     }
-    function draw() {
+
+    function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = 'black';
       ctx.lineWidth = 1;
       ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+    }
+
+    function draw() {
+      clearCanvas();
 
       const pick = buildPickLookup(canvas);
       canvas._pickLayer = pick;
@@ -1667,40 +1716,45 @@
 
       const radius = Math.min(canvas.width, canvas.height) * 0.48;
       const fovRad = state.fov * Math.PI / 180;
-      const b = ensureOrientation();
+      const basis = ensureOrientation();
 
       ctx.save();
       ctx.beginPath();
       ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
       ctx.clip();
 
+      const visibleStars = skyStars
+        .filter(star => star.mag <= state.magLimit)
+        .sort((a, b) => b.mag - a.mag);
+
       ctx.fillStyle = 'black';
-      skyStars
-        .filter(s => s.mag <= state.magLimit)
-        .sort((a, b) => b.mag - a.mag)
-        .forEach(s => {
-          const p = project(s.v, b, radius, fovRad);
-          if (!p) return;
-          const r = Math.max(0.8, Math.min(4.6, 4.1 - s.mag * 0.54));
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-          ctx.fill();
-          registerPickCircle(pick, p.x, p.y, Math.max(12, r + 8), { type: 'star', star: s });
-        });
+      for (const star of visibleStars) {
+        const p = project(star.v, basis, radius, fovRad);
+        if (!p) continue;
+        const r = Math.max(0.8, Math.min(4.6, 4.1 - star.mag * 0.54));
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        registerPickCircle(pick, p.x, p.y, Math.max(12, r + 8), { type: 'star', star });
+      }
 
       if (state.showDso !== false) {
-        buildSkyDsoObjects().forEach(o => {
-          const p = project(o.v, b, radius, fovRad);
-          if (!p) return;
-          ctx.fillStyle = o.colour;
+        for (const dso of buildSkyDsoObjects()) {
+          const p = project(dso.v, basis, radius, fovRad);
+          if (!p) continue;
+
+          ctx.fillStyle = dso.colour;
           ctx.strokeStyle = 'black';
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(p.x, p.y, 5.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
-          registerPickCircle(pick, p.x, p.y, 11, { type: 'dso', dso: o });
-        });
+
+          registerPickCircle(pick, p.x, p.y, 11, { type: 'dso', dso });
+        }
       }
 
       ctx.restore();
@@ -1711,6 +1765,18 @@
       ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
       ctx.stroke();
     }
+
+    function selectAt(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * canvas.width / rect.width;
+      const y = (clientY - rect.top) * canvas.height / rect.height;
+      const hit = pickFromLayer(canvas._pickLayer, x, y);
+      if (!hit) return;
+
+      state.message = hit.type === 'dso' ? dsoInfoHtml(hit.dso) : starInfoHtml(hit.star);
+      msg.innerHTML = state.message;
+    }
+
     function move(dx, dy, multiplier = 1) {
       const b = ensureOrientation();
       const anglePerPx = (state.fov * Math.PI / 180) / Math.min(canvas.width, canvas.height) * multiplier;
@@ -1718,77 +1784,138 @@
       rotateBasis(ensureOrientation().right, -dy * anglePerPx);
       draw();
     }
-    function rollFrame(direction) { const b = ensureOrientation(); rotateBasis(b.f, direction * 10 * Math.PI / 180); draw(); focusCanvas(); }
-    function selectAt(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-      const x = (clientX - rect.left) * canvas.width / rect.width;
-      const y = (clientY - rect.top) * canvas.height / rect.height;
-      const hit = pickFromLayer(canvas._pickLayer, x, y);
-      if (!hit) return;
-      state.message = hit.type === 'dso' ? dsoInfoHtml(hit.dso) : starInfoHtml(hit.star);
-      const msg = $('#mapMsg');
-      if (msg) msg.innerHTML = state.message;
+
+    function rollFrame(direction) {
+      const b = ensureOrientation();
+      rotateBasis(b.f, direction * 10 * Math.PI / 180);
+      draw();
+      focusCanvas();
     }
-    $('#mapFov').addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
-    $('#mapFovSlider').addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
-    $('#mapMag').addEventListener('input', e => setMag(e.target.value));
-    $('#mapMagSlider').addEventListener('input', e => setMag(e.target.value));
-    $('#mapDso').addEventListener('change', e => { state.showDso = e.target.checked; draw(); });
-    $('#mapCentre').addEventListener('click', () => { state.orient = localBasisFromForward(vecFromRaDec(0, 0)); setFov(defaultFov()); focusCanvas(); });
+
+    fovInput.addEventListener('input', e => setFov(e.target.value));
+    fovSlider.addEventListener('input', e => setFov(e.target.value));
+    magInput.addEventListener('input', e => setMag(e.target.value));
+    magSlider.addEventListener('input', e => setMag(e.target.value));
+
+    $('#mapDso').addEventListener('change', e => {
+      state.showDso = e.target.checked;
+      draw();
+      focusCanvas();
+    });
+
+    $('#mapCentre').addEventListener('click', () => {
+      state.orient = localBasisFromForward(vecFromRaDec(0, 0));
+      setFov(defaultFov());
+      focusCanvas();
+    });
+
     $('#mapRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#mapRollCW').addEventListener('click', () => rollFrame(1));
-    $('#mapClear').addEventListener('click', () => { state.message = ''; $('#mapMsg').textContent = ''; focusCanvas(); });
+    $('#mapClear').addEventListener('click', () => {
+      state.message = '';
+      msg.textContent = '';
+      focusCanvas();
+    });
+
     document.querySelectorAll('[data-move]').forEach(btn => btn.addEventListener('click', () => {
       const [x, y] = btn.dataset.move.split(',').map(Number);
       move(x * Math.min(canvas.width, canvas.height) * 0.05, y * Math.min(canvas.width, canvas.height) * 0.05, 1);
       focusCanvas();
     }));
-    const activePointers = new Map();
-    let lastDrag = null, lastPinchDistance = null, totalDrag = 0;
-    const pointerDistance = () => { const pts = [...activePointers.values()]; return pts.length < 2 ? null : Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y); };
-    function finishPointer(e) {
-      const lastPoint = activePointers.get(e.pointerId);
-      activePointers.delete(e.pointerId);
-      if (lastPoint && totalDrag < 6) selectAt(lastPoint.x, lastPoint.y);
-      lastPinchDistance = activePointers.size >= 2 ? pointerDistance() : null;
-      lastDrag = activePointers.size === 1 ? [...activePointers.values()][0] : null;
-      totalDrag = 0;
+
+    let drag = null;
+    let pinch = null;
+
+    function pointerPosition(e) {
+      return { id: e.pointerId, x: e.clientX, y: e.clientY };
     }
-    canvas.addEventListener('pointerdown', e => { activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId); focusCanvas(); totalDrag = 0; if (activePointers.size === 1) lastDrag = { x: e.clientX, y: e.clientY }; if (activePointers.size >= 2) lastPinchDistance = pointerDistance(); });
-    canvas.addEventListener('pointermove', e => {
-      if (!activePointers.has(e.pointerId)) return;
-      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (activePointers.size >= 2) { const d = pointerDistance(); if (d && lastPinchDistance) setFov(state.fov * lastPinchDistance / d); lastPinchDistance = d; return; }
-      const p = activePointers.get(e.pointerId);
-      if (!lastDrag) { lastDrag = p; return; }
-      totalDrag += Math.hypot(p.x - lastDrag.x, p.y - lastDrag.y);
-      move(p.x - lastDrag.x, p.y - lastDrag.y, 0.9);
-      lastDrag = p;
+
+    const active = new Map();
+
+    function pointerDistance() {
+      const points = [...active.values()];
+      if (points.length < 2) return null;
+      return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+    }
+
+    canvas.addEventListener('pointerdown', e => {
+      active.set(e.pointerId, pointerPosition(e));
+      canvas.setPointerCapture(e.pointerId);
+      focusCanvas();
+
+      if (active.size === 1) drag = { start: pointerPosition(e), last: pointerPosition(e), moved: 0 };
+      if (active.size >= 2) pinch = pointerDistance();
     });
+
+    canvas.addEventListener('pointermove', e => {
+      if (!active.has(e.pointerId)) return;
+      const next = pointerPosition(e);
+      active.set(e.pointerId, next);
+
+      if (active.size >= 2) {
+        const d = pointerDistance();
+        if (d && pinch) setFov(state.fov * pinch / d);
+        pinch = d;
+        return;
+      }
+
+      if (!drag) return;
+      const dx = next.x - drag.last.x;
+      const dy = next.y - drag.last.y;
+      drag.moved += Math.hypot(dx, dy);
+      move(dx, dy, 0.9);
+      drag.last = next;
+    });
+
+    function finishPointer(e) {
+      const last = active.get(e.pointerId) || pointerPosition(e);
+      active.delete(e.pointerId);
+
+      if (drag && drag.start && drag.moved < 6) selectAt(last.x, last.y);
+
+      drag = active.size === 1 ? { start: [...active.values()][0], last: [...active.values()][0], moved: 0 } : null;
+      pinch = active.size >= 2 ? pointerDistance() : null;
+    }
+
     canvas.addEventListener('pointerup', finishPointer);
     canvas.addEventListener('pointercancel', finishPointer);
     canvas.addEventListener('lostpointercapture', finishPointer);
+
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
-      if (e.ctrlKey || e.metaKey) { setFov(state.fov * Math.exp(e.deltaY * 0.002)); return; }
+      if (e.ctrlKey || e.metaKey) {
+        setFov(state.fov * Math.exp(e.deltaY * 0.002));
+        return;
+      }
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? canvas.height : 1;
       move((e.deltaX || (e.shiftKey ? e.deltaY : 0)) * unit, (e.shiftKey ? 0 : e.deltaY) * unit, 0.45);
     }, { passive: false });
+
     canvas.addEventListener('keydown', e => {
       const step = e.shiftKey ? 28 : 12;
-      if (['ArrowLeft','a','A'].includes(e.key)) { e.preventDefault(); move(-step, 0); }
-      if (['ArrowRight','d','D'].includes(e.key)) { e.preventDefault(); move(step, 0); }
-      if (['ArrowUp','w','W'].includes(e.key)) { e.preventDefault(); move(0, -step); }
-      if (['ArrowDown','s','S'].includes(e.key)) { e.preventDefault(); move(0, step); }
+      if (['ArrowLeft', 'a', 'A'].includes(e.key)) { e.preventDefault(); move(-step, 0); }
+      if (['ArrowRight', 'd', 'D'].includes(e.key)) { e.preventDefault(); move(step, 0); }
+      if (['ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); move(0, -step); }
+      if (['ArrowDown', 's', 'S'].includes(e.key)) { e.preventDefault(); move(0, step); }
     });
+
     if (!state.loaded && !state.loading) {
       state.loading = true;
       Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => {
         buildSkyDsoObjects();
-        state.loaded = true; state.loading = false; draw(); canvas.focus();
-      }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
+        state.loaded = true;
+        state.loading = false;
+        draw();
+        focusCanvas();
+      }).catch(() => {
+        state.error = 'sky data unavailable';
+        state.loading = false;
+        draw();
+      });
     }
-    draw(); setTimeout(() => canvas.focus(), 0);
+
+    draw();
+    setTimeout(focusCanvas, 0);
   }
 
   function renderGuessConstellation() {
