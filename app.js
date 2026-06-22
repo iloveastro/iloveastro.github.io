@@ -793,7 +793,7 @@
       atlasCanvas.addEventListener('click', selectAtlasObject);
       atlasCanvas.addEventListener('dblclick', openAtlasStarMapZoom);
       redrawAtlasMap();
-      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => { buildSkyDsoObjects(); redrawAtlasMap(); });
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => []), loadDsoCoordinateData().catch(() => new Map())]).then(() => { buildSkyDsoObjects(); redrawAtlasMap(); });
     }
   }
 
@@ -998,6 +998,126 @@
   }
 
   let skyDsoObjects = [];
+  let skyDsoCoordinateMap = new Map();
+  let skyDsoCoordinatePromise = null;
+  const OPENNGC_CSV_URLS = [
+    'https://raw.githubusercontent.com/mattiaverga/OpenNGC/master/database_files/NGC.csv',
+    'https://cdn.jsdelivr.net/gh/mattiaverga/OpenNGC@master/database_files/NGC.csv'
+  ];
+
+  function csvRows(text) {
+    const rows = [];
+    let row = [], cell = '', quoted = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i], next = text[i + 1];
+      if (quoted) {
+        if (ch === '"' && next === '"') { cell += '"'; i++; }
+        else if (ch === '"') quoted = false;
+        else cell += ch;
+      } else if (ch === '"') quoted = true;
+      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else if (ch !== '\r') cell += ch;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.some(x => String(x || '').trim()));
+  }
+
+  function hmsToDegrees(value) {
+    const parts = String(value || '').trim().split(/[:\s]+/).filter(Boolean).map(Number);
+    if (!parts.length || !Number.isFinite(parts[0])) return null;
+    const h = parts[0], m = Number.isFinite(parts[1]) ? parts[1] : 0, s = Number.isFinite(parts[2]) ? parts[2] : 0;
+    return (h + m / 60 + s / 3600) * 15;
+  }
+
+  function dmsToDegrees(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    const sign = raw.startsWith('-') ? -1 : 1;
+    const parts = raw.replace(/^[+-]/, '').split(/[:\s]+/).filter(Boolean).map(Number);
+    if (!parts.length || !Number.isFinite(parts[0])) return null;
+    const d = Math.abs(parts[0]), m = Number.isFinite(parts[1]) ? parts[1] : 0, s = Number.isFinite(parts[2]) ? parts[2] : 0;
+    return sign * (d + m / 60 + s / 3600);
+  }
+
+  function dsoKey(value) {
+    const s = String(value || '').trim();
+    if (!s) return '';
+    const compacted = s.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const m = compacted.match(/^(NGC|IC|M|MESSIER|C|CALDWELL)0*([0-9]+)[A-Z]*$/);
+    if (!m) return compacted;
+    const prefix = m[1] === 'MESSIER' ? 'M' : m[1] === 'CALDWELL' ? 'C' : m[1];
+    return `${prefix}${parseInt(m[2], 10)}`;
+  }
+
+  function dsoIdentifierKeys(o) {
+    const values = [o.code, o.commonName, ...(o.aliases || []), ...(o.accepted || [])];
+    return [...new Set(values.map(dsoKey).filter(Boolean))];
+  }
+
+  function catalogueRowKeys(row) {
+    const values = [];
+    ['Name', 'M', 'Messier', 'NGC', 'IC', 'Identifiers', 'Common names', 'Common name', 'Other names'].forEach(k => {
+      if (row[k]) values.push(...String(row[k]).split(/[;,]/));
+    });
+    if (row.M) values.push(`M${row.M}`, `Messier ${row.M}`);
+    if (row.NGC) values.push(`NGC${row.NGC}`);
+    if (row.IC) values.push(`IC${row.IC}`);
+    return [...new Set(values.map(dsoKey).filter(Boolean))];
+  }
+
+  function parseOpenNgc(text) {
+    const rows = csvRows(text);
+    if (rows.length < 2) return new Map();
+    const header = rows[0].map(x => String(x || '').trim());
+    const objectCoordsByKey = new Map();
+
+    for (const cells of rows.slice(1)) {
+      const row = {};
+      header.forEach((h, i) => row[h] = cells[i] || '');
+      const ra = hmsToDegrees(row.RA || row.ra);
+      const dec = dmsToDegrees(row.Dec || row.DEC || row.dec);
+      if (!Number.isFinite(ra) || !Number.isFinite(dec)) continue;
+      catalogueRowKeys(row).forEach(key => objectCoordsByKey.set(key, { ra, dec }));
+    }
+
+    const coords = new Map();
+    DATA.dso.forEach(o => {
+      for (const key of dsoIdentifierKeys(o)) {
+        if (objectCoordsByKey.has(key)) {
+          coords.set(o.code, objectCoordsByKey.get(key));
+          break;
+        }
+      }
+    });
+    return coords;
+  }
+
+  async function loadDsoCoordinateData() {
+    if (skyDsoCoordinateMap.size) return skyDsoCoordinateMap;
+    if (skyDsoCoordinatePromise) return skyDsoCoordinatePromise;
+
+    skyDsoCoordinatePromise = (async () => {
+      let lastError = null;
+      for (const url of OPENNGC_CSV_URLS) {
+        try {
+          const res = await fetch(url, { cache: 'force-cache' });
+          if (!res.ok) throw new Error(`OpenNGC HTTP ${res.status}`);
+          const parsed = parseOpenNgc(await res.text());
+          if (parsed.size) {
+            skyDsoCoordinateMap = parsed;
+            skyDsoObjects = [];
+            return skyDsoCoordinateMap;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      throw lastError || new Error('DSO coordinate data unavailable');
+    })();
+
+    return skyDsoCoordinatePromise;
+  }
   function hashUnit(value, salt = '') {
     const s = String(value || '') + '|' + salt;
     let h = 2166136261;
@@ -1033,7 +1153,11 @@
     if (skyDsoObjects.length) return skyDsoObjects;
     skyDsoObjects = DATA.dso.map(o => {
       let v = null;
-      if (Number.isFinite(o.ra) && Number.isFinite(o.dec)) v = vecFromRaDec(o.ra, o.dec);
+      const catalogueCoord = skyDsoCoordinateMap.get(o.code);
+      if (catalogueCoord && Number.isFinite(catalogueCoord.ra) && Number.isFinite(catalogueCoord.dec)) {
+        v = vecFromRaDec(catalogueCoord.ra, catalogueCoord.dec);
+      }
+      if (!v && Number.isFinite(o.ra) && Number.isFinite(o.dec)) v = vecFromRaDec(o.ra, o.dec);
       if (!v && skyBoundsFeatures.length) {
         for (let i = 0; i < 220; i++) {
           const candidate = seededUnitVec(o.code || o.commonName || o.constellation, i);
@@ -1041,7 +1165,7 @@
         }
       }
       if (!v) v = skyConstCentres.get(o.constellation) || vecFromRaDec(0, 0);
-      return { ...o, v, colour: dsoColour(o), category: dsoCategory(o) };
+      return { ...o, v, colour: dsoColour(o), category: dsoCategory(o), hasCataloguePosition: Boolean(catalogueCoord) };
     });
     return skyDsoObjects;
   }
@@ -1157,7 +1281,7 @@
     const rotation = Number.isFinite(options.rotation) ? options.rotation : 0;
     const stars = options.stars || constellationStarSubset(name, magLimit);
     const showDso = options.showDso === true;
-    const dsos = showDso ? buildSkyDsoObjects().filter(o => o.constellation === name) : [];
+    const dsos = showDso ? buildSkyDsoObjects().filter(o => o.constellation === name && String(o.commonName || '').trim()) : [];
     const vectors = [...stars.map(s => s.v), ...dsos.map(o => o.v)];
     const pick = buildPickLookup(canvas);
 
@@ -1741,7 +1865,7 @@
       }
 
       if (state.showDso !== false) {
-        for (const dso of buildSkyDsoObjects()) {
+        for (const dso of buildSkyDsoObjects().filter(o => String(o.commonName || '').trim())) {
           const p = project(dso.v, basis, radius, fovRad);
           if (!p) continue;
 
@@ -1901,7 +2025,7 @@
 
     if (!state.loaded && !state.loading) {
       state.loading = true;
-      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => {
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => []), loadDsoCoordinateData().catch(() => new Map())]).then(() => {
         buildSkyDsoObjects();
         state.loaded = true;
         state.loading = false;
@@ -2813,9 +2937,9 @@
   }
 
   function renderTables() {
-    const state = states.tables || (states.tables = { mode: 'constellations', sort: {}, dsoFilters: { messier: true, caldwell: true, unnamed: true } });
+    const state = states.tables || (states.tables = { mode: 'constellations', sort: {}, dsoFilters: { messier: true, caldwell: true } });
     if (!state.sort) state.sort = {};
-    if (!state.dsoFilters) state.dsoFilters = { messier: true, caldwell: true, unnamed: true };
+    if (!state.dsoFilters) state.dsoFilters = { messier: true, caldwell: true };
     const tableModes = [
       { id: 'constellations', label: 'constellations' },
       { id: 'stars', label: 'stars' },
@@ -2861,7 +2985,6 @@
       const kind = dsoKind(o.code);
       if (kind === 'messier' && !state.dsoFilters.messier) return false;
       if (kind === 'caldwell' && !state.dsoFilters.caldwell) return false;
-      if (!String(o.commonName || '').trim() && !state.dsoFilters.unnamed) return false;
       return true;
     }
     function renderTableOptions() {
@@ -2869,7 +2992,7 @@
         options.innerHTML = '';
         return;
       }
-      options.innerHTML = `<label class="checkline"><input type="checkbox" data-dso-filter="messier" ${state.dsoFilters.messier ? 'checked' : ''}><span>Messier</span></label><label class="checkline"><input type="checkbox" data-dso-filter="caldwell" ${state.dsoFilters.caldwell ? 'checked' : ''}><span>Caldwell</span></label><label class="checkline"><input type="checkbox" data-dso-filter="unnamed" ${state.dsoFilters.unnamed ? 'checked' : ''}><span>unnamed DSOs</span></label>`;
+      options.innerHTML = `<label class="checkline"><input type="checkbox" data-dso-filter="messier" ${state.dsoFilters.messier ? 'checked' : ''}><span>Messier</span></label><label class="checkline"><input type="checkbox" data-dso-filter="caldwell" ${state.dsoFilters.caldwell ? 'checked' : ''}><span>Caldwell</span></label>`;
       options.querySelectorAll('[data-dso-filter]').forEach(box => box.addEventListener('change', () => {
         state.dsoFilters[box.dataset.dsoFilter] = box.checked;
         redraw();
