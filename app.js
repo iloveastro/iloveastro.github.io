@@ -678,7 +678,7 @@
     const hereIndex = order.indexOf(name);
     const prevName = order[(hereIndex - 1 + order.length) % order.length];
     const nextName = order[(hereIndex + 1) % order.length];
-    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table><div class="atlas-map-layout"><div class="atlas-map-controls"><label>Limiting magnitude<div class="slider-text-row"><input id="atlasMapMagSlider" type="range" min="4" max="6" step="0.1" value="6"><input id="atlasMapMag" type="number" min="4" max="6" step="0.1" value="6"></div></label><label class="checkline"><input id="atlasMapDso" type="checkbox"><span>DSOs</span></label><button type="button" id="atlasMapZoom">zoom map</button><div id="atlasConstMsg" class="message"></div></div><canvas id="atlasConstMap" width="900" height="900" aria-label="${esc(name)} star map"></canvas></div></section>`;
+    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table><div class="atlas-map-layout"><div class="atlas-map-controls"><label>Limiting magnitude<div class="slider-text-row"><input id="atlasMapMagSlider" type="range" min="4" max="6" step="0.1" value="6"><input id="atlasMapMag" type="number" min="4" max="6" step="0.1" value="6"></div></label><label class="checkline"><input id="atlasMapDso" type="checkbox"><span>DSOs</span></label><button type="button" id="atlasMapZoom" class="atlas-map-zoom-button" title="enlarge map" aria-label="enlarge star map">⛶</button><div id="atlasConstMsg" class="message"></div></div><canvas id="atlasConstMap" width="900" height="900" aria-label="${esc(name)} star map" title="click a star or DSO for info; double-click to enlarge"></canvas></div></section>`;
     $('#backAtlas').addEventListener('click', renderAtlas);
     $('#prevAtlas').addEventListener('click', () => renderConstellationPage(prevName));
     $('#nextAtlas').addEventListener('click', () => renderConstellationPage(nextName));
@@ -731,13 +731,15 @@
         const rect = canvasEl.getBoundingClientRect();
         const x = (clientX - rect.left) * canvasEl.width / rect.width;
         const y = (clientY - rect.top) * canvasEl.height / rect.height;
-        const nearest = arr => arr.map(p => ({ p, d: Math.hypot(p.x - x, p.y - y) })).filter(x => x.d <= x.p.r).sort((a, b) => a.d - b.d)[0]?.p;
+        const nearest = arr => arr.map(p => ({ p, d: Math.hypot(p.x - x, p.y - y) })).filter(x => x.d <= Math.max(20, x.p.r || 0)).sort((a, b) => a.d - b.d)[0]?.p;
         const dsoHit = showDso ? nearest(dsos) : null;
         const starHit = nearest(stars);
         if (dsoHit && (!starHit || Math.hypot(dsoHit.x - x, dsoHit.y - y) < Math.hypot(starHit.x - x, starHit.y - y))) {
           msgEl.innerHTML = dsoInfoHtml(dsoHit.dso);
         } else if (starHit) {
           msgEl.innerHTML = starInfoHtml(starHit.star);
+        } else {
+          msgEl.textContent = 'click closer to a star or DSO';
         }
       }
       function selectAtlasObject(e) {
@@ -749,7 +751,7 @@
         const layout = el('div', { class: 'atlas-star-map-zoom-layout' });
         const controls = el('div', { class: 'atlas-map-controls atlas-star-map-zoom-controls' });
         controls.innerHTML = `<label>Limiting magnitude<div class="slider-text-row"><input id="atlasZoomMagSlider" type="range" min="4" max="6" step="0.1" value="${atlasMagLimit.toFixed(1)}"><input id="atlasZoomMag" type="number" min="4" max="6" step="0.1" value="${atlasMagLimit.toFixed(1)}"></div></label><label class="checkline"><input id="atlasZoomDso" type="checkbox" ${atlasShowDso ? 'checked' : ''}><span>DSOs</span></label><div id="atlasZoomMsg" class="message"></div>`;
-        const zoomCanvas = el('canvas', { id: 'atlasZoomConstMap', width: '1200', height: '1200', 'aria-label': `${esc(name)} enlarged star map` });
+        const zoomCanvas = el('canvas', { id: 'atlasZoomConstMap', width: '1200', height: '1200', 'aria-label': `${esc(name)} enlarged star map`, title: 'click a star or DSO for info' });
         layout.append(controls, zoomCanvas);
         overlay.append(close, layout);
         document.body.append(overlay);
@@ -1153,7 +1155,7 @@
       const y = canvas.height / 2 - p.y * scale;
       const r = Math.max(1.2, Math.min(6, 5.2 - p.star.mag * 0.62));
       ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-      drawn.push({ x, y, r: Math.max(6, r + 4), star: p.star });
+      drawn.push({ x, y, r: Math.max(18, r + 10), star: p.star });
     });
     if (showDso) {
       rawDsos.forEach(p => {
@@ -1163,7 +1165,7 @@
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(x, y, 5.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        drawnDsos.push({ x, y, r: 10, dso: p.dso });
+        drawnDsos.push({ x, y, r: 20, dso: p.dso });
       });
     }
     drawn.dsos = drawnDsos;
@@ -1500,6 +1502,9 @@
     canvas.addEventListener('pointerup', finishPointer);
     canvas.addEventListener('pointercancel', finishPointer);
     canvas.addEventListener('lostpointercapture', finishPointer);
+    canvas.addEventListener('click', e => {
+      if (totalDrag < 6) selectAt(e.clientX, e.clientY);
+    });
 
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
@@ -1601,7 +1606,7 @@
         if (!p) continue;
         const r = Math.max(0.8, Math.min(4.6, 4.1 - s.mag * 0.54));
         ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
-        drawnStars.push({ ...p, r: Math.max(5, r + 3), star: s });
+        drawnStars.push({ ...p, r: Math.max(18, r + 10), star: s });
       }
       if (state.showDso !== false) {
         for (const o of buildSkyDsoObjects()) {
@@ -1611,7 +1616,7 @@
           ctx.strokeStyle = 'black';
           ctx.lineWidth = 1;
           ctx.beginPath(); ctx.arc(p.x, p.y, 5.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          drawnDsos.push({ ...p, r: 10, dso: o });
+          drawnDsos.push({ ...p, r: 20, dso: o });
         }
       }
       ctx.restore();
@@ -1629,7 +1634,7 @@
       const rect = canvas.getBoundingClientRect();
       const x = (clientX - rect.left) * canvas.width / rect.width;
       const y = (clientY - rect.top) * canvas.height / rect.height;
-      const nearest = arr => arr.map(p => ({ p, d: Math.hypot(p.x - x, p.y - y) })).filter(x => x.d <= x.p.r).sort((a, b) => a.d - b.d)[0]?.p;
+      const nearest = arr => arr.map(p => ({ p, d: Math.hypot(p.x - x, p.y - y) })).filter(x => x.d <= Math.max(20, x.p.r || 0)).sort((a, b) => a.d - b.d)[0]?.p;
       const dsoHit = state.showDso !== false ? nearest(drawnDsos) : null;
       const msg = $('#mapMsg');
       if (dsoHit) {
@@ -1645,6 +1650,7 @@
         if (!starHit) return;
         state.message = starInfoHtml(starHit.star);
       }
+      if (!state.message) state.message = 'click closer to a star or DSO';
       if (msg) msg.innerHTML = state.message;
     }
     $('#mapFov').addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
