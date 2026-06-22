@@ -942,11 +942,42 @@
     right = normVec(cross(f, up));
     return { f, right, up };
   }
+  const CONSTELLATION_GENITIVE = {
+    'Andromeda': 'Andromedae', 'Antlia': 'Antliae', 'Apus': 'Apodis', 'Aquarius': 'Aquarii', 'Aquila': 'Aquilae', 'Ara': 'Arae', 'Aries': 'Arietis', 'Auriga': 'Aurigae',
+    'Boötes': 'Boötis', 'Caelum': 'Caeli', 'Camelopardalis': 'Camelopardalis', 'Cancer': 'Cancri', 'Canes Venatici': 'Canum Venaticorum', 'Canis Major': 'Canis Majoris', 'Canis Minor': 'Canis Minoris',
+    'Capricornus': 'Capricorni', 'Carina': 'Carinae', 'Cassiopeia': 'Cassiopeiae', 'Centaurus': 'Centauri', 'Cepheus': 'Cephei', 'Cetus': 'Ceti', 'Chamaeleon': 'Chamaeleontis',
+    'Circinus': 'Circini', 'Columba': 'Columbae', 'Coma Berenices': 'Comae Berenices', 'Corona Australis': 'Coronae Australis', 'Corona Borealis': 'Coronae Borealis',
+    'Corvus': 'Corvi', 'Crater': 'Crateris', 'Crux': 'Crucis', 'Cygnus': 'Cygni', 'Delphinus': 'Delphini', 'Dorado': 'Doradus', 'Draco': 'Draconis', 'Equuleus': 'Equulei',
+    'Eridanus': 'Eridani', 'Fornax': 'Fornacis', 'Gemini': 'Geminorum', 'Grus': 'Gruis', 'Hercules': 'Herculis', 'Horologium': 'Horologii', 'Hydra': 'Hydrae', 'Hydrus': 'Hydri',
+    'Indus': 'Indi', 'Lacerta': 'Lacertae', 'Leo': 'Leonis', 'Leo Minor': 'Leonis Minoris', 'Lepus': 'Leporis', 'Libra': 'Librae', 'Lupus': 'Lupi', 'Lynx': 'Lyncis',
+    'Lyra': 'Lyrae', 'Mensa': 'Mensae', 'Microscopium': 'Microscopii', 'Monoceros': 'Monocerotis', 'Musca': 'Muscae', 'Norma': 'Normae', 'Octans': 'Octantis',
+    'Ophiuchus': 'Ophiuchi', 'Orion': 'Orionis', 'Pavo': 'Pavonis', 'Pegasus': 'Pegasi', 'Perseus': 'Persei', 'Phoenix': 'Phoenicis', 'Pictor': 'Pictoris',
+    'Pisces': 'Piscium', 'Piscis Austrinus': 'Piscis Austrini', 'Puppis': 'Puppis', 'Pyxis': 'Pyxidis', 'Reticulum': 'Reticuli', 'Sagitta': 'Sagittae', 'Sagittarius': 'Sagittarii',
+    'Scorpius': 'Scorpii', 'Sculptor': 'Sculptoris', 'Scutum': 'Scuti', 'Serpens': 'Serpentis', 'Sextans': 'Sextantis', 'Taurus': 'Tauri', 'Telescopium': 'Telescopii',
+    'Triangulum': 'Trianguli', 'Triangulum Australe': 'Trianguli Australis', 'Tucana': 'Tucanae', 'Ursa Major': 'Ursae Majoris', 'Ursa Minor': 'Ursae Minoris',
+    'Vela': 'Velorum', 'Virgo': 'Virginis', 'Volans': 'Volantis', 'Vulpecula': 'Vulpeculae'
+  };
+  const GREEK_BAYER_SYMBOLS = [
+    ['alpha', 'α'], ['alp', 'α'], ['beta', 'β'], ['bet', 'β'], ['gamma', 'γ'], ['gam', 'γ'], ['delta', 'δ'], ['del', 'δ'], ['epsilon', 'ε'], ['eps', 'ε'],
+    ['zeta', 'ζ'], ['zet', 'ζ'], ['eta', 'η'], ['theta', 'θ'], ['the', 'θ'], ['iota', 'ι'], ['iot', 'ι'], ['kappa', 'κ'], ['kap', 'κ'], ['lambda', 'λ'], ['lam', 'λ'],
+    ['mu', 'μ'], ['nu', 'ν'], ['xi', 'ξ'], ['omicron', 'ο'], ['omi', 'ο'], ['pi', 'π'], ['rho', 'ρ'], ['sig', 'σ'], ['sigma', 'σ'], ['tau', 'τ'], ['upsilon', 'υ'], ['ups', 'υ'],
+    ['phi', 'φ'], ['chi', 'χ'], ['psi', 'ψ'], ['omega', 'ω'], ['ome', 'ω']
+  ];
+  function greekBayerSymbol(value) {
+    const c = compact(value);
+    if (!c) return '';
+    for (const [key, symbol] of GREEK_BAYER_SYMBOLS) {
+      if (c.includes(key)) return symbol;
+    }
+    return '';
+  }
   function starDisplayName(s) {
-    return String(s.name || '').trim() || String(s.bf || '').trim() || String(s.bayer || '').trim() || 'unnamed star';
+    return String(s.name || '').trim();
   }
   function starDesignation(s) {
-    return String(s.bf || '').trim() || String(s.bayer || '').trim() || '—';
+    const symbol = greekBayerSymbol(s.bayer) || greekBayerSymbol(s.bf);
+    if (!symbol) return '';
+    return `${symbol} ${CONSTELLATION_GENITIVE[s.constellation] || s.constellation}`;
   }
 
   function setupSphereFullscreen() {
@@ -1413,12 +1444,24 @@
       const msg = $('#mapMsg');
       if (dsoHit) {
         const o = dsoHit.dso;
-        state.message = `<strong>${esc(o.commonName || 'unnamed DSO')}</strong><br>tag: ${esc(o.code)}<br>constellation: ${esc(o.constellation)}<br>type: ${esc(o.type)}`;
+        const lines = [];
+        if (String(o.commonName || '').trim()) lines.push(`<strong>${esc(o.commonName)}</strong>`);
+        lines.push(`tag: ${esc(o.code)}`);
+        lines.push(`constellation: ${esc(o.constellation)}`);
+        lines.push(`type: ${esc(o.type)}`);
+        state.message = lines.join('<br>');
       } else {
         const starHit = nearest(drawnStars);
         if (!starHit) return;
         const s = starHit.star;
-        state.message = `<strong>${esc(starDisplayName(s))}</strong><br>designation: ${esc(starDesignation(s))}<br>constellation: ${esc(s.constellation)}<br>magnitude: ${s.mag.toFixed(2)}`;
+        const name = starDisplayName(s);
+        const designation = starDesignation(s);
+        const lines = [];
+        if (name) lines.push(`<strong>${esc(name)}</strong>`);
+        if (designation) lines.push(`designation: ${esc(designation)}`);
+        lines.push(`constellation: ${esc(s.constellation)}`);
+        lines.push(`magnitude: ${s.mag.toFixed(2)}`);
+        state.message = lines.join('<br>');
       }
       if (msg) msg.innerHTML = state.message;
     }
@@ -1486,27 +1529,21 @@
 
   function renderGuessConstellation() {
     const state = states.guessconst || (states.guessconst = { loaded: false, loading: false, error: '', target: '', stars: [], rotation: 0, message: '', answered: false, magLimit: defaultMag() });
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="single constellation star map"></canvas></section><aside class="panel"><div class="prompt">Which constellation is this?</div><input id="guessConstInput" autocomplete="off" placeholder="constellation name"><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div class="stats">${formatScore('guessconst')}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="single constellation star map"></canvas></section><aside class="panel"><div class="prompt">Which constellation is this?</div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><input id="guessConstInput" autocomplete="off" placeholder="constellation name"><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div class="stats">${formatScore('guessconst')}</div></aside></div>`;
+    initRangeVisuals(app);
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
     function starsInConstellation(name) {
-      let stars = skyStars.filter(s => s.mag <= state.magLimit && officialConstellationAtVec(s.v) === name);
-      if (stars.length < 3) stars = skyStars.filter(s => s.mag <= 6 && officialConstellationAtVec(s.v) === name);
-      if (stars.length < 3) stars = skyStars.filter(s => s.constellation === name && s.mag <= 6);
-      return stars;
+      const official = skyStars.filter(s => s.mag <= state.magLimit && officialConstellationAtVec(s.v) === name);
+      if (official.length) return official;
+      return skyStars.filter(s => s.mag <= state.magLimit && s.constellation === name);
     }
     function chooseQuestion() {
-      const names = shuffle(DATA.constellations.map(c => c.name));
-      for (const name of names) {
-        const stars = starsInConstellation(name);
-        if (stars.length >= 3) {
-          state.target = name;
-          state.stars = stars;
-          state.rotation = Math.random() * Math.PI * 2;
-          state.message = '';
-          state.answered = false;
-          return;
-        }
-      }
+      const name = rand(DATA.constellations).name;
+      state.target = name;
+      state.stars = starsInConstellation(name);
+      state.rotation = Math.random() * Math.PI * 2;
+      state.message = '';
+      state.answered = false;
     }
     function centreVec(stars) {
       const sum = stars.reduce((v, s) => ({ x: v.x + s.v.x, y: v.y + s.v.y, z: v.z + s.v.z }), { x: 0, y: 0, z: 0 });
@@ -1517,7 +1554,8 @@
       ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
       if (!state.loaded) { ctx.fillStyle = 'black'; ctx.font = '20px Arial'; ctx.fillText(state.error || 'loading constellation...', 24, 40); return; }
-      if (!state.target || !state.stars.length) chooseQuestion();
+      if (!state.target) chooseQuestion();
+      if (!state.stars.length) return;
       const b = localBasisFromForward(centreVec(state.stars));
       const c = Math.cos(state.rotation), s = Math.sin(state.rotation);
       const raw = state.stars.map(star => {
@@ -1554,6 +1592,20 @@
       state.message = `answer: ${state.target}`;
       $('#guessConstMsg').textContent = state.message;
     }
+    function setGuessMag(value) {
+      state.magLimit = Math.max(4, Math.min(6, parseFloat(value) || defaultMag()));
+      state.magLimit = Math.round(state.magLimit * 10) / 10;
+      const mag = $('#guessConstMag');
+      const slider = $('#guessConstMagSlider');
+      if (mag) mag.value = state.magLimit.toFixed(1);
+      if (slider) { slider.value = state.magLimit.toFixed(1); updateRangeVisual(slider); }
+      if (state.loaded && state.target) {
+        state.stars = starsInConstellation(state.target);
+        draw();
+      }
+    }
+    $('#guessConstMag').addEventListener('input', e => setGuessMag(e.target.value));
+    $('#guessConstMagSlider').addEventListener('input', e => setGuessMag(e.target.value));
     $('#guessConstInput').addEventListener('input', e => checkAnswer(e.target.value));
     $('#guessConstInput').addEventListener('keydown', e => { if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); e.stopPropagation(); newQuestion(); } });
     $('#guessConstReveal').addEventListener('click', reveal);
