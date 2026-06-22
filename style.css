@@ -533,3 +533,55 @@ input[type='range']::-moz-range-thumb {
     max-height: 56vh;
   }
 }
+
+
+/* v69 atlas sizing: larger than v68, still viewport-bounded */
+.detail-chart.atlas-zoomable-chart {
+  width: min(100%, 72vh, 760px);
+  max-height: 72vh;
+}
+.atlas-map-layout {
+  grid-template-columns: minmax(190px, 250px) minmax(0, 760px);
+}
+.atlas-map-layout #atlasConstMap {
+  width: min(100%, 70vh, 720px);
+  max-height: 70vh;
+}
+.atlas-star-map-zoom-layout {
+  display: grid;
+  grid-template-columns: minmax(210px, 280px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  width: min(98vw, 1280px);
+  max-height: 94vh;
+}
+.atlas-star-map-zoom-controls {
+  padding: 10px;
+  border: 1px solid #111;
+  background: white;
+}
+#atlasZoomConstMap {
+  width: min(calc(98vw - 330px), 92vh, 980px);
+  max-height: 92vh;
+  height: auto;
+  border: 1px solid #111;
+  background: white;
+}
+@media (max-width: 850px) {
+  .detail-chart.atlas-zoomable-chart {
+    width: min(100%, 66vh, 680px);
+    max-height: 66vh;
+  }
+  .atlas-map-layout #atlasConstMap {
+    width: min(100%, 64vh, 640px);
+    max-height: 64vh;
+  }
+  .atlas-star-map-zoom-layout {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+  #atlasZoomConstMap {
+    width: min(100%, 82vh, 900px);
+    max-height: 82vh;
+  }
+}

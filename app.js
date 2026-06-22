@@ -678,7 +678,7 @@
     const hereIndex = order.indexOf(name);
     const prevName = order[(hereIndex - 1 + order.length) % order.length];
     const nextName = order[(hereIndex + 1) % order.length];
-    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table><div class="atlas-map-layout"><div class="atlas-map-controls"><label>Limiting magnitude<div class="slider-text-row"><input id="atlasMapMagSlider" type="range" min="4" max="6" step="0.1" value="6"><input id="atlasMapMag" type="number" min="4" max="6" step="0.1" value="6"></div></label><label class="checkline"><input id="atlasMapDso" type="checkbox"><span>DSOs</span></label><div id="atlasConstMsg" class="message"></div></div><canvas id="atlasConstMap" width="900" height="900" aria-label="${esc(name)} star map"></canvas></div></section>`;
+    app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table><div class="atlas-map-layout"><div class="atlas-map-controls"><label>Limiting magnitude<div class="slider-text-row"><input id="atlasMapMagSlider" type="range" min="4" max="6" step="0.1" value="6"><input id="atlasMapMag" type="number" min="4" max="6" step="0.1" value="6"></div></label><label class="checkline"><input id="atlasMapDso" type="checkbox"><span>DSOs</span></label><button type="button" id="atlasMapZoom">zoom map</button><div id="atlasConstMsg" class="message"></div></div><canvas id="atlasConstMap" width="900" height="900" aria-label="${esc(name)} star map"></canvas></div></section>`;
     $('#backAtlas').addEventListener('click', renderAtlas);
     $('#prevAtlas').addEventListener('click', () => renderConstellationPage(prevName));
     $('#nextAtlas').addEventListener('click', () => renderConstellationPage(nextName));
@@ -721,24 +721,85 @@
         if (slider) { slider.value = atlasMagLimit.toFixed(1); updateRangeVisual(slider); }
         redrawAtlasMap();
       }
-      function selectAtlasObject(e) {
-        const rect = atlasCanvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left) * atlasCanvas.width / rect.width;
-        const y = (e.clientY - rect.top) * atlasCanvas.height / rect.height;
+      function setAtlasDso(value) {
+        atlasShowDso = !!value;
+        const dso = $('#atlasMapDso');
+        if (dso) dso.checked = atlasShowDso;
+        redrawAtlasMap();
+      }
+      function selectFromDrawn(clientX, clientY, canvasEl, stars, dsos, showDso, msgEl) {
+        const rect = canvasEl.getBoundingClientRect();
+        const x = (clientX - rect.left) * canvasEl.width / rect.width;
+        const y = (clientY - rect.top) * canvasEl.height / rect.height;
         const nearest = arr => arr.map(p => ({ p, d: Math.hypot(p.x - x, p.y - y) })).filter(x => x.d <= x.p.r).sort((a, b) => a.d - b.d)[0]?.p;
-        const dsoHit = atlasShowDso ? nearest(atlasDsos) : null;
-        const starHit = nearest(atlasStars);
-        const msg = $('#atlasConstMsg');
+        const dsoHit = showDso ? nearest(dsos) : null;
+        const starHit = nearest(stars);
         if (dsoHit && (!starHit || Math.hypot(dsoHit.x - x, dsoHit.y - y) < Math.hypot(starHit.x - x, starHit.y - y))) {
-          msg.innerHTML = dsoInfoHtml(dsoHit.dso);
+          msgEl.innerHTML = dsoInfoHtml(dsoHit.dso);
         } else if (starHit) {
-          msg.innerHTML = starInfoHtml(starHit.star);
+          msgEl.innerHTML = starInfoHtml(starHit.star);
         }
+      }
+      function selectAtlasObject(e) {
+        selectFromDrawn(e.clientX, e.clientY, atlasCanvas, atlasStars, atlasDsos, atlasShowDso, $('#atlasConstMsg'));
+      }
+      function openAtlasStarMapZoom() {
+        const overlay = el('div', { class: 'image-zoom-overlay atlas-star-map-zoom' });
+        const close = el('button', { type: 'button', class: 'image-zoom-close', 'aria-label': 'close zoom' }, [document.createTextNode('×')]);
+        const layout = el('div', { class: 'atlas-star-map-zoom-layout' });
+        const controls = el('div', { class: 'atlas-map-controls atlas-star-map-zoom-controls' });
+        controls.innerHTML = `<label>Limiting magnitude<div class="slider-text-row"><input id="atlasZoomMagSlider" type="range" min="4" max="6" step="0.1" value="${atlasMagLimit.toFixed(1)}"><input id="atlasZoomMag" type="number" min="4" max="6" step="0.1" value="${atlasMagLimit.toFixed(1)}"></div></label><label class="checkline"><input id="atlasZoomDso" type="checkbox" ${atlasShowDso ? 'checked' : ''}><span>DSOs</span></label><div id="atlasZoomMsg" class="message"></div>`;
+        const zoomCanvas = el('canvas', { id: 'atlasZoomConstMap', width: '1200', height: '1200', 'aria-label': `${esc(name)} enlarged star map` });
+        layout.append(controls, zoomCanvas);
+        overlay.append(close, layout);
+        document.body.append(overlay);
+        initRangeVisuals(overlay);
+        let zoomStars = [];
+        let zoomDsos = [];
+        function redrawZoom() {
+          zoomStars = drawConstellationStarMap(zoomCanvas, name, { magLimit: atlasMagLimit, rotation: 0, showDso: atlasShowDso });
+          zoomDsos = zoomStars.dsos || [];
+        }
+        function syncZoomControls() {
+          const mag = $('#atlasZoomMag');
+          const slider = $('#atlasZoomMagSlider');
+          const dso = $('#atlasZoomDso');
+          if (mag) mag.value = atlasMagLimit.toFixed(1);
+          if (slider) { slider.value = atlasMagLimit.toFixed(1); updateRangeVisual(slider); }
+          if (dso) dso.checked = atlasShowDso;
+        }
+        function setZoomMag(value) {
+          setAtlasMag(value);
+          syncZoomControls();
+          redrawZoom();
+        }
+        function setZoomDso(value) {
+          setAtlasDso(value);
+          syncZoomControls();
+          redrawZoom();
+        }
+        $('#atlasZoomMag').addEventListener('input', e => setZoomMag(e.target.value));
+        $('#atlasZoomMagSlider').addEventListener('input', e => setZoomMag(e.target.value));
+        $('#atlasZoomDso').addEventListener('change', e => setZoomDso(e.target.checked));
+        zoomCanvas.addEventListener('click', e => selectFromDrawn(e.clientX, e.clientY, zoomCanvas, zoomStars, zoomDsos, atlasShowDso, $('#atlasZoomMsg')));
+        function closeZoom() {
+          overlay.remove();
+          document.removeEventListener('keydown', escClose);
+        }
+        function escClose(e) {
+          if (e.key === 'Escape') closeZoom();
+        }
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeZoom(); });
+        close.addEventListener('click', closeZoom);
+        document.addEventListener('keydown', escClose);
+        redrawZoom();
       }
       $('#atlasMapMag').addEventListener('input', e => setAtlasMag(e.target.value));
       $('#atlasMapMagSlider').addEventListener('input', e => setAtlasMag(e.target.value));
-      $('#atlasMapDso').addEventListener('change', e => { atlasShowDso = e.target.checked; redrawAtlasMap(); });
+      $('#atlasMapDso').addEventListener('change', e => setAtlasDso(e.target.checked));
+      $('#atlasMapZoom').addEventListener('click', openAtlasStarMapZoom);
       atlasCanvas.addEventListener('click', selectAtlasObject);
+      atlasCanvas.addEventListener('dblclick', openAtlasStarMapZoom);
       redrawAtlasMap();
       Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => { buildSkyDsoObjects(); redrawAtlasMap(); });
     }
