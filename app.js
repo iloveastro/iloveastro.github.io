@@ -1005,7 +1005,17 @@
     'https://cdn.jsdelivr.net/gh/mattiaverga/OpenNGC@master/database_files/NGC.csv'
   ];
 
-  function csvRows(text) {
+  function detectCsvDelimiter(text) {
+    const firstLine = String(text || '').split(/\r?\n/, 1)[0] || '';
+    const counts = [
+      { delimiter: ';', count: (firstLine.match(/;/g) || []).length },
+      { delimiter: ',', count: (firstLine.match(/,/g) || []).length },
+      { delimiter: '\t', count: (firstLine.match(/\t/g) || []).length }
+    ];
+    counts.sort((a, b) => b.count - a.count);
+    return counts[0].count ? counts[0].delimiter : ',';
+  }
+  function csvRows(text, delimiter = ',') {
     const rows = [];
     let row = [], cell = '', quoted = false;
     for (let i = 0; i < text.length; i++) {
@@ -1015,7 +1025,7 @@
         else if (ch === '"') quoted = false;
         else cell += ch;
       } else if (ch === '"') quoted = true;
-      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === delimiter) { row.push(cell); cell = ''; }
       else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
       else if (ch !== '\r') cell += ch;
     }
@@ -1067,7 +1077,7 @@
   }
 
   function parseOpenNgc(text) {
-    const rows = csvRows(text);
+    const rows = csvRows(text, detectCsvDelimiter(text));
     if (rows.length < 2) return new Map();
     const header = rows[0].map(x => String(x || '').trim());
     const objectCoordsByKey = new Map();
@@ -1741,7 +1751,7 @@
       orient: null
     });
 
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="constellation, star, or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="constellation, star, or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
 
     initRangeVisuals(app);
     setupSphereFullscreen();
@@ -1963,7 +1973,9 @@
         let score = Infinity;
         if (key === query) score = 0;
         else if (key.startsWith(query)) score = 1;
+        else if (query.length >= 5 && key.length >= query.length && oneSubstitutionTypo(key.slice(0, query.length), query)) score = 1.5;
         else if (key.includes(query)) score = 2;
+        else if (query.length >= 5 && key.length === query.length && oneSubstitutionTypo(key, query)) score = 2.5;
         if (score < Infinity) candidates.push({ ...result, label, score });
       }
     }
@@ -1991,7 +2003,7 @@
         });
       });
 
-      buildSkyDsoObjects().forEach(dso => {
+      buildSkyDsoObjects().filter(dso => String(dso.commonName || '').trim()).forEach(dso => {
         addSearchCandidate(candidates, query, dsoSearchLabels(dso), {
           kind: 'dso',
           dso,
@@ -2091,6 +2103,8 @@
       focusCanvas();
     });
 
+    $('#mapZoomIn').addEventListener('click', () => { setFov(state.fov * 0.8); focusCanvas(); });
+    $('#mapZoomOut').addEventListener('click', () => { setFov(state.fov * 1.25); focusCanvas(); });
     $('#mapRollCCW').addEventListener('click', () => rollFrame(-1));
     $('#mapRollCW').addEventListener('click', () => rollFrame(1));
     $('#mapClear').addEventListener('click', () => {
@@ -3101,7 +3115,7 @@
   function renderTables() {
     const state = states.tables || (states.tables = { mode: 'constellations', sort: {}, dsoFilters: { messier: true, caldwell: true } });
     if (!state.sort) state.sort = {};
-    if (!state.dsoFilters) state.dsoFilters = { messier: true, caldwell: true };
+    if (!state.dsoFilters) state.dsoFilters = { messier: true, caldwell: true }; delete state.dsoFilters.unnamed;
     const tableModes = [
       { id: 'constellations', label: 'constellations' },
       { id: 'stars', label: 'stars' },
