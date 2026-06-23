@@ -649,15 +649,17 @@
   }
 
   function renderAtlas() {
-    app.innerHTML = '<h2>Atlas</h2><input id="atlasSearch" placeholder="search constellations, stars, DSOs, asterisms"><div class="atlas-grid" id="atlasGrid"></div>';
+    const state = states.atlas || (states.atlas = { page: '' });
+    if (state.page) { renderConstellationPage(state.page); return; }
+    app.innerHTML = '<h2>Atlas</h2><input id="atlasSearch" placeholder="search constellation name"><div class="atlas-grid" id="atlasGrid"></div>';
     const search = $('#atlasSearch'), grid = $('#atlasGrid');
     function draw() {
       const q = norm(search.value);
       grid.innerHTML = '';
       DATA.constellations.forEach(c0 => {
         const name = c0.name, info = DATA.constellationInfo[name], chart = chartByName.get(name);
-        const blob = [name, info.meaning, info.myth, ...(info.neighbours || []), ...(info.asterisms || []), ...info.stars.map(s => s.name), ...info.dsos.map(o => `${o.code} ${o.commonName}`)].join(' ');
-        if (q && !norm(blob).includes(q)) return;
+        const aliases = [name, c0.abbr, ...(c0.aliases || [])];
+        if (q && !aliases.some(x => norm(x) === q)) return;
         const card = el('div', { class: 'atlas-card', onclick: () => renderConstellationPage(name) });
         card.innerHTML = `${chart ? chartImg(chart, true, '', `${name} labelled chart`) : ''}<h3>${esc(name)}</h3><p class="small">${esc(info.meaning)}</p><p class="small">${info.asterisms.length ? info.asterisms.map(esc).join(', ') : '&nbsp;'}</p>`;
         grid.append(card);
@@ -666,6 +668,8 @@
     search.addEventListener('input', draw); draw(); search.focus();
   }
   function renderConstellationPage(name) {
+    const atlasState = states.atlas || (states.atlas = { page: '' });
+    atlasState.page = name;
     const info = DATA.constellationInfo[name], charts = chartsByName.get(name) || [];
     const relatedAsterisms = DATA.asterisms.filter(a => (a.constellations || []).includes(name));
     const asterismRows = relatedAsterisms.length ? relatedAsterisms.map(a => `<tr><td>${esc(a.name)}</td><td>${(a.members || []).map(esc).join(', ') || '—'}</td><td>${esc(a.clue || '')}</td></tr>`).join('') : '<tr><td colspan="3">No listed asterism in the current catalogue.</td></tr>';
@@ -679,7 +683,11 @@
     const prevName = order[(hereIndex - 1 + order.length) % order.length];
     const nextName = order[(hereIndex + 1) % order.length];
     app.innerHTML = `<div class="controls atlas-page-nav"><button type="button" id="prevAtlas" title="previous constellation">←</button><button type="button" id="backAtlas">atlas</button><button type="button" id="nextAtlas" title="next constellation">→</button></div><h2>${esc(name)}</h2><div class="detail-grid"><section class="panel"><h3>Memory hook</h3><p><strong>${esc(info.meaning)}</strong></p><p>${esc(info.myth)}</p>${atlasNotes}<h3>Bordering / nearby chart labels</h3><p>${info.neighbours.length ? info.neighbours.map(n => `<button type="button" class="linkbtn" data-const="${esc(n)}">${esc(n)}</button>`).join(' ') : 'none listed'}</p><h3>Asterisms and sky groups</h3><div class="table-wrap"><table><thead><tr><th>asterism</th><th>member stars</th><th>description</th></tr></thead><tbody>${asterismRows}</tbody></table></div>${facts.length ? `<h3>Fun facts / pointing tricks</h3><ul>${facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</section><section class="panel">${chartHtml}</section></div><section class="panel"><h3>Stars inside</h3><table><thead><tr><th>star</th><th>designation</th><th>note</th></tr></thead><tbody>${starRows}</tbody></table><h3>Messier + Caldwell DSOs inside</h3><table><thead><tr><th>code</th><th>common name</th><th>type</th></tr></thead><tbody>${dsoRows}</tbody></table><div class="atlas-map-layout"><div class="atlas-map-controls"><label>Limiting magnitude<div class="slider-text-row"><input id="atlasMapMagSlider" type="range" min="4" max="6" step="0.1" value="6"><input id="atlasMapMag" type="number" min="4" max="6" step="0.1" value="6"></div></label><label class="checkline"><input id="atlasMapDso" type="checkbox"><span>DSOs</span></label><div id="atlasConstMsg" class="message"></div></div><div class="atlas-map-canvas-wrap"><canvas id="atlasConstMap" width="900" height="900" aria-label="${esc(name)} star map"></canvas><button type="button" id="atlasMapZoom" class="atlas-map-zoom-button" title="enlarge map" aria-label="enlarge star map">⛶</button></div></div></section>`;
-    $('#backAtlas').addEventListener('click', renderAtlas);
+    $('#backAtlas').addEventListener('click', () => {
+      const atlasState = states.atlas || (states.atlas = { page: '' });
+      atlasState.page = '';
+      renderAtlas();
+    });
     $('#prevAtlas').addEventListener('click', () => renderConstellationPage(prevName));
     $('#nextAtlas').addEventListener('click', () => renderConstellationPage(nextName));
     document.querySelectorAll('[data-const]').forEach(b => b.addEventListener('click', () => renderConstellationPage(b.dataset.const)));
@@ -1258,6 +1266,25 @@
     const byCatalogue = skyStars.filter(s => s.mag <= magLimit && s.constellation === name);
     const byBoundary = skyStars.filter(s => s.mag <= magLimit && officialConstellationAtVec(s.v) === name);
     return uniqueSkyStars([...byCatalogue, ...byBoundary]);
+  }
+  const GUESS_CONTEXT_STARS = {
+    Pegasus: ['Alpheratz'],
+    Auriga: ['Elnath', 'Alnath']
+  };
+  function findSkyStarByAnyName(names, magLimit = 6) {
+    const keys = names.map(compact).filter(Boolean);
+    return skyStars
+      .filter(s => s.mag <= magLimit)
+      .find(s => keys.includes(compact(s.name)) || keys.includes(compact(starDisplayName(s))));
+  }
+  function guessStarsForConstellation(name, magLimit = 6) {
+    const stars = starsForConstellation(name, magLimit).slice();
+    const contextNames = GUESS_CONTEXT_STARS[name] || [];
+    contextNames.forEach(label => {
+      const star = findSkyStarByAnyName([label], magLimit);
+      if (star) stars.push({ ...star, constellation: name, contextStar: true, actualConstellation: star.constellation });
+    });
+    return uniqueSkyStars(stars);
   }
   function constellationStarSubset(name, magLimit = 6) {
     return starsForConstellation(name, magLimit);
@@ -2237,7 +2264,7 @@
     initRangeVisuals(app);
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
     function starsInConstellation(name) {
-      return starsForConstellation(name, state.magLimit);
+      return guessStarsForConstellation(name, state.magLimit);
     }
     function chooseQuestion() {
       const name = rand(DATA.constellations).name;
