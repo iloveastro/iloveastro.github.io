@@ -659,7 +659,7 @@
       DATA.constellations.forEach(c0 => {
         const name = c0.name, info = DATA.constellationInfo[name], chart = chartByName.get(name);
         const aliases = [name, c0.abbr, ...(c0.aliases || [])];
-        if (q && !aliases.some(x => norm(x) === q)) return;
+        if (q && !aliases.some(x => norm(x).includes(q))) return;
         const card = el('div', { class: 'atlas-card', onclick: () => renderConstellationPage(name) });
         card.innerHTML = `${chart ? chartImg(chart, true, '', `${name} labelled chart`) : ''}<h3>${esc(name)}</h3><p class="small">${esc(info.meaning)}</p><p class="small">${info.asterisms.length ? info.asterisms.map(esc).join(', ') : '&nbsp;'}</p>`;
         grid.append(card);
