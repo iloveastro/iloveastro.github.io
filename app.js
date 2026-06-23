@@ -1243,10 +1243,24 @@
     lines.push(`type: ${esc(o.type)}`);
     return lines.join('<br>');
   }
+  function uniqueSkyStars(list) {
+    const seen = new Set();
+    const out = [];
+    list.forEach(s => {
+      const key = `${Number(s.ra).toFixed(6)}:${Number(s.dec).toFixed(6)}:${compact(s.name)}:${compact(s.bayer)}:${compact(s.bf)}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(s);
+    });
+    return out.sort((a, b) => a.mag - b.mag);
+  }
+  function starsForConstellation(name, magLimit = 6) {
+    const byCatalogue = skyStars.filter(s => s.mag <= magLimit && s.constellation === name);
+    const byBoundary = skyStars.filter(s => s.mag <= magLimit && officialConstellationAtVec(s.v) === name);
+    return uniqueSkyStars([...byCatalogue, ...byBoundary]);
+  }
   function constellationStarSubset(name, magLimit = 6) {
-    const official = skyStars.filter(s => s.mag <= magLimit && officialConstellationAtVec(s.v) === name);
-    if (official.length) return official;
-    return skyStars.filter(s => s.mag <= magLimit && s.constellation === name);
+    return starsForConstellation(name, magLimit);
   }
   function colourIdFill(ctx, id) {
     const r = id & 255, g = (id >> 8) & 255, b = (id >> 16) & 255;
@@ -2223,9 +2237,7 @@
     initRangeVisuals(app);
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
     function starsInConstellation(name) {
-      const official = skyStars.filter(s => s.mag <= state.magLimit && officialConstellationAtVec(s.v) === name);
-      if (official.length) return official;
-      return skyStars.filter(s => s.mag <= state.magLimit && s.constellation === name);
+      return starsForConstellation(name, state.magLimit);
     }
     function chooseQuestion() {
       const name = rand(DATA.constellations).name;
