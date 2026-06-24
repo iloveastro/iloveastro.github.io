@@ -679,17 +679,6 @@ input[type='range']::-moz-range-thumb {
 .guess-mode-row {
   margin: 0.45rem 0 0.65rem;
 }
-.compact-select {
-  width: auto;
-  max-width: 12rem;
-  padding: 0.22rem 1.6rem 0.22rem 0.55rem;
-  border: 1px solid #aaa;
-  border-radius: 999px;
-  background: #f2f2f2;
-  color: #333;
-  font-size: 0.82rem;
-  line-height: 1.2;
-}
 .guess-const-inputs {
   display: grid;
   gap: 0.4rem;

@@ -2298,7 +2298,7 @@
     if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
 
     const scoreId = () => state.mode === 1 ? 'guessconst' : `guessconst${state.mode}`;
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="single constellation star map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${state.mode > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" class="compact-select" aria-label="guess constellation mode"><option value="1" ${state.mode === 1 ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === 3 ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === 5 ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${state.mode > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: state.mode }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" placeholder="constellation ${state.mode > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="single constellation star map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${state.mode > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === 1 ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === 3 ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === 5 ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${state.mode > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: state.mode }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" placeholder="constellation ${state.mode > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
 
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
@@ -2439,7 +2439,7 @@
       if (!state.targets.length || state.answered) return;
       const matched = matchedTargets();
       if (state.mode > 1 && state.autoCheck) {
-        state.message = matched.length ? `${matched.length}/${state.mode} correct: ${matched.join(', ')}` : `0/${state.mode} correct`;
+        state.message = matched.length ? `${matched.length}/${state.mode} correct: ${matched.join(', ')}` : '';
         msg.textContent = state.message;
       }
       if (matched.length === state.mode && (state.mode === 1 || allInputsFilled())) {
@@ -2448,9 +2448,6 @@
         state.message = state.mode === 1 ? `correct: ${state.targets[0]}` : `correct: ${state.targets.join(', ')}`;
         msg.textContent = state.message;
         updateStats();
-      } else if (state.mode > 1 && allInputsFilled() && matched.length !== state.mode && !state.autoCheck) {
-        state.message = 'not quite';
-        msg.textContent = state.message;
       }
     }
 
@@ -2506,13 +2503,18 @@
       if (state.autoCheck) checkAnswers();
       else if (!state.answered) { state.message = ''; msg.textContent = ''; }
     });
-    document.querySelectorAll('.guessConstAnswer').forEach(input => {
+    document.querySelectorAll('.guessConstAnswer').forEach((input, index, inputs) => {
       input.addEventListener('input', checkAnswers);
       input.addEventListener('keydown', e => {
         if (e.key === 'Enter' && e.shiftKey) {
           e.preventDefault();
           e.stopPropagation();
           newQuestion();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          const next = inputs[index + 1];
+          if (next) next.focus();
         }
       });
     });
