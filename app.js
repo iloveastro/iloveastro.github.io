@@ -2300,6 +2300,9 @@
     });
 
     const FOV_MODE_DEGREES = 150;
+    const FOV_TARGET_COUNT = 11;
+    const FOV_SOFT_MAX_ANSWERS = 15;
+    const FOV_MIN_ANSWERS = 3;
 
     function normaliseMode(value) {
       const v = String(value || '1');
@@ -2527,8 +2530,11 @@
     }
 
     function fovCandidateScore(targets, exposure) {
-      const countPenalty = Math.abs(targets.length - 8) * 1.5 + (targets.length < 3 ? 16 : 0) + (targets.length > 16 ? (targets.length - 16) * 4 : 0);
-      return exposureSum(exposure, targets) + countPenalty + Math.random() * 0.1;
+      // Keep FOV rounds learnable, but allow rare >15-answer fields when they are the best balanced option.
+      if (targets.length < FOV_MIN_ANSWERS) return Infinity;
+      const countPenalty = Math.abs(targets.length - FOV_TARGET_COUNT) * 2.5;
+      const overSoftMaxPenalty = targets.length > FOV_SOFT_MAX_ANSWERS ? (targets.length - FOV_SOFT_MAX_ANSWERS) * 7 : 0;
+      return exposureSum(exposure, targets) + countPenalty + overSoftMaxPenalty + Math.random() * 0.1;
     }
 
     function fovCandidateForAnchor(anchor, exposure) {
@@ -2536,18 +2542,16 @@
       const core = fovCoreStars(anchor);
       if (core.length < 3) return null;
 
-      for (let attempt = 0; attempt < 26; attempt++) {
+      for (let attempt = 0; attempt < 44; attempt++) {
         const orient = orientationAroundAnchor(anchor);
         const targets = fovVisibleConstellations(orient);
         if (!targets.includes(anchor)) continue;
+
         const score = fovCandidateScore(targets, exposure);
-        if (!best || score < best.score) best = { orient, targets, score };
+        if (Number.isFinite(score) && (!best || score < best.score)) best = { orient, targets, score };
       }
 
-      if (best) return best;
-      const orient = orientationFromForward(averageStarVector(core));
-      const targets = fovVisibleConstellations(orient);
-      return targets.includes(anchor) ? { orient, targets, score: fovCandidateScore(targets, exposure) } : null;
+      return best;
     }
 
     function makeBalancedFovPool() {
