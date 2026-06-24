@@ -671,3 +671,13 @@ input[type='range']::-moz-range-thumb {
   border-color: #111;
   font-weight: 700;
 }
+
+
+.guess-const-inputs {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+}
+.guess-const-inputs input {
+  width: 100%;
+}
