@@ -2294,7 +2294,9 @@
       found: [],
       fov: null,
       fovOrient: null,
-      boundaryCache: null
+      boundaryCache: null,
+      roundPools: {},
+      fovCoreCache: {}
     });
 
     const FOV_MODE_DEGREES = 150;
@@ -2307,6 +2309,8 @@
     if (!Array.isArray(state.targets)) state.targets = state.target ? [state.target] : [];
     if (!Array.isArray(state.inputs)) state.inputs = [];
     if (!Array.isArray(state.found)) state.found = [];
+    if (!state.roundPools || typeof state.roundPools !== 'object') state.roundPools = {};
+    if (!state.fovCoreCache || typeof state.fovCoreCache !== 'object') state.fovCoreCache = {};
     if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
 
     const modeCount = state.mode === 'fov' ? 1 : Number(state.mode);
@@ -2355,33 +2359,78 @@
       return edgeCount ? graph : fallbackGuessGraph();
     }
 
-    function connectedConstellationSet(count) {
-      if (count <= 1) return [rand(DATA.constellations).name];
-      const graph = guessConstellationGraph();
-      const names = [...graph.entries()].filter(([, ns]) => ns.size).map(([name]) => name);
+    function constellationNamesForBalance() {
+      return DATA.constellations.map(c => c.name);
+    }
 
-      for (let attempt = 0; attempt < 1200; attempt++) {
-        const chosen = [rand(names)];
-        while (chosen.length < count) {
-          const here = chosen[chosen.length - 1];
-          const options = [...(graph.get(here) || [])].filter(n => !chosen.includes(n));
-          if (!options.length) break;
-          chosen.push(rand(options));
-        }
-        if (chosen.length === count) return chosen;
+    function shuffledCopy(list) {
+      const out = [...list];
+      for (let i = out.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [out[i], out[j]] = [out[j], out[i]];
       }
+      return out;
+    }
 
-      for (let attempt = 0; attempt < 300; attempt++) {
-        const chosen = [rand(names)];
+    function zeroExposureMap(names = constellationNamesForBalance()) {
+      return new Map(names.map(name => [name, 0]));
+    }
+
+    function exposureSum(exposure, targets) {
+      return targets.reduce((sum, name) => sum + (exposure.get(name) || 0), 0);
+    }
+
+    function addExposure(exposure, targets) {
+      targets.forEach(name => exposure.set(name, (exposure.get(name) || 0) + 1));
+    }
+
+    function makeSingleConstellationPool() {
+      return shuffledCopy(constellationNamesForBalance()).map(name => ({
+        targets: [name],
+        rotation: Math.random() * Math.PI * 2
+      }));
+    }
+
+    function connectedSetForAnchor(anchor, count, graph, exposure) {
+      if (count <= 1) return [anchor];
+      let best = null;
+      for (let attempt = 0; attempt < 80; attempt++) {
+        const chosen = [anchor];
         while (chosen.length < count) {
           const frontier = [...new Set(chosen.flatMap(n => [...(graph.get(n) || [])]).filter(n => !chosen.includes(n)))];
           if (!frontier.length) break;
-          chosen.push(rand(frontier));
+          frontier.sort((a, b) => ((exposure.get(a) || 0) - (exposure.get(b) || 0)) || (Math.random() - 0.5));
+          const shortlist = frontier.slice(0, Math.min(4, frontier.length));
+          chosen.push(rand(shortlist));
         }
-        if (chosen.length === count) return chosen;
+        if (chosen.length !== count) continue;
+        const score = exposureSum(exposure, chosen) + Math.random() * 0.05;
+        if (!best || score < best.score) best = { targets: chosen, score };
       }
+      if (best) return best.targets;
 
-      return DATA.constellations.slice(0, count).map(c => c.name);
+      const fallback = [anchor];
+      while (fallback.length < count) {
+        const frontier = [...new Set(fallback.flatMap(n => [...(graph.get(n) || [])]).filter(n => !fallback.includes(n)))];
+        if (!frontier.length) break;
+        fallback.push(frontier.sort((a, b) => (exposure.get(a) || 0) - (exposure.get(b) || 0))[0]);
+      }
+      return fallback.length === count ? fallback : constellationNamesForBalance().slice(0, count);
+    }
+
+    function makeConnectedConstellationPool(count) {
+      const graph = guessConstellationGraph();
+      const names = shuffledCopy([...graph.entries()].filter(([, ns]) => ns.size).map(([name]) => name));
+      const exposure = zeroExposureMap();
+      const rounds = [];
+
+      names.forEach(anchor => {
+        const targets = connectedSetForAnchor(anchor, count, graph, exposure);
+        rounds.push({ targets, rotation: Math.random() * Math.PI * 2 });
+        addExposure(exposure, targets);
+      });
+
+      return shuffledCopy(rounds);
     }
 
     function starsInConstellations(names) {
@@ -2414,139 +2463,150 @@
       };
     }
 
-    function vectorAverage(vectors) {
-      return normVec(vectors.reduce((sum, v) => ({ x: sum.x + v.x, y: sum.y + v.y, z: sum.z + v.z }), { x: 0, y: 0, z: 0 }));
-    }
-
-    function boundaryCoordToVec(coord, mirror = false) {
-      const lon = Number(coord[0]);
-      const lat = Number(coord[1]);
-      const ra = mirror ? -lon : lon;
-      return vecFromRaDec(((ra % 360) + 360) % 360, lat);
-    }
-
-    function featureBoundaryVectors(feature) {
-      const coords = [];
-      const seen = new Set();
-      (feature.rings || []).forEach(poly => {
-        (poly || []).forEach(ring => {
-          (ring || []).forEach(coord => {
-            if (!coord || coord.length < 2) return;
-            const key = `${Number(coord[0]).toFixed(5)},${Number(coord[1]).toFixed(5)}`;
-            if (seen.has(key)) return;
-            seen.add(key);
-            coords.push(coord);
-          });
-        });
-      });
-      const normal = coords.map(coord => boundaryCoordToVec(coord, false));
-      const mirrored = coords.map(coord => boundaryCoordToVec(coord, true));
-      const centre = skyConstCentres.get(feature.name);
-      if (!centre || !normal.length) return normal;
-      const normalDot = dot(vectorAverage(normal), centre);
-      const mirroredDot = dot(vectorAverage(mirrored), centre);
-      return mirroredDot > normalDot ? mirrored : normal;
-    }
-
-    function boundaryCache() {
-      if (state.boundaryCache && state.boundaryCache.length) return state.boundaryCache;
-      state.boundaryCache = (skyBoundsFeatures || []).map(feature => ({
-        name: feature.name,
-        vectors: featureBoundaryVectors(feature)
-      })).filter(item => item.name && item.vectors.length);
-      return state.boundaryCache;
-    }
-
-    function boundaryFullyInsideFov(item, orient) {
+    function starInsideFov(star, orient) {
       const minDot = Math.cos((FOV_MODE_DEGREES / 2) * Math.PI / 180);
-      return item.vectors.every(v => dot(v, orient.f) >= minDot);
+      return dot(star.v, orient.f) >= minDot;
+    }
+
+    function fovCoreStars(name) {
+      if (!state.fovCoreCache[name]) state.fovCoreCache[name] = starsForConstellation(name, 6).slice(0, 3);
+      return state.fovCoreCache[name] || [];
+    }
+
+    function fovDisplayStars(names) {
+      return uniqueSkyStars(names.flatMap(name => [...starsForConstellation(name, state.magLimit), ...fovCoreStars(name)]));
+    }
+
+    function fovConstellationQualifies(name, orient) {
+      const core = fovCoreStars(name);
+      // Algorithmic 150° FOV rule: if the three-brightest-star recognition core is in view,
+      // the full constellation is displayed and becomes part of the answer set.
+      return core.length >= 3 && core.every(star => starInsideFov(star, orient));
     }
 
     function fovVisibleConstellations(orient) {
-      return boundaryCache()
-        .filter(item => boundaryFullyInsideFov(item, orient))
-        .map(item => item.name)
+      return constellationNamesForBalance()
+        .filter(name => fovConstellationQualifies(name, orient))
         .sort((a, b) => a.localeCompare(b));
     }
 
-    function chooseFovQuestion() {
+    function averageStarVector(stars) {
+      return normVec(stars.reduce((sum, star) => ({
+        x: sum.x + star.v.x,
+        y: sum.y + star.v.y,
+        z: sum.z + star.v.z
+      }), { x: 0, y: 0, z: 0 }));
+    }
+
+    function jitterVector(forward, maxDegrees) {
+      const b = localBasisFromForward(forward);
+      const theta = Math.random() * Math.PI * 2;
+      const direction = normVec({
+        x: b.right.x * Math.cos(theta) + b.up.x * Math.sin(theta),
+        y: b.right.y * Math.cos(theta) + b.up.y * Math.sin(theta),
+        z: b.right.z * Math.cos(theta) + b.up.z * Math.sin(theta)
+      });
+      const axis = normVec(cross(forward, direction));
+      return rotateAroundAxis(forward, axis, Math.random() * maxDegrees * Math.PI / 180);
+    }
+
+    function orientationFromForward(forward) {
+      const b = localBasisFromForward(forward);
+      const roll = Math.random() * Math.PI * 2;
+      return {
+        f: b.f,
+        right: rotateAroundAxis(b.right, b.f, roll),
+        up: rotateAroundAxis(b.up, b.f, roll)
+      };
+    }
+
+    function orientationAroundAnchor(anchor) {
+      const core = fovCoreStars(anchor);
+      const centre = core.length ? averageStarVector(core) : randomUnitVector();
+      return orientationFromForward(jitterVector(centre, 26));
+    }
+
+    function fovCandidateScore(targets, exposure) {
+      const countPenalty = Math.abs(targets.length - 8) * 1.5 + (targets.length < 3 ? 16 : 0) + (targets.length > 16 ? (targets.length - 16) * 4 : 0);
+      return exposureSum(exposure, targets) + countPenalty + Math.random() * 0.1;
+    }
+
+    function fovCandidateForAnchor(anchor, exposure) {
       let best = null;
-      for (let attempt = 0; attempt < 180; attempt++) {
-        const orient = randomFovOrientation();
+      const core = fovCoreStars(anchor);
+      if (core.length < 3) return null;
+
+      for (let attempt = 0; attempt < 26; attempt++) {
+        const orient = orientationAroundAnchor(anchor);
         const targets = fovVisibleConstellations(orient);
-        const candidate = { orient, targets };
-        if (!best || Math.abs(targets.length - 8) < Math.abs(best.targets.length - 8)) best = candidate;
-        if (targets.length >= 3 && targets.length <= 12) {
-          best = candidate;
-          break;
-        }
+        if (!targets.includes(anchor)) continue;
+        const score = fovCandidateScore(targets, exposure);
+        if (!best || score < best.score) best = { orient, targets, score };
       }
-      state.fov = FOV_MODE_DEGREES;
-      state.fovOrient = best ? best.orient : randomFovOrientation();
-      state.targets = best ? best.targets : [];
+
+      if (best) return best;
+      const orient = orientationFromForward(averageStarVector(core));
+      const targets = fovVisibleConstellations(orient);
+      return targets.includes(anchor) ? { orient, targets, score: fovCandidateScore(targets, exposure) } : null;
+    }
+
+    function makeBalancedFovPool() {
+      const names = shuffledCopy(constellationNamesForBalance().filter(name => fovCoreStars(name).length >= 3));
+      const exposure = zeroExposureMap();
+      const rounds = [];
+
+      names.forEach(anchor => {
+        const candidate = fovCandidateForAnchor(anchor, exposure);
+        if (!candidate || !candidate.targets.length) return;
+        rounds.push({
+          targets: candidate.targets,
+          orient: candidate.orient,
+          rotation: Math.random() * Math.PI * 2
+        });
+        addExposure(exposure, candidate.targets);
+      });
+
+      return shuffledCopy(rounds);
+    }
+
+    function makeBalancedRoundPool(mode) {
+      if (mode === '1') return makeSingleConstellationPool();
+      if (mode === '3') return makeConnectedConstellationPool(3);
+      if (mode === '5') return makeConnectedConstellationPool(5);
+      return makeBalancedFovPool();
+    }
+
+    function nextBalancedRound(mode) {
+      if (!state.roundPools[mode] || !state.roundPools[mode].length) state.roundPools[mode] = makeBalancedRoundPool(mode);
+      return state.roundPools[mode].pop();
+    }
+
+    function applyRound(round) {
+      state.targets = round?.targets || [];
       state.target = state.targets[0] || '';
-      state.stars = uniqueSkyStars(state.targets.flatMap(name => starsForConstellation(name, state.magLimit)));
-      state.rotation = 0;
+      state.rotation = Number.isFinite(round?.rotation) ? round.rotation : Math.random() * Math.PI * 2;
+      state.fovOrient = round?.orient || null;
+      state.fov = isFovMode ? FOV_MODE_DEGREES : null;
+      state.stars = isFovMode ? fovDisplayStars(state.targets) : starsInConstellations(state.targets);
       state.message = '';
       state.answered = false;
       state.found = [];
-      state.inputs = [''];
+      state.inputs = isFovMode ? [''] : Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
     }
 
     function chooseQuestion() {
-      if (isFovMode) {
-        chooseFovQuestion();
-        return;
-      }
-      state.targets = connectedConstellationSet(modeCount);
-      state.target = state.targets[0] || '';
-      state.stars = starsInConstellations(state.targets);
-      state.rotation = Math.random() * Math.PI * 2;
-      state.message = '';
-      state.answered = false;
-      state.found = [];
-      state.inputs = Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
-    }
-
-    function projectFov(v, b, radius, fovRad) {
-      const z = dot(v, b.f);
-      const ang = Math.acos(Math.max(-1, Math.min(1, z)));
-      if (ang > fovRad / 2) return null;
-      const x = dot(v, b.right), y = dot(v, b.up);
-      const sin = Math.sin(ang) || 1e-9;
-      const rr = (ang / (fovRad / 2)) * radius;
-      return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
+      const round = nextBalancedRound(state.mode);
+      applyRound(round);
     }
 
     function drawFovMap() {
-      const pick = buildPickLookup(canvas);
-      const drawn = [];
-      const radius = Math.min(canvas.width, canvas.height) * 0.48;
-      const fovRad = FOV_MODE_DEGREES * Math.PI / 180;
-      const b = state.fovOrient || localBasisFromForward(vecFromRaDec(0, 0));
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
-      ctx.clip();
-
-      const visible = state.stars.filter(s => s.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
-      ctx.fillStyle = 'black';
-      for (const star of visible) {
-        const p = projectFov(star.v, b, radius, fovRad);
-        if (!p) continue;
-        const r = Math.max(0.8, Math.min(5.2, 4.7 - star.mag * 0.55));
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-        ctx.fill();
-        const hitR = Math.max(9, r + 6);
-        registerPickCircle(pick, p.x, p.y, hitR, { type: 'star', star });
-        drawn.push({ x: p.x, y: p.y, r: hitR, star });
-      }
-
-      ctx.restore();
-      canvas._pickLayer = pick;
-      return drawn;
+      // The 150° FOV is the selection window. Once a constellation qualifies,
+      // display the whole selected constellation set so large patterns are not chopped.
+      return drawConstellationStarMap(canvas, state.target || state.targets[0], {
+        magLimit: state.magLimit,
+        rotation: state.rotation,
+        stars: state.stars
+      });
     }
 
     let drawnGuessStars = [];
@@ -2566,11 +2626,6 @@
       if (!state.targets.length || (!isFovMode && state.targets.length !== modeCount)) chooseQuestion();
       if (isFovMode) {
         drawnGuessStars = drawFovMap();
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.48, 0, Math.PI * 2);
-        ctx.stroke();
       } else {
         drawnGuessStars = drawConstellationStarMap(canvas, state.target || state.targets[0], { magLimit: state.magLimit, rotation: state.rotation, stars: state.stars });
       }
@@ -2687,7 +2742,7 @@
 
     function refreshCurrentQuestionForMag() {
       if (isFovMode) {
-        state.stars = uniqueSkyStars(state.targets.flatMap(name => starsForConstellation(name, state.magLimit)));
+        state.stars = fovDisplayStars(state.targets);
       } else {
         state.stars = starsInConstellations(state.targets);
       }
