@@ -2292,36 +2292,29 @@
       magLimit: defaultMag(),
       inputs: [],
       found: [],
-      fov: null,
-      fovOrient: null,
-      boundaryCache: null,
-      roundPools: {},
-      fovCoreCache: {}
+      roundPools: {}
     });
 
-    const FOV_MODE_DEGREES = 150;
-    const FOV_TARGET_COUNT = 11;
-    const FOV_SOFT_MAX_ANSWERS = 15;
-    const FOV_MIN_ANSWERS = 3;
+    const BULK_MODE_COUNT = 12;
 
     function normaliseMode(value) {
       const v = String(value || '1');
-      return ['1', '3', '5', 'fov'].includes(v) ? v : '1';
+      return ['1', '3', '5', '12'].includes(v) ? v : '1';
     }
+
     state.mode = normaliseMode(state.mode);
     if (!Array.isArray(state.targets)) state.targets = state.target ? [state.target] : [];
     if (!Array.isArray(state.inputs)) state.inputs = [];
     if (!Array.isArray(state.found)) state.found = [];
     if (!state.roundPools || typeof state.roundPools !== 'object') state.roundPools = {};
-    if (!state.fovCoreCache || typeof state.fovCoreCache !== 'object') state.fovCoreCache = {};
     if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
 
-    const modeCount = state.mode === 'fov' ? 1 : Number(state.mode);
-    const isFovMode = state.mode === 'fov';
-    const scoreId = () => state.mode === '1' ? 'guessconst' : state.mode === 'fov' ? 'guessconstFov' : `guessconst${state.mode}`;
+    const modeCount = Number(state.mode);
+    const isBulkAnswerMode = state.mode === '12';
+    const scoreId = () => state.mode === '1' ? 'guessconst' : `guessconst${state.mode}`;
     const savedValue = i => esc(state.inputs[i] || '');
 
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 || isFovMode ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option><option value="fov" ${state.mode === 'fov' ? 'selected' : ''}>150° FOV</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${!isFovMode && modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${isFovMode ? `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(0)}" placeholder="constellation name"><div id="guessFovCounter" class="small"></div>` : Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option><option value="12" ${state.mode === '12' ? 'selected' : ''}>12 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${!isBulkAnswerMode && modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${isBulkAnswerMode ? `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(0)}" placeholder="constellation name"><div id="guessConstCounter" class="small"></div>` : Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
 
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
@@ -2330,6 +2323,31 @@
 
     function updateStats() {
       if (stats) stats.innerHTML = formatScore(scoreId());
+    }
+
+    function constellationNamesForBalance() {
+      return DATA.constellations.map(c => c.name);
+    }
+
+    function shuffledCopy(list) {
+      const out = [...list];
+      for (let i = out.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [out[i], out[j]] = [out[j], out[i]];
+      }
+      return out;
+    }
+
+    function zeroExposureMap(names = constellationNamesForBalance()) {
+      return new Map(names.map(name => [name, 0]));
+    }
+
+    function exposureSum(exposure, targets) {
+      return targets.reduce((sum, name) => sum + (exposure.get(name) || 0), 0);
+    }
+
+    function addExposure(exposure, targets) {
+      targets.forEach(name => exposure.set(name, (exposure.get(name) || 0) + 1));
     }
 
     function fallbackGuessGraph() {
@@ -2362,31 +2380,6 @@
       return edgeCount ? graph : fallbackGuessGraph();
     }
 
-    function constellationNamesForBalance() {
-      return DATA.constellations.map(c => c.name);
-    }
-
-    function shuffledCopy(list) {
-      const out = [...list];
-      for (let i = out.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [out[i], out[j]] = [out[j], out[i]];
-      }
-      return out;
-    }
-
-    function zeroExposureMap(names = constellationNamesForBalance()) {
-      return new Map(names.map(name => [name, 0]));
-    }
-
-    function exposureSum(exposure, targets) {
-      return targets.reduce((sum, name) => sum + (exposure.get(name) || 0), 0);
-    }
-
-    function addExposure(exposure, targets) {
-      targets.forEach(name => exposure.set(name, (exposure.get(name) || 0) + 1));
-    }
-
     function makeSingleConstellationPool() {
       return shuffledCopy(constellationNamesForBalance()).map(name => ({
         targets: [name],
@@ -2397,13 +2390,14 @@
     function connectedSetForAnchor(anchor, count, graph, exposure) {
       if (count <= 1) return [anchor];
       let best = null;
-      for (let attempt = 0; attempt < 80; attempt++) {
+
+      for (let attempt = 0; attempt < 120; attempt++) {
         const chosen = [anchor];
         while (chosen.length < count) {
           const frontier = [...new Set(chosen.flatMap(n => [...(graph.get(n) || [])]).filter(n => !chosen.includes(n)))];
           if (!frontier.length) break;
           frontier.sort((a, b) => ((exposure.get(a) || 0) - (exposure.get(b) || 0)) || (Math.random() - 0.5));
-          const shortlist = frontier.slice(0, Math.min(4, frontier.length));
+          const shortlist = frontier.slice(0, Math.min(5, frontier.length));
           chosen.push(rand(shortlist));
         }
         if (chosen.length !== count) continue;
@@ -2436,148 +2430,12 @@
       return shuffledCopy(rounds);
     }
 
-    function starsInConstellations(names) {
-      return uniqueSkyStars(names.flatMap(name => guessStarsForConstellation(name, state.magLimit)));
-    }
-
-    function rotateAroundAxis(v, axis, angle) {
-      const c = Math.cos(angle), s = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
-      return normVec({
-        x: v.x * c + cr.x * s + axis.x * d * (1 - c),
-        y: v.y * c + cr.y * s + axis.y * d * (1 - c),
-        z: v.z * c + cr.z * s + axis.z * d * (1 - c)
-      });
-    }
-
-    function randomUnitVector() {
-      const z = Math.random() * 2 - 1;
-      const a = Math.random() * Math.PI * 2;
-      const r = Math.sqrt(Math.max(0, 1 - z * z));
-      return { x: r * Math.cos(a), y: r * Math.sin(a), z };
-    }
-
-    function randomFovOrientation() {
-      const b = localBasisFromForward(randomUnitVector());
-      const roll = Math.random() * Math.PI * 2;
-      return {
-        f: b.f,
-        right: rotateAroundAxis(b.right, b.f, roll),
-        up: rotateAroundAxis(b.up, b.f, roll)
-      };
-    }
-
-    function starInsideFov(star, orient) {
-      const minDot = Math.cos((FOV_MODE_DEGREES / 2) * Math.PI / 180);
-      return dot(star.v, orient.f) >= minDot;
-    }
-
-    function fovCoreStars(name) {
-      if (!state.fovCoreCache[name]) state.fovCoreCache[name] = starsForConstellation(name, 6).slice(0, 3);
-      return state.fovCoreCache[name] || [];
-    }
-
-    function fovDisplayStars(names) {
-      return uniqueSkyStars(names.flatMap(name => [...starsForConstellation(name, state.magLimit), ...fovCoreStars(name)]));
-    }
-
-    function fovConstellationQualifies(name, orient) {
-      const core = fovCoreStars(name);
-      // Algorithmic 150° FOV rule: if the three-brightest-star recognition core is in view,
-      // the full constellation is displayed and becomes part of the answer set.
-      return core.length >= 3 && core.every(star => starInsideFov(star, orient));
-    }
-
-    function fovVisibleConstellations(orient) {
-      return constellationNamesForBalance()
-        .filter(name => fovConstellationQualifies(name, orient))
-        .sort((a, b) => a.localeCompare(b));
-    }
-
-    function averageStarVector(stars) {
-      return normVec(stars.reduce((sum, star) => ({
-        x: sum.x + star.v.x,
-        y: sum.y + star.v.y,
-        z: sum.z + star.v.z
-      }), { x: 0, y: 0, z: 0 }));
-    }
-
-    function jitterVector(forward, maxDegrees) {
-      const b = localBasisFromForward(forward);
-      const theta = Math.random() * Math.PI * 2;
-      const direction = normVec({
-        x: b.right.x * Math.cos(theta) + b.up.x * Math.sin(theta),
-        y: b.right.y * Math.cos(theta) + b.up.y * Math.sin(theta),
-        z: b.right.z * Math.cos(theta) + b.up.z * Math.sin(theta)
-      });
-      const axis = normVec(cross(forward, direction));
-      return rotateAroundAxis(forward, axis, Math.random() * maxDegrees * Math.PI / 180);
-    }
-
-    function orientationFromForward(forward) {
-      const b = localBasisFromForward(forward);
-      const roll = Math.random() * Math.PI * 2;
-      return {
-        f: b.f,
-        right: rotateAroundAxis(b.right, b.f, roll),
-        up: rotateAroundAxis(b.up, b.f, roll)
-      };
-    }
-
-    function orientationAroundAnchor(anchor) {
-      const core = fovCoreStars(anchor);
-      const centre = core.length ? averageStarVector(core) : randomUnitVector();
-      return orientationFromForward(jitterVector(centre, 26));
-    }
-
-    function fovCandidateScore(targets, exposure) {
-      // Keep FOV rounds learnable, but allow rare >15-answer fields when they are the best balanced option.
-      if (targets.length < FOV_MIN_ANSWERS) return Infinity;
-      const countPenalty = Math.abs(targets.length - FOV_TARGET_COUNT) * 2.5;
-      const overSoftMaxPenalty = targets.length > FOV_SOFT_MAX_ANSWERS ? (targets.length - FOV_SOFT_MAX_ANSWERS) * 7 : 0;
-      return exposureSum(exposure, targets) + countPenalty + overSoftMaxPenalty + Math.random() * 0.1;
-    }
-
-    function fovCandidateForAnchor(anchor, exposure) {
-      let best = null;
-      const core = fovCoreStars(anchor);
-      if (core.length < 3) return null;
-
-      for (let attempt = 0; attempt < 44; attempt++) {
-        const orient = orientationAroundAnchor(anchor);
-        const targets = fovVisibleConstellations(orient);
-        if (!targets.includes(anchor)) continue;
-
-        const score = fovCandidateScore(targets, exposure);
-        if (Number.isFinite(score) && (!best || score < best.score)) best = { orient, targets, score };
-      }
-
-      return best;
-    }
-
-    function makeBalancedFovPool() {
-      const names = shuffledCopy(constellationNamesForBalance().filter(name => fovCoreStars(name).length >= 3));
-      const exposure = zeroExposureMap();
-      const rounds = [];
-
-      names.forEach(anchor => {
-        const candidate = fovCandidateForAnchor(anchor, exposure);
-        if (!candidate || !candidate.targets.length) return;
-        rounds.push({
-          targets: candidate.targets,
-          orient: candidate.orient,
-          rotation: Math.random() * Math.PI * 2
-        });
-        addExposure(exposure, candidate.targets);
-      });
-
-      return shuffledCopy(rounds);
-    }
-
     function makeBalancedRoundPool(mode) {
       if (mode === '1') return makeSingleConstellationPool();
       if (mode === '3') return makeConnectedConstellationPool(3);
       if (mode === '5') return makeConnectedConstellationPool(5);
-      return makeBalancedFovPool();
+      if (mode === '12') return makeConnectedConstellationPool(BULK_MODE_COUNT);
+      return makeSingleConstellationPool();
     }
 
     function nextBalancedRound(mode) {
@@ -2585,32 +2443,24 @@
       return state.roundPools[mode].pop();
     }
 
+    function starsInConstellations(names) {
+      return uniqueSkyStars(names.flatMap(name => guessStarsForConstellation(name, state.magLimit)));
+    }
+
     function applyRound(round) {
       state.targets = round?.targets || [];
       state.target = state.targets[0] || '';
       state.rotation = Number.isFinite(round?.rotation) ? round.rotation : Math.random() * Math.PI * 2;
-      state.fovOrient = round?.orient || null;
-      state.fov = isFovMode ? FOV_MODE_DEGREES : null;
-      state.stars = isFovMode ? fovDisplayStars(state.targets) : starsInConstellations(state.targets);
+      state.stars = starsInConstellations(state.targets);
       state.message = '';
       state.answered = false;
+      state.autoCheck = false;
       state.found = [];
-      state.inputs = isFovMode ? [''] : Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
+      state.inputs = isBulkAnswerMode ? [''] : Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
     }
 
     function chooseQuestion() {
-      const round = nextBalancedRound(state.mode);
-      applyRound(round);
-    }
-
-    function drawFovMap() {
-      // The 150° FOV is the selection window. Once a constellation qualifies,
-      // display the whole selected constellation set so large patterns are not chopped.
-      return drawConstellationStarMap(canvas, state.target || state.targets[0], {
-        magLimit: state.magLimit,
-        rotation: state.rotation,
-        stars: state.stars
-      });
+      applyRound(nextBalancedRound(state.mode));
     }
 
     let drawnGuessStars = [];
@@ -2627,12 +2477,12 @@
         ctx.fillText(state.error || 'loading constellation...', 24, 40);
         return;
       }
-      if (!state.targets.length || (!isFovMode && state.targets.length !== modeCount)) chooseQuestion();
-      if (isFovMode) {
-        drawnGuessStars = drawFovMap();
-      } else {
-        drawnGuessStars = drawConstellationStarMap(canvas, state.target || state.targets[0], { magLimit: state.magLimit, rotation: state.rotation, stars: state.stars });
-      }
+      if (!state.targets.length || state.targets.length !== modeCount) chooseQuestion();
+      drawnGuessStars = drawConstellationStarMap(canvas, state.target || state.targets[0], {
+        magLimit: state.magLimit,
+        rotation: state.rotation,
+        stars: state.stars
+      });
     }
 
     function selectGuessStar(clientX, clientY) {
@@ -2666,24 +2516,24 @@
       return [...document.querySelectorAll('.guessConstAnswer')].every(input => input.value.trim());
     }
 
-    function updateFovCounter() {
-      const counter = $('#guessFovCounter');
+    function updateGuessCounter() {
+      const counter = $('#guessConstCounter');
       if (counter) counter.textContent = `${state.found.length}/${state.targets.length} found`;
     }
 
-    function checkFovAnswer() {
-      if (!isFovMode || state.answered) return;
+    function checkBulkAnswer() {
+      if (!isBulkAnswerMode || state.answered) return;
       const input = document.querySelector('.guessConstAnswer');
       if (!input) return;
       state.inputs[0] = input.value;
       const value = input.value.trim();
       if (!value) {
-        updateFovCounter();
+        updateGuessCounter();
         return;
       }
       const match = state.targets.find(t => !state.found.includes(t) && targetMatches(value, t));
       if (!match) {
-        updateFovCounter();
+        updateGuessCounter();
         return;
       }
       state.found.push(match);
@@ -2692,7 +2542,7 @@
       state.inputs[0] = '';
       state.message = state.found.join(', ');
       msg.textContent = state.message;
-      updateFovCounter();
+      updateGuessCounter();
       if (state.found.length === state.targets.length) {
         state.answered = true;
         record(scoreId(), true);
@@ -2703,8 +2553,8 @@
     }
 
     function checkAnswers() {
-      if (isFovMode) {
-        checkFovAnswer();
+      if (isBulkAnswerMode) {
+        checkBulkAnswer();
         return;
       }
       if (!state.targets.length || state.answered) return;
@@ -2733,7 +2583,7 @@
       if (!state.targets.length || state.answered) return;
       state.answered = true;
       record(scoreId(), false);
-      if (isFovMode) {
+      if (isBulkAnswerMode) {
         const missing = state.targets.filter(t => !state.found.includes(t));
         state.message = missing.length ? `missing: ${missing.join(', ')}` : `all found: ${state.targets.join(', ')}`;
       } else {
@@ -2741,15 +2591,7 @@
       }
       msg.textContent = state.message;
       updateStats();
-      updateFovCounter();
-    }
-
-    function refreshCurrentQuestionForMag() {
-      if (isFovMode) {
-        state.stars = fovDisplayStars(state.targets);
-      } else {
-        state.stars = starsInConstellations(state.targets);
-      }
+      updateGuessCounter();
     }
 
     function setGuessMag(value) {
@@ -2760,20 +2602,14 @@
       if (mag) mag.value = state.magLimit.toFixed(1);
       if (slider) { slider.value = state.magLimit.toFixed(1); updateRangeVisual(slider); }
       if (state.loaded && state.targets.length) {
-        refreshCurrentQuestionForMag();
+        state.stars = starsInConstellations(state.targets);
         draw();
-        updateFovCounter();
+        updateGuessCounter();
       }
     }
 
     function rotateGuess(direction) {
-      if (isFovMode && state.fovOrient) {
-        state.fovOrient = {
-          f: state.fovOrient.f,
-          right: rotateAroundAxis(state.fovOrient.right, state.fovOrient.f, direction * 10 * Math.PI / 180),
-          up: rotateAroundAxis(state.fovOrient.up, state.fovOrient.f, direction * 10 * Math.PI / 180)
-        };
-      } else state.rotation += direction * 10 * Math.PI / 180;
+      state.rotation += direction * 10 * Math.PI / 180;
       draw();
     }
 
@@ -2787,8 +2623,6 @@
       state.answered = false;
       state.inputs = [];
       state.found = [];
-      state.fov = null;
-      state.fovOrient = null;
       renderGuessConstellation();
     });
     $('#guessConstMag').addEventListener('input', e => setGuessMag(e.target.value));
@@ -2830,14 +2664,14 @@
         state.loading = false;
         chooseQuestion();
         renderGuessConstellation();
-      }).catch(err => {
+      }).catch(() => {
         state.error = 'sky data unavailable';
         state.loading = false;
         draw();
       });
     }
     draw();
-    updateFovCounter();
+    updateGuessCounter();
     setTimeout(() => {
       const first = document.querySelector('.guessConstAnswer');
       if (first) first.focus();
