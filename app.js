@@ -2281,7 +2281,7 @@
       loaded: false,
       loading: false,
       error: '',
-      mode: 1,
+      mode: '1',
       targets: [],
       target: '',
       stars: [],
@@ -2289,16 +2289,29 @@
       message: '',
       answered: false,
       autoCheck: false,
-      magLimit: defaultMag()
+      magLimit: defaultMag(),
+      inputs: [],
+      found: [],
+      fov: null,
+      fovOrient: null
     });
 
-    if (!state.mode) state.mode = 1;
+    function normaliseMode(value) {
+      const v = String(value || '1');
+      return ['1', '3', '5', 'fov'].includes(v) ? v : '1';
+    }
+    state.mode = normaliseMode(state.mode);
     if (!Array.isArray(state.targets)) state.targets = state.target ? [state.target] : [];
-    state.mode = [1, 3, 5].includes(Number(state.mode)) ? Number(state.mode) : 1;
+    if (!Array.isArray(state.inputs)) state.inputs = [];
+    if (!Array.isArray(state.found)) state.found = [];
     if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
 
-    const scoreId = () => state.mode === 1 ? 'guessconst' : `guessconst${state.mode}`;
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="single constellation star map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${state.mode > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === 1 ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === 3 ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === 5 ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${state.mode > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: state.mode }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" placeholder="constellation ${state.mode > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    const modeCount = state.mode === 'fov' ? 1 : Number(state.mode);
+    const isFovMode = state.mode === 'fov';
+    const scoreId = () => state.mode === '1' ? 'guessconst' : state.mode === 'fov' ? 'guessconstFov' : `guessconst${state.mode}`;
+    const savedValue = i => esc(state.inputs[i] || '');
+
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 || isFovMode ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option><option value="fov" ${state.mode === 'fov' ? 'selected' : ''}>FOV</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label>${isFovMode ? `<p class="small">FOV: ${state.fov ? Number(state.fov).toFixed(0) : '...'}°</p>` : ''}<div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${!isFovMode && modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${isFovMode ? `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(0)}" placeholder="constellation name"><div id="guessFovCounter" class="small"></div>` : Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
 
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
@@ -2344,7 +2357,6 @@
       const graph = guessConstellationGraph();
       const names = [...graph.entries()].filter(([, ns]) => ns.size).map(([name]) => name);
 
-      // Prefer an actual bordering path: A borders B, B borders C, etc.
       for (let attempt = 0; attempt < 1200; attempt++) {
         const chosen = [rand(names)];
         while (chosen.length < count) {
@@ -2356,7 +2368,6 @@
         if (chosen.length === count) return chosen;
       }
 
-      // Last-resort connected component growth, still never disconnected.
       for (let attempt = 0; attempt < 300; attempt++) {
         const chosen = [rand(names)];
         while (chosen.length < count) {
@@ -2374,13 +2385,126 @@
       return uniqueSkyStars(names.flatMap(name => guessStarsForConstellation(name, state.magLimit)));
     }
 
+    function rotateAroundAxis(v, axis, angle) {
+      const c = Math.cos(angle), s = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
+      return normVec({
+        x: v.x * c + cr.x * s + axis.x * d * (1 - c),
+        y: v.y * c + cr.y * s + axis.y * d * (1 - c),
+        z: v.z * c + cr.z * s + axis.z * d * (1 - c)
+      });
+    }
+
+    function randomUnitVector() {
+      const z = Math.random() * 2 - 1;
+      const a = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.max(0, 1 - z * z));
+      return { x: r * Math.cos(a), y: r * Math.sin(a), z };
+    }
+
+    function randomFovOrientation() {
+      const b = localBasisFromForward(randomUnitVector());
+      const roll = Math.random() * Math.PI * 2;
+      return {
+        f: b.f,
+        right: rotateAroundAxis(b.right, b.f, roll),
+        up: rotateAroundAxis(b.up, b.f, roll)
+      };
+    }
+
+    function starInsideFov(star, orient, fovDegrees) {
+      const half = (fovDegrees * Math.PI / 180) / 2;
+      return dot(star.v, orient.f) >= Math.cos(half);
+    }
+
+    function fovVisibleConstellations(orient, fovDegrees) {
+      const out = [];
+      DATA.constellations.forEach(c => {
+        const stars = starsForConstellation(c.name, state.magLimit);
+        if (!stars.length) return;
+        if (stars.every(s => starInsideFov(s, orient, fovDegrees))) out.push(c.name);
+      });
+      return out.sort((a, b) => a.localeCompare(b));
+    }
+
+    function chooseFovQuestion() {
+      let best = null;
+      for (let attempt = 0; attempt < 350; attempt++) {
+        const fov = 120 + Math.random() * 30;
+        const orient = randomFovOrientation();
+        const targets = fovVisibleConstellations(orient, fov);
+        const candidate = { fov, orient, targets };
+        if (!best || Math.abs(targets.length - 7) < Math.abs(best.targets.length - 7)) best = candidate;
+        if (targets.length >= 3 && targets.length <= 12) {
+          best = candidate;
+          break;
+        }
+      }
+      state.fov = best.fov;
+      state.fovOrient = best.orient;
+      state.targets = best.targets;
+      state.target = best.targets[0] || '';
+      state.stars = uniqueSkyStars(state.targets.flatMap(name => starsForConstellation(name, state.magLimit)));
+      state.rotation = 0;
+      state.message = '';
+      state.answered = false;
+      state.found = [];
+      state.inputs = [''];
+    }
+
     function chooseQuestion() {
-      state.targets = connectedConstellationSet(state.mode);
+      if (isFovMode) {
+        chooseFovQuestion();
+        return;
+      }
+      state.targets = connectedConstellationSet(modeCount);
       state.target = state.targets[0] || '';
       state.stars = starsInConstellations(state.targets);
       state.rotation = Math.random() * Math.PI * 2;
       state.message = '';
       state.answered = false;
+      state.found = [];
+      state.inputs = Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
+    }
+
+    function projectFov(v, b, radius, fovRad) {
+      const z = dot(v, b.f);
+      const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+      if (ang > fovRad / 2) return null;
+      const x = dot(v, b.right), y = dot(v, b.up);
+      const sin = Math.sin(ang) || 1e-9;
+      const rr = (ang / (fovRad / 2)) * radius;
+      return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
+    }
+
+    function drawFovMap() {
+      const pick = buildPickLookup(canvas);
+      const drawn = [];
+      const radius = Math.min(canvas.width, canvas.height) * 0.48;
+      const fovRad = (state.fov || 135) * Math.PI / 180;
+      const b = state.fovOrient || localBasisFromForward(vecFromRaDec(0, 0));
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      const visible = state.stars.filter(s => s.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
+      ctx.fillStyle = 'black';
+      for (const star of visible) {
+        const p = projectFov(star.v, b, radius, fovRad);
+        if (!p) continue;
+        const r = Math.max(0.8, Math.min(5.2, 4.7 - star.mag * 0.55));
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        const hitR = Math.max(9, r + 6);
+        registerPickCircle(pick, p.x, p.y, hitR, { type: 'star', star });
+        drawn.push({ x: p.x, y: p.y, r: hitR, star });
+      }
+
+      ctx.restore();
+      canvas._pickLayer = pick;
+      return drawn;
     }
 
     let drawnGuessStars = [];
@@ -2397,8 +2521,14 @@
         ctx.fillText(state.error || 'loading constellation...', 24, 40);
         return;
       }
-      if (!state.targets.length || state.targets.length !== state.mode) chooseQuestion();
-      drawnGuessStars = drawConstellationStarMap(canvas, state.target || state.targets[0], { magLimit: state.magLimit, rotation: state.rotation, stars: state.stars });
+      if (!state.targets.length || (!isFovMode && state.targets.length !== modeCount)) chooseQuestion();
+      if (isFovMode) drawnGuessStars = drawFovMap();
+      else drawnGuessStars = drawConstellationStarMap(canvas, state.target || state.targets[0], { magLimit: state.magLimit, rotation: state.rotation, stars: state.stars });
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.48, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
     function selectGuessStar(clientX, clientY) {
@@ -2412,18 +2542,15 @@
     }
     canvas.addEventListener('click', e => selectGuessStar(e.clientX, e.clientY));
 
-    function clearInputs() {
-      document.querySelectorAll('.guessConstAnswer').forEach(input => input.value = '');
-    }
-
     function targetMatches(value, target) {
       return answerMatches(value, [target]);
     }
 
     function matchedTargets() {
       const used = new Set();
-      document.querySelectorAll('.guessConstAnswer').forEach(input => {
+      document.querySelectorAll('.guessConstAnswer').forEach((input, i) => {
         const value = input.value.trim();
+        state.inputs[i] = input.value;
         if (!value) return;
         const match = state.targets.find(t => !used.has(t) && targetMatches(value, t));
         if (match) used.add(match);
@@ -2435,17 +2562,57 @@
       return [...document.querySelectorAll('.guessConstAnswer')].every(input => input.value.trim());
     }
 
-    function checkAnswers() {
-      if (!state.targets.length || state.answered) return;
-      const matched = matchedTargets();
-      if (state.mode > 1 && state.autoCheck) {
-        state.message = matched.length ? `${matched.length}/${state.mode} correct: ${matched.join(', ')}` : '';
-        msg.textContent = state.message;
+    function updateFovCounter() {
+      const counter = $('#guessFovCounter');
+      if (counter) counter.textContent = `${state.found.length}/${state.targets.length} found`;
+    }
+
+    function checkFovAnswer() {
+      if (!isFovMode || state.answered) return;
+      const input = document.querySelector('.guessConstAnswer');
+      if (!input) return;
+      state.inputs[0] = input.value;
+      const value = input.value.trim();
+      if (!value) {
+        updateFovCounter();
+        return;
       }
-      if (matched.length === state.mode && (state.mode === 1 || allInputsFilled())) {
+      const match = state.targets.find(t => !state.found.includes(t) && targetMatches(value, t));
+      if (!match) {
+        updateFovCounter();
+        return;
+      }
+      state.found.push(match);
+      state.found.sort((a, b) => a.localeCompare(b));
+      input.value = '';
+      state.inputs[0] = '';
+      state.message = state.found.join(', ');
+      msg.textContent = state.message;
+      updateFovCounter();
+      if (state.found.length === state.targets.length) {
         state.answered = true;
         record(scoreId(), true);
-        state.message = state.mode === 1 ? `correct: ${state.targets[0]}` : `correct: ${state.targets.join(', ')}`;
+        state.message = `correct: ${state.targets.join(', ')}`;
+        msg.textContent = state.message;
+        updateStats();
+      }
+    }
+
+    function checkAnswers() {
+      if (isFovMode) {
+        checkFovAnswer();
+        return;
+      }
+      if (!state.targets.length || state.answered) return;
+      const matched = matchedTargets();
+      if (state.mode !== '1' && state.autoCheck) {
+        state.message = matched.length ? `${matched.length}/${modeCount} correct: ${matched.join(', ')}` : '';
+        msg.textContent = state.message;
+      }
+      if (matched.length === modeCount && (state.mode === '1' || allInputsFilled())) {
+        state.answered = true;
+        record(scoreId(), true);
+        state.message = state.mode === '1' ? `correct: ${state.targets[0]}` : `correct: ${state.targets.join(', ')}`;
         msg.textContent = state.message;
         updateStats();
       }
@@ -2453,8 +2620,8 @@
 
     function newQuestion() {
       if (!state.loaded) return;
+      state.inputs = [];
       chooseQuestion();
-      clearInputs();
       renderGuessConstellation();
     }
 
@@ -2462,9 +2629,28 @@
       if (!state.targets.length || state.answered) return;
       state.answered = true;
       record(scoreId(), false);
-      state.message = `answer: ${state.targets.join(', ')}`;
+      if (isFovMode) {
+        const missing = state.targets.filter(t => !state.found.includes(t));
+        state.message = missing.length ? `missing: ${missing.join(', ')}` : `all found: ${state.targets.join(', ')}`;
+      } else {
+        state.message = `answer: ${state.targets.join(', ')}`;
+      }
       msg.textContent = state.message;
       updateStats();
+      updateFovCounter();
+    }
+
+    function refreshCurrentQuestionForMag() {
+      if (isFovMode) {
+        if (state.fovOrient && state.fov) {
+          state.targets = fovVisibleConstellations(state.fovOrient, state.fov);
+          state.target = state.targets[0] || '';
+          state.stars = uniqueSkyStars(state.targets.flatMap(name => starsForConstellation(name, state.magLimit)));
+          state.found = state.found.filter(t => state.targets.includes(t));
+        } else chooseFovQuestion();
+      } else {
+        state.stars = starsInConstellations(state.targets);
+      }
     }
 
     function setGuessMag(value) {
@@ -2475,23 +2661,34 @@
       if (mag) mag.value = state.magLimit.toFixed(1);
       if (slider) { slider.value = state.magLimit.toFixed(1); updateRangeVisual(slider); }
       if (state.loaded && state.targets.length) {
-        state.stars = starsInConstellations(state.targets);
+        refreshCurrentQuestionForMag();
         draw();
+        updateFovCounter();
       }
     }
 
     function rotateGuess(direction) {
-      state.rotation += direction * 10 * Math.PI / 180;
+      if (isFovMode && state.fovOrient) {
+        state.fovOrient = {
+          f: state.fovOrient.f,
+          right: rotateAroundAxis(state.fovOrient.right, state.fovOrient.f, direction * 10 * Math.PI / 180),
+          up: rotateAroundAxis(state.fovOrient.up, state.fovOrient.f, direction * 10 * Math.PI / 180)
+        };
+      } else state.rotation += direction * 10 * Math.PI / 180;
       draw();
     }
 
     $('#guessConstMode').addEventListener('change', e => {
-      state.mode = Number(e.target.value);
+      state.mode = normaliseMode(e.target.value);
       state.autoCheck = false;
       state.targets = [];
       state.target = '';
       state.message = '';
       state.answered = false;
+      state.inputs = [];
+      state.found = [];
+      state.fov = null;
+      state.fovOrient = null;
       renderGuessConstellation();
     });
     $('#guessConstMag').addEventListener('input', e => setGuessMag(e.target.value));
@@ -2504,7 +2701,10 @@
       else if (!state.answered) { state.message = ''; msg.textContent = ''; }
     });
     document.querySelectorAll('.guessConstAnswer').forEach((input, index, inputs) => {
-      input.addEventListener('input', checkAnswers);
+      input.addEventListener('input', e => {
+        state.inputs[index] = e.target.value;
+        checkAnswers();
+      });
       input.addEventListener('keydown', e => {
         if (e.key === 'Enter' && e.shiftKey) {
           e.preventDefault();
@@ -2513,6 +2713,7 @@
         } else if (e.key === 'Enter') {
           e.preventDefault();
           e.stopPropagation();
+          checkAnswers();
           const next = inputs[index + 1];
           if (next) next.focus();
         }
@@ -2536,6 +2737,7 @@
       });
     }
     draw();
+    updateFovCounter();
     setTimeout(() => {
       const first = document.querySelector('.guessConstAnswer');
       if (first) first.focus();
