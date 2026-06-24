@@ -2288,16 +2288,17 @@
       rotation: 0,
       message: '',
       answered: false,
-      autoCheck: true,
+      autoCheck: false,
       magLimit: defaultMag()
     });
 
     if (!state.mode) state.mode = 1;
     if (!Array.isArray(state.targets)) state.targets = state.target ? [state.target] : [];
     state.mode = [1, 3, 5].includes(Number(state.mode)) ? Number(state.mode) : 1;
+    if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
 
     const scoreId = () => state.mode === 1 ? 'guessconst' : `guessconst${state.mode}`;
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="single constellation star map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${state.mode > 1 ? 's are these' : ' is this'}?</div><label>Mode<select id="guessConstMode"><option value="1" ${state.mode === 1 ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === 3 ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === 5 ? 'selected' : ''}>5 constellations</option></select></label><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${state.mode > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck !== false ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: state.mode }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" placeholder="constellation ${state.mode > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="single constellation star map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${state.mode > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" class="compact-select" aria-label="guess constellation mode"><option value="1" ${state.mode === 1 ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === 3 ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === 5 ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${state.mode > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: state.mode }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" placeholder="constellation ${state.mode > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
 
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
@@ -2308,29 +2309,65 @@
       if (stats) stats.innerHTML = formatScore(scoreId());
     }
 
-    function constellationNeighbours(name) {
-      const names = new Set(DATA.constellations.map(c => c.name));
-      const info = DATA.constellationInfo[name] || {};
-      return (info.neighbours || []).filter(n => names.has(n));
+    function fallbackGuessGraph() {
+      const graph = new Map(DATA.constellations.map(c => [c.name, new Set()]));
+      DATA.constellations.forEach(c => {
+        const info = DATA.constellationInfo[c.name] || {};
+        (info.neighbours || []).forEach(n => {
+          if (!graph.has(n) || n === c.name) return;
+          graph.get(c.name).add(n);
+          graph.get(n).add(c.name);
+        });
+      });
+      return graph;
+    }
+
+    function guessConstellationGraph() {
+      const graph = new Map(DATA.constellations.map(c => [c.name, new Set()]));
+      if (!SKY_RACE_GRAPH) return fallbackGuessGraph();
+      SKY_RACE_GRAPH.forEach((neighbours, rawName) => {
+        const a = skyRaceBaseName(rawName);
+        if (!graph.has(a)) return;
+        neighbours.forEach(rawNeighbour => {
+          const b = skyRaceBaseName(rawNeighbour);
+          if (!graph.has(b) || a === b) return;
+          graph.get(a).add(b);
+          graph.get(b).add(a);
+        });
+      });
+      const edgeCount = [...graph.values()].reduce((sum, ns) => sum + ns.size, 0) / 2;
+      return edgeCount ? graph : fallbackGuessGraph();
     }
 
     function connectedConstellationSet(count) {
-      const names = DATA.constellations.map(c => c.name);
-      for (let attempt = 0; attempt < 500; attempt++) {
+      if (count <= 1) return [rand(DATA.constellations).name];
+      const graph = guessConstellationGraph();
+      const names = [...graph.entries()].filter(([, ns]) => ns.size).map(([name]) => name);
+
+      // Prefer an actual bordering path: A borders B, B borders C, etc.
+      for (let attempt = 0; attempt < 1200; attempt++) {
         const chosen = [rand(names)];
         while (chosen.length < count) {
-          const frontier = [...new Set(chosen.flatMap(constellationNeighbours).filter(n => !chosen.includes(n)))];
+          const here = chosen[chosen.length - 1];
+          const options = [...(graph.get(here) || [])].filter(n => !chosen.includes(n));
+          if (!options.length) break;
+          chosen.push(rand(options));
+        }
+        if (chosen.length === count) return chosen;
+      }
+
+      // Last-resort connected component growth, still never disconnected.
+      for (let attempt = 0; attempt < 300; attempt++) {
+        const chosen = [rand(names)];
+        while (chosen.length < count) {
+          const frontier = [...new Set(chosen.flatMap(n => [...(graph.get(n) || [])]).filter(n => !chosen.includes(n)))];
           if (!frontier.length) break;
           chosen.push(rand(frontier));
         }
         if (chosen.length === count) return chosen;
       }
-      const fallback = [];
-      while (fallback.length < count) {
-        const n = rand(names);
-        if (!fallback.includes(n)) fallback.push(n);
-      }
-      return fallback;
+
+      return DATA.constellations.slice(0, count).map(c => c.name);
     }
 
     function starsInConstellations(names) {
@@ -2398,17 +2435,10 @@
       return [...document.querySelectorAll('.guessConstAnswer')].every(input => input.value.trim());
     }
 
-    function revealAnswers(prefix = 'answer') {
-      state.answered = true;
-      state.message = `${prefix}: ${state.targets.join(', ')}`;
-      msg.textContent = state.message;
-      updateStats();
-    }
-
     function checkAnswers() {
       if (!state.targets.length || state.answered) return;
       const matched = matchedTargets();
-      if (state.mode > 1 && state.autoCheck !== false) {
+      if (state.mode > 1 && state.autoCheck) {
         state.message = matched.length ? `${matched.length}/${state.mode} correct: ${matched.join(', ')}` : `0/${state.mode} correct`;
         msg.textContent = state.message;
       }
@@ -2418,7 +2448,7 @@
         state.message = state.mode === 1 ? `correct: ${state.targets[0]}` : `correct: ${state.targets.join(', ')}`;
         msg.textContent = state.message;
         updateStats();
-      } else if (state.mode > 1 && allInputsFilled() && matched.length !== state.mode && state.autoCheck === false) {
+      } else if (state.mode > 1 && allInputsFilled() && matched.length !== state.mode && !state.autoCheck) {
         state.message = 'not quite';
         msg.textContent = state.message;
       }
@@ -2435,7 +2465,9 @@
       if (!state.targets.length || state.answered) return;
       state.answered = true;
       record(scoreId(), false);
-      revealAnswers('answer');
+      state.message = `answer: ${state.targets.join(', ')}`;
+      msg.textContent = state.message;
+      updateStats();
     }
 
     function setGuessMag(value) {
@@ -2458,6 +2490,7 @@
 
     $('#guessConstMode').addEventListener('change', e => {
       state.mode = Number(e.target.value);
+      state.autoCheck = false;
       state.targets = [];
       state.target = '';
       state.message = '';
@@ -2489,7 +2522,7 @@
 
     if (!state.loaded && !state.loading) {
       state.loading = true;
-      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => {
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => []), ensureSkyRaceGraph()]).then(() => {
         state.loaded = true;
         state.loading = false;
         chooseQuestion();
