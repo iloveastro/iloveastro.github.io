@@ -2293,8 +2293,11 @@
       inputs: [],
       found: [],
       fov: null,
-      fovOrient: null
+      fovOrient: null,
+      boundaryCache: null
     });
+
+    const FOV_MODE_DEGREES = 150;
 
     function normaliseMode(value) {
       const v = String(value || '1');
@@ -2311,7 +2314,7 @@
     const scoreId = () => state.mode === '1' ? 'guessconst' : state.mode === 'fov' ? 'guessconstFov' : `guessconst${state.mode}`;
     const savedValue = i => esc(state.inputs[i] || '');
 
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 || isFovMode ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option><option value="fov" ${state.mode === 'fov' ? 'selected' : ''}>FOV</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label>${isFovMode ? `<p class="small">FOV: ${state.fov ? Number(state.fov).toFixed(0) : '...'}°</p>` : ''}<div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${!isFovMode && modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${isFovMode ? `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(0)}" placeholder="constellation name"><div id="guessFovCounter" class="small"></div>` : Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 || isFovMode ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option><option value="fov" ${state.mode === 'fov' ? 'selected' : ''}>150° FOV</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${!isFovMode && modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${isFovMode ? `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(0)}" placeholder="constellation name"><div id="guessFovCounter" class="small"></div>` : Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
 
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
@@ -2411,38 +2414,77 @@
       };
     }
 
-    function starInsideFov(star, orient, fovDegrees) {
-      const half = (fovDegrees * Math.PI / 180) / 2;
-      return dot(star.v, orient.f) >= Math.cos(half);
+    function vectorAverage(vectors) {
+      return normVec(vectors.reduce((sum, v) => ({ x: sum.x + v.x, y: sum.y + v.y, z: sum.z + v.z }), { x: 0, y: 0, z: 0 }));
     }
 
-    function fovVisibleConstellations(orient, fovDegrees) {
-      const out = [];
-      DATA.constellations.forEach(c => {
-        const stars = starsForConstellation(c.name, state.magLimit);
-        if (!stars.length) return;
-        if (stars.every(s => starInsideFov(s, orient, fovDegrees))) out.push(c.name);
+    function boundaryCoordToVec(coord, mirror = false) {
+      const lon = Number(coord[0]);
+      const lat = Number(coord[1]);
+      const ra = mirror ? -lon : lon;
+      return vecFromRaDec(((ra % 360) + 360) % 360, lat);
+    }
+
+    function featureBoundaryVectors(feature) {
+      const coords = [];
+      const seen = new Set();
+      (feature.rings || []).forEach(poly => {
+        (poly || []).forEach(ring => {
+          (ring || []).forEach(coord => {
+            if (!coord || coord.length < 2) return;
+            const key = `${Number(coord[0]).toFixed(5)},${Number(coord[1]).toFixed(5)}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            coords.push(coord);
+          });
+        });
       });
-      return out.sort((a, b) => a.localeCompare(b));
+      const normal = coords.map(coord => boundaryCoordToVec(coord, false));
+      const mirrored = coords.map(coord => boundaryCoordToVec(coord, true));
+      const centre = skyConstCentres.get(feature.name);
+      if (!centre || !normal.length) return normal;
+      const normalDot = dot(vectorAverage(normal), centre);
+      const mirroredDot = dot(vectorAverage(mirrored), centre);
+      return mirroredDot > normalDot ? mirrored : normal;
+    }
+
+    function boundaryCache() {
+      if (state.boundaryCache && state.boundaryCache.length) return state.boundaryCache;
+      state.boundaryCache = (skyBoundsFeatures || []).map(feature => ({
+        name: feature.name,
+        vectors: featureBoundaryVectors(feature)
+      })).filter(item => item.name && item.vectors.length);
+      return state.boundaryCache;
+    }
+
+    function boundaryFullyInsideFov(item, orient) {
+      const minDot = Math.cos((FOV_MODE_DEGREES / 2) * Math.PI / 180);
+      return item.vectors.every(v => dot(v, orient.f) >= minDot);
+    }
+
+    function fovVisibleConstellations(orient) {
+      return boundaryCache()
+        .filter(item => boundaryFullyInsideFov(item, orient))
+        .map(item => item.name)
+        .sort((a, b) => a.localeCompare(b));
     }
 
     function chooseFovQuestion() {
       let best = null;
-      for (let attempt = 0; attempt < 350; attempt++) {
-        const fov = 120 + Math.random() * 30;
+      for (let attempt = 0; attempt < 180; attempt++) {
         const orient = randomFovOrientation();
-        const targets = fovVisibleConstellations(orient, fov);
-        const candidate = { fov, orient, targets };
-        if (!best || Math.abs(targets.length - 7) < Math.abs(best.targets.length - 7)) best = candidate;
+        const targets = fovVisibleConstellations(orient);
+        const candidate = { orient, targets };
+        if (!best || Math.abs(targets.length - 8) < Math.abs(best.targets.length - 8)) best = candidate;
         if (targets.length >= 3 && targets.length <= 12) {
           best = candidate;
           break;
         }
       }
-      state.fov = best.fov;
-      state.fovOrient = best.orient;
-      state.targets = best.targets;
-      state.target = best.targets[0] || '';
+      state.fov = FOV_MODE_DEGREES;
+      state.fovOrient = best ? best.orient : randomFovOrientation();
+      state.targets = best ? best.targets : [];
+      state.target = state.targets[0] || '';
       state.stars = uniqueSkyStars(state.targets.flatMap(name => starsForConstellation(name, state.magLimit)));
       state.rotation = 0;
       state.message = '';
@@ -2480,7 +2522,7 @@
       const pick = buildPickLookup(canvas);
       const drawn = [];
       const radius = Math.min(canvas.width, canvas.height) * 0.48;
-      const fovRad = (state.fov || 135) * Math.PI / 180;
+      const fovRad = FOV_MODE_DEGREES * Math.PI / 180;
       const b = state.fovOrient || localBasisFromForward(vecFromRaDec(0, 0));
 
       ctx.save();
@@ -2522,13 +2564,16 @@
         return;
       }
       if (!state.targets.length || (!isFovMode && state.targets.length !== modeCount)) chooseQuestion();
-      if (isFovMode) drawnGuessStars = drawFovMap();
-      else drawnGuessStars = drawConstellationStarMap(canvas, state.target || state.targets[0], { magLimit: state.magLimit, rotation: state.rotation, stars: state.stars });
-      ctx.strokeStyle = 'black';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.48, 0, Math.PI * 2);
-      ctx.stroke();
+      if (isFovMode) {
+        drawnGuessStars = drawFovMap();
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.48, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        drawnGuessStars = drawConstellationStarMap(canvas, state.target || state.targets[0], { magLimit: state.magLimit, rotation: state.rotation, stars: state.stars });
+      }
     }
 
     function selectGuessStar(clientX, clientY) {
@@ -2642,12 +2687,7 @@
 
     function refreshCurrentQuestionForMag() {
       if (isFovMode) {
-        if (state.fovOrient && state.fov) {
-          state.targets = fovVisibleConstellations(state.fovOrient, state.fov);
-          state.target = state.targets[0] || '';
-          state.stars = uniqueSkyStars(state.targets.flatMap(name => starsForConstellation(name, state.magLimit)));
-          state.found = state.found.filter(t => state.targets.includes(t));
-        } else chooseFovQuestion();
+        state.stars = uniqueSkyStars(state.targets.flatMap(name => starsForConstellation(name, state.magLimit)));
       } else {
         state.stars = starsInConstellations(state.targets);
       }
@@ -2680,6 +2720,7 @@
 
     $('#guessConstMode').addEventListener('change', e => {
       state.mode = normaliseMode(e.target.value);
+      state.magLimit = defaultMag();
       state.autoCheck = false;
       state.targets = [];
       state.target = '';
