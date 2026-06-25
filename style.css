@@ -693,15 +693,23 @@ input[type='range']::-moz-range-thumb {
 
 
 
-#app {
+
+
+#gameRegion {
   position: relative;
   min-height: 55vh;
 }
+#app {
+  min-height: 55vh;
+}
 .loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
   min-height: 55vh;
   display: grid;
   place-items: center;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.94);
   color: #000;
 }
 .loading-card {

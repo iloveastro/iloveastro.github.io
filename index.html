@@ -6,15 +6,21 @@
   <title>iloveastro</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    #app {
+    #gameRegion {
       position: relative;
       min-height: 55vh;
     }
+    #app {
+      min-height: 55vh;
+    }
     #loadingOverlay.loading-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
       min-height: 55vh;
       display: grid;
       place-items: center;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.94);
       color: #000;
     }
     #loadingOverlay .loading-card {
@@ -65,17 +71,32 @@
       </div>
     </div>
   </header>
-  <nav id="tabs" aria-label="games"></nav>
-  <main id="app">
+  <nav id="tabs" aria-label="games"><button type="button" class="active">Charts</button>
+    <button type="button">SkyGuessr</button>
+    <button type="button">SkyRace</button>
+    <button type="button">Sky Map</button>
+    <button type="button">Constellation Map</button>
+    <button type="button">Find Constellation</button>
+    <button type="button">Guess Constellation</button>
+    <button type="button">Neighbours</button>
+    <button type="button">Stars</button>
+    <button type="button">DSOs</button>
+    <button type="button">88 Timer</button>
+    <button type="button">Atlas</button>
+    <button type="button">Tables</button></nav>
+  <div id="gameRegion">
+    <main id="app"></main>
     <section id="loadingOverlay" class="loading-overlay" data-launch="1">
       <div class="loading-card">
         <div class="loading-word" aria-live="polite">i</div>
         <div class="loading-note">loading...</div>
       </div>
     </section>
-  </main>
+  </div>
   <script>
     window.__iloveastroLoadingFrames = ['i','il','ilo','ilov','ilove','ilovea','iloveas','iloveast','iloveastr','iloveastro','loveastro','oveastro','veastro','eastro','astro','stro','tro','ro','o'];
+    window.__iloveastroLaunchStartedAt = Date.now();
+    window.__iloveastroLaunchMinMs = window.__iloveastroLoadingFrames.length * 70;
     window.__iloveastroLaunchLoader = (function () {
       var i = 0;
       return setInterval(function () {

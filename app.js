@@ -49,26 +49,21 @@
   }
 
   function ensureLoadingOverlay() {
-    const appRoot = document.getElementById('app') || document.body;
+    const region = document.getElementById('gameRegion') || document.body;
     let overlay = document.getElementById('loadingOverlay');
     if (!overlay) {
       overlay = document.createElement('section');
       overlay.id = 'loadingOverlay';
       overlay.className = 'loading-overlay';
       overlay.innerHTML = `<div class="loading-card"><div class="loading-word" aria-live="polite"></div><div class="loading-note">loading...</div></div>`;
-      appRoot.append(overlay);
-    } else if (overlay.parentElement !== appRoot && appRoot !== document.body) {
-      appRoot.append(overlay);
+      region.append(overlay);
+    } else if (overlay.parentElement !== region && region !== document.body) {
+      region.append(overlay);
     }
     return overlay;
   }
 
-  function showLoadingOverlay(label = '') {
-    stopLaunchLoader();
-    const overlay = ensureLoadingOverlay();
-    delete overlay.dataset.launch;
-    const note = overlay.querySelector('.loading-note');
-    if (note) note.textContent = 'loading...';
+  function animateLoadingOverlay(overlay) {
     const word = overlay.querySelector('.loading-word');
     if (loadingOverlayTimer) clearInterval(loadingOverlayTimer);
     let i = 0;
@@ -82,7 +77,16 @@
     }, 70);
   }
 
-  function hideLoadingOverlay() {
+  function showLoadingOverlay(label = '') {
+    stopLaunchLoader();
+    const overlay = ensureLoadingOverlay();
+    delete overlay.dataset.launch;
+    const note = overlay.querySelector('.loading-note');
+    if (note) note.textContent = 'loading...';
+    animateLoadingOverlay(overlay);
+  }
+
+  function removeLoadingOverlayNow() {
     stopLaunchLoader();
     if (loadingOverlayTimer) {
       clearInterval(loadingOverlayTimer);
@@ -92,9 +96,20 @@
     if (overlay) overlay.remove();
   }
 
+  function hideLoadingOverlay() {
+    removeLoadingOverlayNow();
+  }
+
   function hideLaunchLoadingOverlay() {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay && overlay.dataset.launch) hideLoadingOverlay();
+    if (!overlay || !overlay.dataset.launch) return;
+    const started = window.__iloveastroLaunchStartedAt || Date.now();
+    const minimum = window.__iloveastroLaunchMinMs || (LOADING_WORD_FRAMES.length * 70);
+    const remaining = Math.max(0, minimum - (Date.now() - started));
+    setTimeout(() => {
+      const current = document.getElementById('loadingOverlay');
+      if (current && current.dataset.launch) removeLoadingOverlayNow();
+    }, remaining);
   }
 
   window.addEventListener('error', () => hideLaunchLoadingOverlay());
