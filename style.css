@@ -699,6 +699,13 @@ input[type='range']::-moz-range-thumb {
 
 
 
+
+
+html.loading-lock,
+body.loading-lock {
+  overflow: hidden;
+  height: 100%;
+}
 #gameRegion {
   position: relative;
   min-height: calc(100svh - var(--play-top, 0px));
@@ -707,10 +714,12 @@ input[type='range']::-moz-range-thumb {
   min-height: calc(100svh - var(--play-top, 0px));
 }
 .loading-overlay {
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: var(--play-top, 0px);
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 20;
-  min-height: calc(100svh - var(--play-top, 0px));
   display: grid;
   place-items: center;
   background: #fff;

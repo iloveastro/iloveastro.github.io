@@ -87,6 +87,8 @@
       clearInterval(loadingOverlayTimer);
       loadingOverlayTimer = null;
     }
+    document.documentElement.classList.remove('loading-lock');
+    document.body.classList.remove('loading-lock');
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.remove();
   }
