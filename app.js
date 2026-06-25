@@ -49,21 +49,26 @@
   }
 
   function ensureLoadingOverlay() {
-    const region = document.getElementById('gameRegion') || document.body;
+    const appRoot = document.getElementById('app') || document.body;
     let overlay = document.getElementById('loadingOverlay');
     if (!overlay) {
       overlay = document.createElement('section');
       overlay.id = 'loadingOverlay';
       overlay.className = 'loading-overlay';
       overlay.innerHTML = `<div class="loading-card"><div class="loading-word" aria-live="polite"></div><div class="loading-note">loading...</div></div>`;
-      region.append(overlay);
-    } else if (overlay.parentElement !== region && region !== document.body) {
-      region.append(overlay);
+      appRoot.append(overlay);
+    } else if (overlay.parentElement !== appRoot && appRoot !== document.body) {
+      appRoot.append(overlay);
     }
     return overlay;
   }
 
-  function animateLoadingOverlay(overlay) {
+  function showLoadingOverlay(label = '') {
+    stopLaunchLoader();
+    const overlay = ensureLoadingOverlay();
+    delete overlay.dataset.launch;
+    const note = overlay.querySelector('.loading-note');
+    if (note) note.textContent = 'loading...';
     const word = overlay.querySelector('.loading-word');
     if (loadingOverlayTimer) clearInterval(loadingOverlayTimer);
     let i = 0;
@@ -74,48 +79,37 @@
       if (!currentWord) return;
       i = (i + 1) % LOADING_WORD_FRAMES.length;
       currentWord.textContent = LOADING_WORD_FRAMES[i];
-    }, 70);
+    }, window.__iloveastroLoaderMs || 70);
   }
 
-  function showLoadingOverlay(label = '') {
-    // Startup loader only. Do not flash loading screens during in-app tab/game switches.
-  }
-
-  function removeLoadingOverlayNow() {
+  function hideLoadingOverlay() {
     stopLaunchLoader();
     if (loadingOverlayTimer) {
       clearInterval(loadingOverlayTimer);
       loadingOverlayTimer = null;
     }
-    document.documentElement.classList.remove('loading-lock');
-    document.body.classList.remove('loading-lock');
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.remove();
   }
 
-  function hideLoadingOverlay() {
-    removeLoadingOverlayNow();
-  }
-
   function hideLaunchLoadingOverlay() {
-    setPlayRegionHeight();
     const overlay = document.getElementById('loadingOverlay');
     if (!overlay || !overlay.dataset.launch) return;
     const started = window.__iloveastroLaunchStartedAt || Date.now();
-    const minimum = window.__iloveastroLaunchMinMs || (LOADING_WORD_FRAMES.length * 70);
-    const remaining = Math.max(0, minimum - (Date.now() - started));
-    setTimeout(() => {
-      const current = document.getElementById('loadingOverlay');
-      if (current && current.dataset.launch) removeLoadingOverlayNow();
-    }, remaining);
+    const minMs = window.__iloveastroMinLaunchMs || (LOADING_WORD_FRAMES.length * (window.__iloveastroLoaderMs || 70));
+    const elapsed = Date.now() - started;
+    const remaining = Math.max(0, minMs - elapsed);
+    const removeLaunch = () => {
+      const later = document.getElementById('loadingOverlay');
+      if (later && later.dataset.launch) hideLoadingOverlay();
+      launchState.active = false;
+    };
+    if (remaining) setTimeout(removeLaunch, remaining);
+    else removeLaunch();
   }
 
   window.addEventListener('error', () => hideLaunchLoadingOverlay());
   window.addEventListener('unhandledrejection', () => hideLaunchLoadingOverlay());
-
-  function setPlayRegionHeight() {
-    if (window.__iloveastroSetPlayRegionHeight) window.__iloveastroSetPlayRegionHeight();
-  }
 
   function ensureImageModal() {
     let modal = document.getElementById('imageModal');
@@ -382,6 +376,7 @@
   ];
 
   let activeGame = 'charts';
+  const launchState = { active: !!document.querySelector('#loadingOverlay[data-launch]') };
   const app = $('#app');
   const tabs = $('#tabs');
   const states = {};
@@ -404,7 +399,11 @@
     tabs.innerHTML = '';
     games.forEach(g => tabs.append(el('button', { type: 'button', class: g.id === activeGame ? 'active' : '', onclick: () => switchGame(g.id) }, [document.createTextNode(g.title)])));
   }
-  function switchGame(id) { activeGame = id; setupTabs(); render(); }
+  function switchGame(id) {
+    activeGame = id;
+    setupTabs();
+    if (!launchState.active) render();
+  }
 
   function setupSaveMenu() {
     const button = $('#saveMenuButton');
@@ -3769,5 +3768,26 @@
     else if (activeGame === 'atlas') renderAtlas();
     else if (activeGame === 'tables') renderTables();
   }
-  setupTabs(); setPlayRegionHeight(); render(); setPlayRegionHeight(); hideLaunchLoadingOverlay();
+  function finishLaunchThenRender() {
+    launchState.active = false;
+    hideLoadingOverlay();
+    render();
+  }
+
+  function beginLaunch() {
+    setupTabs();
+    const overlay = document.getElementById('loadingOverlay');
+    if (!overlay || !overlay.dataset.launch) {
+      launchState.active = false;
+      render();
+      return;
+    }
+    const started = window.__iloveastroLaunchStartedAt || Date.now();
+    const minMs = window.__iloveastroMinLaunchMs || (LOADING_WORD_FRAMES.length * (window.__iloveastroLoaderMs || 70));
+    const elapsed = Date.now() - started;
+    const remaining = Math.max(0, minMs - elapsed);
+    setTimeout(finishLaunchThenRender, remaining);
+  }
+
+  beginLaunch();
 })();

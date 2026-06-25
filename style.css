@@ -697,33 +697,17 @@ input[type='range']::-moz-range-thumb {
 
 
 
-
-
-
-
-html.loading-lock,
-body.loading-lock {
-  overflow: hidden;
-  height: 100%;
-}
-#gameRegion {
-  position: relative;
-  min-height: calc(100svh - var(--play-top, 0px));
-}
 #app {
-  min-height: calc(100svh - var(--play-top, 0px));
+  position: relative;
 }
 .loading-overlay {
-  position: fixed;
-  top: var(--play-top, 0px);
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 20;
+  height: calc(100svh - 190px);
+  min-height: 360px;
   display: grid;
   place-items: center;
   background: #fff;
   color: #000;
+  overflow: hidden;
 }
 .loading-card {
   border: 0;

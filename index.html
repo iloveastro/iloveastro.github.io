@@ -6,29 +6,17 @@
   <title>iloveastro</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    html.loading-lock,
-    body.loading-lock {
-      overflow: hidden;
-      height: 100%;
-    }
-    #gameRegion {
-      position: relative;
-      min-height: calc(100svh - var(--play-top, 0px));
-    }
     #app {
-      min-height: calc(100svh - var(--play-top, 0px));
+      position: relative;
     }
     #loadingOverlay.loading-overlay {
-      position: fixed;
-      top: var(--play-top, 0px);
-      right: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 20;
+      height: calc(100svh - 190px);
+      min-height: 360px;
       display: grid;
       place-items: center;
       background: #fff;
       color: #000;
+      overflow: hidden;
     }
     #loadingOverlay .loading-card {
       border: 0;
@@ -48,7 +36,7 @@
     }
   </style>
 </head>
-<body class="loading-lock">
+<body>
   <header>
     <h1>iloveastro</h1>
     <div class="save-menu">
@@ -78,40 +66,20 @@
       </div>
     </div>
   </header>
-  <nav id="tabs" aria-label="games"><button type="button" class="active">Charts</button>
-    <button type="button">SkyGuessr</button>
-    <button type="button">SkyRace</button>
-    <button type="button">Sky Map</button>
-    <button type="button">Constellation Map</button>
-    <button type="button">Find Constellation</button>
-    <button type="button">Guess Constellation</button>
-    <button type="button">Neighbours</button>
-    <button type="button">Stars</button>
-    <button type="button">DSOs</button>
-    <button type="button">88 Timer</button>
-    <button type="button">Atlas</button>
-    <button type="button">Tables</button></nav>
-  <div id="gameRegion">
-    <main id="app"></main>
+  <nav id="tabs" aria-label="games"><button type="button" class="active">Charts</button><button type="button">SkyGuessr</button><button type="button">SkyRace</button><button type="button">Sky Map</button><button type="button">Constellation Map</button><button type="button">Find Constellation</button><button type="button">Guess Constellation</button><button type="button">Neighbours</button><button type="button">Stars</button><button type="button">DSOs</button><button type="button">88 Timer</button><button type="button">Atlas</button><button type="button">Tables</button></nav>
+  <main id="app">
     <section id="loadingOverlay" class="loading-overlay" data-launch="1">
       <div class="loading-card">
         <div class="loading-word" aria-live="polite">i</div>
         <div class="loading-note">loading...</div>
       </div>
     </section>
-  </div>
+  </main>
   <script>
     window.__iloveastroLoadingFrames = ['i','il','ilo','ilov','ilove','ilovea','iloveas','iloveast','iloveastr','iloveastro','loveastro','oveastro','veastro','eastro','astro','stro','tro','ro','o'];
+    window.__iloveastroLoaderMs = 70;
     window.__iloveastroLaunchStartedAt = Date.now();
-    window.__iloveastroLaunchMinMs = window.__iloveastroLoadingFrames.length * 70;
-    window.__iloveastroSetPlayRegionHeight = function () {
-      var region = document.getElementById('gameRegion');
-      if (!region) return;
-      var top = Math.max(0, Math.round(region.getBoundingClientRect().top));
-      document.documentElement.style.setProperty('--play-top', top + 'px');
-    };
-    window.__iloveastroSetPlayRegionHeight();
-    window.addEventListener('resize', window.__iloveastroSetPlayRegionHeight, { passive: true });
+    window.__iloveastroMinLaunchMs = window.__iloveastroLoadingFrames.length * window.__iloveastroLoaderMs;
     window.__iloveastroLaunchLoader = (function () {
       var i = 0;
       return setInterval(function () {
@@ -119,7 +87,7 @@
         if (!el) return;
         i = (i + 1) % window.__iloveastroLoadingFrames.length;
         el.textContent = window.__iloveastroLoadingFrames[i];
-      }, 70);
+      }, window.__iloveastroLoaderMs);
     })();
   </script>
   <script src="data.js"></script>
