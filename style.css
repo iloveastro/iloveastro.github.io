@@ -695,21 +695,25 @@ input[type='range']::-moz-range-thumb {
 
 
 
+
+
+
+
 #gameRegion {
   position: relative;
-  min-height: 55vh;
+  min-height: calc(100svh - var(--play-top, 0px));
 }
 #app {
-  min-height: 55vh;
+  min-height: calc(100svh - var(--play-top, 0px));
 }
 .loading-overlay {
   position: absolute;
   inset: 0;
   z-index: 20;
-  min-height: 55vh;
+  min-height: calc(100svh - var(--play-top, 0px));
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.94);
+  background: #fff;
   color: #000;
 }
 .loading-card {

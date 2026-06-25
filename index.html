@@ -8,19 +8,19 @@
   <style>
     #gameRegion {
       position: relative;
-      min-height: 55vh;
+      min-height: calc(100svh - var(--play-top, 0px));
     }
     #app {
-      min-height: 55vh;
+      min-height: calc(100svh - var(--play-top, 0px));
     }
     #loadingOverlay.loading-overlay {
       position: absolute;
       inset: 0;
       z-index: 20;
-      min-height: 55vh;
+      min-height: calc(100svh - var(--play-top, 0px));
       display: grid;
       place-items: center;
-      background: rgba(255, 255, 255, 0.94);
+      background: #fff;
       color: #000;
     }
     #loadingOverlay .loading-card {
@@ -97,6 +97,14 @@
     window.__iloveastroLoadingFrames = ['i','il','ilo','ilov','ilove','ilovea','iloveas','iloveast','iloveastr','iloveastro','loveastro','oveastro','veastro','eastro','astro','stro','tro','ro','o'];
     window.__iloveastroLaunchStartedAt = Date.now();
     window.__iloveastroLaunchMinMs = window.__iloveastroLoadingFrames.length * 70;
+    window.__iloveastroSetPlayRegionHeight = function () {
+      var region = document.getElementById('gameRegion');
+      if (!region) return;
+      var top = Math.max(0, Math.round(region.getBoundingClientRect().top));
+      document.documentElement.style.setProperty('--play-top', top + 'px');
+    };
+    window.__iloveastroSetPlayRegionHeight();
+    window.addEventListener('resize', window.__iloveastroSetPlayRegionHeight, { passive: true });
     window.__iloveastroLaunchLoader = (function () {
       var i = 0;
       return setInterval(function () {

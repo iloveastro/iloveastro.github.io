@@ -78,12 +78,7 @@
   }
 
   function showLoadingOverlay(label = '') {
-    stopLaunchLoader();
-    const overlay = ensureLoadingOverlay();
-    delete overlay.dataset.launch;
-    const note = overlay.querySelector('.loading-note');
-    if (note) note.textContent = 'loading...';
-    animateLoadingOverlay(overlay);
+    // Startup loader only. Do not flash loading screens during in-app tab/game switches.
   }
 
   function removeLoadingOverlayNow() {
@@ -101,6 +96,7 @@
   }
 
   function hideLaunchLoadingOverlay() {
+    setPlayRegionHeight();
     const overlay = document.getElementById('loadingOverlay');
     if (!overlay || !overlay.dataset.launch) return;
     const started = window.__iloveastroLaunchStartedAt || Date.now();
@@ -114,6 +110,10 @@
 
   window.addEventListener('error', () => hideLaunchLoadingOverlay());
   window.addEventListener('unhandledrejection', () => hideLaunchLoadingOverlay());
+
+  function setPlayRegionHeight() {
+    if (window.__iloveastroSetPlayRegionHeight) window.__iloveastroSetPlayRegionHeight();
+  }
 
   function ensureImageModal() {
     let modal = document.getElementById('imageModal');
@@ -3767,5 +3767,5 @@
     else if (activeGame === 'atlas') renderAtlas();
     else if (activeGame === 'tables') renderTables();
   }
-  setupTabs(); render(); hideLaunchLoadingOverlay();
+  setupTabs(); setPlayRegionHeight(); render(); setPlayRegionHeight(); hideLaunchLoadingOverlay();
 })();
