@@ -5,8 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>iloveastro</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    #loadingOverlay.loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: #000;
+    }
+    #loadingOverlay .loading-card {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      text-align: center;
+    }
+    #loadingOverlay .loading-word {
+      min-height: 2.2rem;
+      font: 700 2rem/1.2 Arial, sans-serif;
+      letter-spacing: 0.08em;
+    }
+    #loadingOverlay .loading-note {
+      display: none;
+    }
+  </style>
 </head>
 <body>
+  <div id="loadingOverlay" class="loading-overlay" data-launch="1">
+    <div class="loading-card">
+      <div class="loading-word" aria-live="polite">i</div>
+      <div class="loading-note"></div>
+    </div>
+  </div>
+  <script>
+    window.__iloveastroLoadingFrames = ['i','il','ilo','ilov','ilove','ilovea','iloveas','iloveast','iloveastr','iloveastro','loveastro','oveastro','veastro','eastro','astro','stro','tro','ro','o'];
+    window.__iloveastroLaunchLoader = (function () {
+      var i = 0;
+      return setInterval(function () {
+        var el = document.querySelector('#loadingOverlay .loading-word');
+        if (!el) return;
+        i = (i + 1) % window.__iloveastroLoadingFrames.length;
+        el.textContent = window.__iloveastroLoadingFrames[i];
+      }, 70);
+    })();
+  </script>
   <header>
     <h1>iloveastro</h1>
     <div class="save-menu">

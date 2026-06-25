@@ -689,20 +689,21 @@ input[type='range']::-moz-range-thumb {
 }
 
 
+
+
 .loading-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.92);
+  background: #fff;
   color: #000;
 }
 .loading-card {
-  border: 1px solid #111;
-  background: #fff;
-  min-width: min(28rem, 80vw);
-  padding: 2rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
   text-align: center;
 }
 .loading-word {
@@ -712,7 +713,5 @@ input[type='range']::-moz-range-thumb {
   letter-spacing: 0.08em;
 }
 .loading-note {
-  margin-top: 0.7rem;
-  font-size: 0.9rem;
-  color: #555;
+  display: none;
 }

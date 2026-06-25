@@ -35,13 +35,21 @@
     });
   }
 
-  const LOADING_WORD_FRAMES = [
+  const LOADING_WORD_FRAMES = window.__iloveastroLoadingFrames || [
     'i', 'il', 'ilo', 'ilov', 'ilove', 'ilovea', 'iloveas', 'iloveast', 'iloveastr', 'iloveastro',
-    'loveastro', 'oveastro', 'veastro', 'eastro', 'astro', 'stro', 'tro', 'ro', 'o', ''
+    'loveastro', 'oveastro', 'veastro', 'eastro', 'astro', 'stro', 'tro', 'ro', 'o'
   ];
   let loadingOverlayTimer = null;
 
+  function stopLaunchLoader() {
+    if (window.__iloveastroLaunchLoader) {
+      clearInterval(window.__iloveastroLaunchLoader);
+      window.__iloveastroLaunchLoader = null;
+    }
+  }
+
   function showLoadingOverlay(label = '') {
+    stopLaunchLoader();
     let overlay = document.getElementById('loadingOverlay');
     if (!overlay) {
       overlay = document.createElement('div');
@@ -50,8 +58,9 @@
       overlay.innerHTML = `<div class="loading-card"><div class="loading-word" aria-live="polite"></div><div class="loading-note"></div></div>`;
       document.body.append(overlay);
     }
+    delete overlay.dataset.launch;
     const note = overlay.querySelector('.loading-note');
-    if (note) note.textContent = label || '';
+    if (note) note.textContent = '';
     const word = overlay.querySelector('.loading-word');
     if (loadingOverlayTimer) clearInterval(loadingOverlayTimer);
     let i = 0;
@@ -62,16 +71,22 @@
       if (!currentWord) return;
       i = (i + 1) % LOADING_WORD_FRAMES.length;
       currentWord.textContent = LOADING_WORD_FRAMES[i];
-    }, 150);
+    }, 70);
   }
 
   function hideLoadingOverlay() {
+    stopLaunchLoader();
     if (loadingOverlayTimer) {
       clearInterval(loadingOverlayTimer);
       loadingOverlayTimer = null;
     }
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.remove();
+  }
+
+  function hideLaunchLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay && overlay.dataset.launch) hideLoadingOverlay();
   }
 
   function ensureImageModal() {
@@ -3726,5 +3741,5 @@
     else if (activeGame === 'atlas') renderAtlas();
     else if (activeGame === 'tables') renderTables();
   }
-  setupTabs(); render();
+  setupTabs(); render(); hideLaunchLoadingOverlay();
 })();
