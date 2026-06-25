@@ -35,6 +35,45 @@
     });
   }
 
+  const LOADING_WORD_FRAMES = [
+    'i', 'il', 'ilo', 'ilov', 'ilove', 'ilovea', 'iloveas', 'iloveast', 'iloveastr', 'iloveastro',
+    'loveastro', 'oveastro', 'veastro', 'eastro', 'astro', 'stro', 'tro', 'ro', 'o', ''
+  ];
+  let loadingOverlayTimer = null;
+
+  function showLoadingOverlay(label = '') {
+    let overlay = document.getElementById('loadingOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'loadingOverlay';
+      overlay.className = 'loading-overlay';
+      overlay.innerHTML = `<div class="loading-card"><div class="loading-word" aria-live="polite"></div><div class="loading-note"></div></div>`;
+      document.body.append(overlay);
+    }
+    const note = overlay.querySelector('.loading-note');
+    if (note) note.textContent = label || '';
+    const word = overlay.querySelector('.loading-word');
+    if (loadingOverlayTimer) clearInterval(loadingOverlayTimer);
+    let i = 0;
+    if (word) word.textContent = LOADING_WORD_FRAMES[i];
+    loadingOverlayTimer = setInterval(() => {
+      const current = document.getElementById('loadingOverlay');
+      const currentWord = current ? current.querySelector('.loading-word') : null;
+      if (!currentWord) return;
+      i = (i + 1) % LOADING_WORD_FRAMES.length;
+      currentWord.textContent = LOADING_WORD_FRAMES[i];
+    }, 150);
+  }
+
+  function hideLoadingOverlay() {
+    if (loadingOverlayTimer) {
+      clearInterval(loadingOverlayTimer);
+      loadingOverlayTimer = null;
+    }
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.remove();
+  }
+
   function ensureImageModal() {
     let modal = document.getElementById('imageModal');
     if (modal) return modal;
@@ -130,6 +169,84 @@
     return m;
   };
   const starByConst = byConstellation(DATA.stars);
+  let namedStarCatalogueReady = false;
+  let namedStarCataloguePromise = null;
+  function sortStarCatalogueRows(a, b) {
+    const ca = String(a.constellation || ''), cb = String(b.constellation || '');
+    if (ca !== cb) return ca.localeCompare(cb);
+    const ma = Number.isFinite(a.mag) ? a.mag : 99;
+    const mb = Number.isFinite(b.mag) ? b.mag : 99;
+    if (ma !== mb) return ma - mb;
+    return String(a.name || '').localeCompare(String(b.name || ''));
+  }
+  function addStarToConstellationMap(star) {
+    if (!starByConst.has(star.constellation)) starByConst.set(star.constellation, []);
+    const arr = starByConst.get(star.constellation);
+    if (!arr.some(s => compact(s.name) === compact(star.name))) {
+      arr.push(star);
+      arr.sort(sortStarCatalogueRows);
+    }
+  }
+  function addStarToConstellationInfo(star) {
+    const info = DATA.constellationInfo[star.constellation];
+    if (!info || !Array.isArray(info.stars)) return;
+    if (!info.stars.some(s => compact(s.name) === compact(star.name))) {
+      info.stars.push(star);
+      info.stars.sort(sortStarCatalogueRows);
+    }
+  }
+  function namedStarDesignationFromSky(star) {
+    return starDesignation(star) || String(star.bf || star.bayer || '').trim();
+  }
+  function addNamedStarCatalogueEntry(star) {
+    const name = String(star.name || '').trim();
+    if (!name || !star.constellation) return false;
+    const existing = DATA.stars.find(s => compact(s.constellation) === compact(star.constellation) && compact(s.name) === compact(name));
+    if (existing) {
+      if (!Number.isFinite(existing.mag) && Number.isFinite(star.mag)) existing.mag = star.mag;
+      if (!existing.designation) existing.designation = namedStarDesignationFromSky(star);
+      addStrict(existing.name);
+      addStrict(existing.designation);
+      addStarToConstellationMap(existing);
+      addStarToConstellationInfo(existing);
+      return false;
+    }
+    const entry = {
+      name,
+      designation: namedStarDesignationFromSky(star),
+      constellation: star.constellation,
+      note: `catalogued common/proper star name${Number.isFinite(star.mag) ? `; mag ${star.mag.toFixed(2)}` : ''}`,
+      mag: Number.isFinite(star.mag) ? star.mag : undefined,
+      generated: true
+    };
+    DATA.stars.push(entry);
+    addStrict(entry.name);
+    addStrict(entry.designation);
+    addStarToConstellationMap(entry);
+    addStarToConstellationInfo(entry);
+    return true;
+  }
+  function augmentNamedStarCatalogueFromSky() {
+    if (namedStarCatalogueReady) return;
+    skyStars.filter(star => String(star.name || '').trim()).forEach(addNamedStarCatalogueEntry);
+    DATA.stars.sort(sortStarCatalogueRows);
+    namedStarCatalogueReady = true;
+  }
+  function ensureNamedStarCatalogue() {
+    if (namedStarCatalogueReady) return Promise.resolve();
+    if (namedStarCataloguePromise) return namedStarCataloguePromise;
+    namedStarCataloguePromise = loadSkyData().then(() => {
+      augmentNamedStarCatalogueFromSky();
+    });
+    return namedStarCataloguePromise;
+  }
+  function deferForNamedStars(title, thenRender) {
+    app.innerHTML = `<h2>${esc(title)}</h2><section class="panel"><p>loading common-name star catalogue...</p></section>`;
+    showLoadingOverlay('loading common-name stars');
+    ensureNamedStarCatalogue()
+      .then(() => { hideLoadingOverlay(); thenRender(); })
+      .catch(() => { hideLoadingOverlay(); app.innerHTML = `<h2>${esc(title)}</h2><section class="panel"><p>could not load the extended star catalogue.</p></section>`; });
+  }
   const dsoByConst = byConstellation(DATA.dso);
   const chartsByName = new Map();
   DATA.charts.forEach(c => { if (!chartsByName.has(c.name)) chartsByName.set(c.name, []); chartsByName.get(c.name).push(c); });
@@ -432,8 +549,16 @@
   function starQuestion(mode) {
     if (mode === 'groupToConstellation') return starGroupQuestion();
     const s = rand(DATA.stars);
-    if (mode === 'designationToStar') return { prompt: `Which named star has designation <strong>${esc(s.designation)}</strong>?`, answers: [s.name], card: () => `<h3>${esc(s.name)}</h3><p>${esc(s.designation)}. ${esc(s.constellation)}. ${esc(s.note)}.</p>${infoCard(s.constellation)}` };
-    if (mode === 'starToDesignation') return { prompt: `What is the designation of <strong>${esc(s.name)}</strong>?`, answers: [s.designation], card: () => `<h3>${esc(s.name)}</h3><p>${esc(s.designation)}. ${esc(s.constellation)}. ${esc(s.note)}.</p>${infoCard(s.constellation)}` };
+    if (mode === 'designationToStar') {
+      const pool = DATA.stars.filter(x => String(x.designation || '').trim());
+      const picked = rand(pool.length ? pool : DATA.stars);
+      return { prompt: `Which named star has designation <strong>${esc(picked.designation)}</strong>?`, answers: [picked.name], card: () => `<h3>${esc(picked.name)}</h3><p>${esc(picked.designation)}. ${esc(picked.constellation)}. ${esc(picked.note)}</p>${infoCard(picked.constellation)}` };
+    }
+    if (mode === 'starToDesignation') {
+      const pool = DATA.stars.filter(x => String(x.designation || '').trim());
+      const picked = rand(pool.length ? pool : DATA.stars);
+      return { prompt: `What is the designation of <strong>${esc(picked.name)}</strong>?`, answers: [picked.designation], card: () => `<h3>${esc(picked.name)}</h3><p>${esc(picked.designation)}. ${esc(picked.constellation)}. ${esc(picked.note)}</p>${infoCard(picked.constellation)}` };
+    }
     if (mode === 'constellationToStar') {
       const entries = [...starByConst.entries()].filter(([, arr]) => arr.length >= 1);
       const [constellation, arr] = rand(entries);
@@ -672,6 +797,10 @@
     search.addEventListener('input', draw); draw(); search.focus();
   }
   function renderConstellationPage(name) {
+    if (!namedStarCatalogueReady) {
+      deferForNamedStars('Atlas', () => { if (activeGame === 'atlas') renderConstellationPage(name); });
+      return;
+    }
     const atlasState = states.atlas || (states.atlas = { page: '' });
     atlasState.page = name;
     if (atlasState.escHandler) document.removeEventListener('keydown', atlasState.escHandler);
@@ -1784,14 +1913,14 @@
       if (['ArrowDown','s','S'].includes(e.key)) { e.preventDefault(); move(0, step); }
     });
     if (!state.loaded && !state.loading) {
-      state.loading = true;
+      state.loading = true; showLoadingOverlay('loading sky data');
       Promise.all([loadSkyData(), loadConstellationBounds()]).then(() => {
         state.loaded = true;
-        state.loading = false;
+        hideLoadingOverlay(); state.loading = false;
         ensureTarget();
         draw();
         answer.focus();
-      }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
+      }).catch(err => { state.error = 'sky data unavailable'; hideLoadingOverlay(); state.loading = false; draw(); });
     }
     ensureTarget(); draw(); setTimeout(() => answer.focus(), 0);
   }
@@ -2256,17 +2385,17 @@
     });
 
     if (!state.loaded && !state.loading) {
-      state.loading = true;
+      state.loading = true; showLoadingOverlay('loading sky data');
       Promise.all([loadSkyData(), loadConstellationBounds().catch(() => []), loadDsoCoordinateData().catch(() => new Map())]).then(() => {
         buildSkyDsoObjects();
         state.loaded = true;
-        state.loading = false;
+        hideLoadingOverlay(); state.loading = false;
         populateMapSearchList();
         draw();
         focusCanvas();
       }).catch(() => {
         state.error = 'sky data unavailable';
-        state.loading = false;
+        hideLoadingOverlay(); state.loading = false;
         draw();
       });
     }
@@ -2295,11 +2424,9 @@
       roundPools: {}
     });
 
-    const BULK_MODE_COUNT = 12;
-
     function normaliseMode(value) {
       const v = String(value || '1');
-      return ['1', '3', '5', '12'].includes(v) ? v : '1';
+      return ['1', '3', '5'].includes(v) ? v : '1';
     }
 
     state.mode = normaliseMode(state.mode);
@@ -2310,11 +2437,10 @@
     if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
 
     const modeCount = Number(state.mode);
-    const isBulkAnswerMode = state.mode === '12';
     const scoreId = () => state.mode === '1' ? 'guessconst' : `guessconst${state.mode}`;
     const savedValue = i => esc(state.inputs[i] || '');
 
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option><option value="12" ${state.mode === '12' ? 'selected' : ''}>12 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${!isBulkAnswerMode && modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${isBulkAnswerMode ? `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(0)}" placeholder="constellation name"><div id="guessConstCounter" class="small"></div>` : Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
 
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
@@ -2434,7 +2560,6 @@
       if (mode === '1') return makeSingleConstellationPool();
       if (mode === '3') return makeConnectedConstellationPool(3);
       if (mode === '5') return makeConnectedConstellationPool(5);
-      if (mode === '12') return makeConnectedConstellationPool(BULK_MODE_COUNT);
       return makeSingleConstellationPool();
     }
 
@@ -2456,7 +2581,7 @@
       state.answered = false;
       state.autoCheck = false;
       state.found = [];
-      state.inputs = isBulkAnswerMode ? [''] : Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
+      state.inputs = Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
     }
 
     function chooseQuestion() {
@@ -2516,47 +2641,7 @@
       return [...document.querySelectorAll('.guessConstAnswer')].every(input => input.value.trim());
     }
 
-    function updateGuessCounter() {
-      const counter = $('#guessConstCounter');
-      if (counter) counter.textContent = `${state.found.length}/${state.targets.length} found`;
-    }
-
-    function checkBulkAnswer() {
-      if (!isBulkAnswerMode || state.answered) return;
-      const input = document.querySelector('.guessConstAnswer');
-      if (!input) return;
-      state.inputs[0] = input.value;
-      const value = input.value.trim();
-      if (!value) {
-        updateGuessCounter();
-        return;
-      }
-      const match = state.targets.find(t => !state.found.includes(t) && targetMatches(value, t));
-      if (!match) {
-        updateGuessCounter();
-        return;
-      }
-      state.found.push(match);
-      state.found.sort((a, b) => a.localeCompare(b));
-      input.value = '';
-      state.inputs[0] = '';
-      state.message = state.found.join(', ');
-      msg.textContent = state.message;
-      updateGuessCounter();
-      if (state.found.length === state.targets.length) {
-        state.answered = true;
-        record(scoreId(), true);
-        state.message = `correct: ${state.targets.join(', ')}`;
-        msg.textContent = state.message;
-        updateStats();
-      }
-    }
-
     function checkAnswers() {
-      if (isBulkAnswerMode) {
-        checkBulkAnswer();
-        return;
-      }
       if (!state.targets.length || state.answered) return;
       const matched = matchedTargets();
       if (state.mode !== '1' && state.autoCheck) {
@@ -2583,15 +2668,9 @@
       if (!state.targets.length || state.answered) return;
       state.answered = true;
       record(scoreId(), false);
-      if (isBulkAnswerMode) {
-        const missing = state.targets.filter(t => !state.found.includes(t));
-        state.message = missing.length ? `missing: ${missing.join(', ')}` : `all found: ${state.targets.join(', ')}`;
-      } else {
-        state.message = `answer: ${state.targets.join(', ')}`;
-      }
+      state.message = `answer: ${state.targets.join(', ')}`;
       msg.textContent = state.message;
       updateStats();
-      updateGuessCounter();
     }
 
     function setGuessMag(value) {
@@ -2604,7 +2683,6 @@
       if (state.loaded && state.targets.length) {
         state.stars = starsInConstellations(state.targets);
         draw();
-        updateGuessCounter();
       }
     }
 
@@ -2658,20 +2736,19 @@
     setShiftEnterAction(newQuestion);
 
     if (!state.loaded && !state.loading) {
-      state.loading = true;
+      state.loading = true; showLoadingOverlay('loading sky data');
       Promise.all([loadSkyData(), loadConstellationBounds().catch(() => []), ensureSkyRaceGraph()]).then(() => {
         state.loaded = true;
-        state.loading = false;
+        hideLoadingOverlay(); state.loading = false;
         chooseQuestion();
         renderGuessConstellation();
       }).catch(() => {
         state.error = 'sky data unavailable';
-        state.loading = false;
+        hideLoadingOverlay(); state.loading = false;
         draw();
       });
     }
     draw();
-    updateGuessCounter();
     setTimeout(() => {
       const first = document.querySelector('.guessConstAnswer');
       if (first) first.focus();
@@ -2967,8 +3044,8 @@
       else if (e.key === 'Enter') { e.preventDefault(); submitGuess(); }
     });
     if (!state.loaded && !state.loading) {
-      state.loading = true;
-      loadSkyData().then(() => { state.loaded = true; state.loading = false; skyAlphaCache = null; ensureTarget(); renderAlphaPin(); }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
+      state.loading = true; showLoadingOverlay('loading sky data');
+      loadSkyData().then(() => { state.loaded = true; hideLoadingOverlay(); state.loading = false; skyAlphaCache = null; ensureTarget(); renderAlphaPin(); }).catch(err => { state.error = 'sky data unavailable'; hideLoadingOverlay(); state.loading = false; draw(); });
     }
     ensureTarget(); draw(); setTimeout(() => canvas.focus(), 0);
   }
@@ -3287,8 +3364,8 @@
       if (['ArrowDown','s','S'].includes(e.key)) { e.preventDefault(); move(0, step); }
     });
     if (!state.loaded && !state.loading) {
-      state.loading = true;
-      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => { state.loaded = true; state.loading = false; draw(); focusCanvas(); }).catch(err => { state.error = 'sky data unavailable'; state.loading = false; draw(); });
+      state.loading = true; showLoadingOverlay('loading sky data');
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => [])]).then(() => { state.loaded = true; hideLoadingOverlay(); state.loading = false; draw(); focusCanvas(); }).catch(err => { state.error = 'sky data unavailable'; hideLoadingOverlay(); state.loading = false; draw(); });
     }
     draw(); setTimeout(() => canvas.focus(), 0);
   }
@@ -3314,6 +3391,23 @@
     graph.get(a).add(b);
     graph.get(b).add(a);
   }
+  function skyRaceUnifySerpensGraph(graph) {
+    if (!graph.has(SERPENS_CAPUT) || !graph.has(SERPENS_CAUDA)) return graph;
+    const union = new Set([
+      ...SERPENS_CAPUT_BORDERS,
+      ...SERPENS_CAUDA_BORDERS,
+      ...(graph.get(SERPENS_CAPUT) || []),
+      ...(graph.get(SERPENS_CAUDA) || [])
+    ]);
+    union.delete(SERPENS_CAPUT);
+    union.delete(SERPENS_CAUDA);
+    union.forEach(n => {
+      skyRaceAddEdge(graph, SERPENS_CAPUT, n);
+      skyRaceAddEdge(graph, SERPENS_CAUDA, n);
+    });
+    skyRaceAddEdge(graph, SERPENS_CAPUT, SERPENS_CAUDA);
+    return graph;
+  }
   function skyRaceCoordKey(coord) {
     const lon = Math.round(raToLon180(coord[0]) * 100000) / 100000;
     const lat = Math.round(Number(coord[1]) * 100000) / 100000;
@@ -3335,7 +3429,7 @@
     });
     SERPENS_CAPUT_BORDERS.forEach(n => skyRaceAddEdge(graph, SERPENS_CAPUT, n));
     SERPENS_CAUDA_BORDERS.forEach(n => skyRaceAddEdge(graph, SERPENS_CAUDA, n));
-    return graph;
+    return skyRaceUnifySerpensGraph(graph);
   }
   function skyRaceGraphFromBounds(features) {
     const graph = skyRaceEmptyGraph();
@@ -3366,6 +3460,7 @@
 
     SERPENS_CAPUT_BORDERS.forEach(n => skyRaceAddEdge(graph, SERPENS_CAPUT, n));
     SERPENS_CAUDA_BORDERS.forEach(n => skyRaceAddEdge(graph, SERPENS_CAUDA, n));
+    skyRaceUnifySerpensGraph(graph);
 
     const edgeCount = [...graph.values()].reduce((sum, ns) => sum + ns.size, 0) / 2;
     return edgeCount > 150 ? graph : skyRaceFallbackGraph();
@@ -3429,7 +3524,8 @@
     const state = states.skyrace || (states.skyrace = { start: '', target: '', current: '', route: [], optimalPath: [], done: false, message: '' });
     if (!SKY_RACE_GRAPH) {
       app.innerHTML = '<h2>SkyRace</h2><section class="panel"><p>loading borders...</p></section>';
-      ensureSkyRaceGraph().then(() => renderSkyRace());
+      showLoadingOverlay('loading borders');
+      ensureSkyRaceGraph().then(() => { hideLoadingOverlay(); renderSkyRace(); });
       return;
     }
     function newRace() {
@@ -3470,7 +3566,7 @@
       if (!state.current) { newRace(); return; }
       const ns = borderingConstellations(state.current);
       const routeText = state.route.map(esc).join(' → ');
-      const splitNote = state.current === SERPENS_CAPUT || state.current === SERPENS_CAUDA ? '<p class="small">Serpens is treated as Caput and Cauda for border jumps.</p>' : '';
+      const splitNote = state.current === SERPENS_CAPUT || state.current === SERPENS_CAUDA ? '<p class="small">Serpens is split on the chart; both halves use the full Serpens border set.</p>' : '';
       app.innerHTML = `<h2>SkyRace</h2><div class="sky-race-layout"><aside class="panel"><p class="sky-race-task"><strong>${esc(state.start)} → ${esc(state.target)}</strong></p><p><strong>current:</strong> ${esc(state.current)}</p><p><strong>clicks:</strong> ${Math.max(0, state.route.length - 1)}</p>${splitNote}<h3>Bordering constellations</h3><div id="skyRaceBorders" class="sky-race-neighbours">${ns.map(n => `<button type="button" class="linkbtn ${n === state.target ? 'sky-race-target-option' : ''}" data-race-border="${esc(n)}">${esc(n)}</button>`).join(' ')}</div><div class="message">${state.message || ''}</div><div class="controls new-round-controls"><button type="button" id="skyRaceNew" class="new-round-button">new race</button></div><h3>Route</h3><p class="small">${routeText}</p><div class="stats">${formatPointScore('skyrace')}</div></aside><section class="panel"><h3>${esc(state.current)}</h3>${currentChart()}</section></div>`;
       $('#skyRaceNew').addEventListener('click', newRace);
       setShiftEnterAction(newRace);
@@ -3480,6 +3576,10 @@
   }
 
   function renderTables() {
+    if (!namedStarCatalogueReady) {
+      deferForNamedStars('Tables', () => { if (activeGame === 'tables') renderTables(); });
+      return;
+    }
     const state = states.tables || (states.tables = { mode: 'constellations', sort: {}, dsoFilters: { messier: true, caldwell: true } });
     if (!state.sort) state.sort = {};
     if (!state.dsoFilters) state.dsoFilters = { messier: true, caldwell: true }; delete state.dsoFilters.unnamed;
@@ -3572,8 +3672,9 @@
           { label: 'star', sortable: true },
           { label: 'designation', sortable: true },
           { label: 'constellation', sortable: true },
+          { label: 'mag', sortable: true },
           { label: 'note', sortable: false }
-        ], DATA.stars.map(s => [s.name, s.designation, s.constellation, s.note]));
+        ], DATA.stars.map(s => [s.name, s.designation, s.constellation, Number.isFinite(s.mag) ? s.mag.toFixed(2) : '', s.note]));
       } else if (state.mode === 'dso') {
         table([
           { label: 'code', sortable: true, sortType: 'dsoCode' },
@@ -3616,7 +3717,10 @@
     else if (activeGame === 'alphapin') renderAlphaPin();
     else if (activeGame === 'guessconst') renderGuessConstellation();
     else if (activeGame === 'neighbours') makeQuestionGame('neighbours', 'Neighbours', { make: neighbourQuestion });
-    else if (activeGame === 'stars') makeQuestionGame('stars', 'Stars', { modes: starModes, defaultMode: 'starToConstellation', make: starQuestion });
+    else if (activeGame === 'stars') {
+      if (!namedStarCatalogueReady) deferForNamedStars('Stars', () => { if (activeGame === 'stars') render(); });
+      else makeQuestionGame('stars', 'Stars', { modes: starModes, defaultMode: 'starToConstellation', make: starQuestion });
+    }
     else if (activeGame === 'dso') makeQuestionGame('dso', 'DSOs', { modes: dsoModes, defaultMode: 'codeToName', make: dsoQuestion });
     else if (activeGame === 'timer') renderTimer();
     else if (activeGame === 'atlas') renderAtlas();
