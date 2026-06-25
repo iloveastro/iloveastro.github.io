@@ -48,19 +48,27 @@
     }
   }
 
-  function showLoadingOverlay(label = '') {
-    stopLaunchLoader();
+  function ensureLoadingOverlay() {
+    const appRoot = document.getElementById('app') || document.body;
     let overlay = document.getElementById('loadingOverlay');
     if (!overlay) {
-      overlay = document.createElement('div');
+      overlay = document.createElement('section');
       overlay.id = 'loadingOverlay';
       overlay.className = 'loading-overlay';
-      overlay.innerHTML = `<div class="loading-card"><div class="loading-word" aria-live="polite"></div><div class="loading-note"></div></div>`;
-      document.body.append(overlay);
+      overlay.innerHTML = `<div class="loading-card"><div class="loading-word" aria-live="polite"></div><div class="loading-note">loading...</div></div>`;
+      appRoot.append(overlay);
+    } else if (overlay.parentElement !== appRoot && appRoot !== document.body) {
+      appRoot.append(overlay);
     }
+    return overlay;
+  }
+
+  function showLoadingOverlay(label = '') {
+    stopLaunchLoader();
+    const overlay = ensureLoadingOverlay();
     delete overlay.dataset.launch;
     const note = overlay.querySelector('.loading-note');
-    if (note) note.textContent = '';
+    if (note) note.textContent = 'loading...';
     const word = overlay.querySelector('.loading-word');
     if (loadingOverlayTimer) clearInterval(loadingOverlayTimer);
     let i = 0;
@@ -88,6 +96,9 @@
     const overlay = document.getElementById('loadingOverlay');
     if (overlay && overlay.dataset.launch) hideLoadingOverlay();
   }
+
+  window.addEventListener('error', () => hideLaunchLoadingOverlay());
+  window.addEventListener('unhandledrejection', () => hideLaunchLoadingOverlay());
 
   function ensureImageModal() {
     let modal = document.getElementById('imageModal');

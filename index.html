@@ -6,10 +6,12 @@
   <title>iloveastro</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    #app {
+      position: relative;
+      min-height: 55vh;
+    }
     #loadingOverlay.loading-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
+      min-height: 55vh;
       display: grid;
       place-items: center;
       background: #fff;
@@ -27,29 +29,13 @@
       letter-spacing: 0.08em;
     }
     #loadingOverlay .loading-note {
-      display: none;
+      margin-top: 0.45rem;
+      font: 400 0.85rem/1.2 Arial, sans-serif;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <div id="loadingOverlay" class="loading-overlay" data-launch="1">
-    <div class="loading-card">
-      <div class="loading-word" aria-live="polite">i</div>
-      <div class="loading-note"></div>
-    </div>
-  </div>
-  <script>
-    window.__iloveastroLoadingFrames = ['i','il','ilo','ilov','ilove','ilovea','iloveas','iloveast','iloveastr','iloveastro','loveastro','oveastro','veastro','eastro','astro','stro','tro','ro','o'];
-    window.__iloveastroLaunchLoader = (function () {
-      var i = 0;
-      return setInterval(function () {
-        var el = document.querySelector('#loadingOverlay .loading-word');
-        if (!el) return;
-        i = (i + 1) % window.__iloveastroLoadingFrames.length;
-        el.textContent = window.__iloveastroLoadingFrames[i];
-      }, 70);
-    })();
-  </script>
   <header>
     <h1>iloveastro</h1>
     <div class="save-menu">
@@ -80,7 +66,26 @@
     </div>
   </header>
   <nav id="tabs" aria-label="games"></nav>
-  <main id="app"></main>
+  <main id="app">
+    <section id="loadingOverlay" class="loading-overlay" data-launch="1">
+      <div class="loading-card">
+        <div class="loading-word" aria-live="polite">i</div>
+        <div class="loading-note">loading...</div>
+      </div>
+    </section>
+  </main>
+  <script>
+    window.__iloveastroLoadingFrames = ['i','il','ilo','ilov','ilove','ilovea','iloveas','iloveast','iloveastr','iloveastro','loveastro','oveastro','veastro','eastro','astro','stro','tro','ro','o'];
+    window.__iloveastroLaunchLoader = (function () {
+      var i = 0;
+      return setInterval(function () {
+        var el = document.querySelector('#loadingOverlay .loading-word');
+        if (!el) return;
+        i = (i + 1) % window.__iloveastroLoadingFrames.length;
+        el.textContent = window.__iloveastroLoadingFrames[i];
+      }, 70);
+    })();
+  </script>
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>

@@ -691,10 +691,14 @@ input[type='range']::-moz-range-thumb {
 
 
 
+
+
+#app {
+  position: relative;
+  min-height: 55vh;
+}
 .loading-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
+  min-height: 55vh;
   display: grid;
   place-items: center;
   background: #fff;
@@ -713,5 +717,7 @@ input[type='range']::-moz-range-thumb {
   letter-spacing: 0.08em;
 }
 .loading-note {
-  display: none;
+  margin-top: 0.45rem;
+  font-size: 0.85rem;
+  color: #888;
 }
