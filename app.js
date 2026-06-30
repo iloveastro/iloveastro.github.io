@@ -996,7 +996,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=109';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1497,13 +1497,14 @@
   function loadSkyConstellationLines() {
     if (skyConstellationLineDb) return Promise.resolve(skyConstellationLineDb);
     if (skyConstellationLinePromise) return skyConstellationLinePromise;
-    skyConstellationLinePromise = fetch(CONSTELLATION_LINES_URL, { cache: 'force-cache' })
+    skyConstellationLinePromise = fetch(CONSTELLATION_LINES_URL, { cache: 'no-cache' })
       .then(res => {
         if (!res.ok) throw new Error('constellation line database unavailable.');
         return res.json();
       })
       .then(data => {
         skyConstellationLineDb = data;
+        console.info(`iloveastro: loaded constellation line database ${data?.metadata?.custom_version || 'unknown version'}.`);
         skyLineEdgesCache = null;
         return skyConstellationLineDb;
       })
@@ -1630,8 +1631,12 @@
     const rotation = Number.isFinite(options.rotation) ? options.rotation : 0;
     const stars = options.stars || constellationStarSubset(name, magLimit);
     const showDso = options.showDso === true;
+    const showLines = options.showLines === true && !!skyConstellationLineDb && !!skyHipByNumber.size;
+    const lineNames = (Array.isArray(options.constellations) && options.constellations.length ? options.constellations : [name]).map(compact);
+    const lineNameSet = new Set(lineNames);
+    const lineEdges = showLines ? skyLineEdgesFromDatabase().filter(edge => lineNameSet.has(compact(edge.constellation))) : [];
     const dsos = showDso ? buildSkyDsoObjects().filter(o => o.constellation === name && String(o.commonName || '').trim()) : [];
-    const vectors = [...stars.map(s => s.v), ...dsos.map(o => o.v)];
+    const vectors = [...stars.map(s => s.v), ...dsos.map(o => o.v), ...lineEdges.flatMap(edge => [edge.s1.v, edge.s2.v])];
     const pick = buildPickLookup(canvas);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1658,10 +1663,36 @@
     };
     const rawStars = stars.map(star => toMapPoint(star.v, { star }));
     const rawDsos = dsos.map(dso => toMapPoint(dso.v, { dso }));
-    const maxAbs = Math.max(0.0001, ...[...rawStars, ...rawDsos].map(p => Math.max(Math.abs(p.x), Math.abs(p.y))));
+    const rawLineEdges = lineEdges.map(edge => ({
+      edge,
+      a: toMapPoint(edge.s1.v, {}),
+      b: toMapPoint(edge.s2.v, {})
+    }));
+    const maxAbs = Math.max(0.0001, ...[...rawStars, ...rawDsos, ...rawLineEdges.flatMap(edge => [edge.a, edge.b])].map(p => Math.max(Math.abs(p.x), Math.abs(p.y))));
     const scale = Math.min(canvas.width, canvas.height) * 0.39 / maxAbs;
     const drawn = [];
     const drawnDsos = [];
+
+    if (showLines && rawLineEdges.length) {
+      ctx.save();
+      ctx.strokeStyle = '#777';
+      ctx.globalAlpha = 0.72;
+      ctx.lineWidth = 1.25;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      rawLineEdges.forEach(({ edge, a, b }) => {
+        if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
+        const x1 = canvas.width / 2 + a.x * scale;
+        const y1 = canvas.height / 2 - a.y * scale;
+        const x2 = canvas.width / 2 + b.x * scale;
+        const y2 = canvas.height / 2 - b.y * scale;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
 
     ctx.fillStyle = 'black';
     rawStars.sort((a, b) => b.star.mag - a.star.mag).forEach(p => {
@@ -1696,6 +1727,7 @@
     drawn.dsos = drawnDsos;
     return drawn;
   }
+
   function pickConstellationMapObject(canvas, name, options = {}, clientX, clientY) {
     const magLimit = Number.isFinite(options.magLimit) ? options.magLimit : 6;
     const rotation = Number.isFinite(options.rotation) ? options.rotation : 0;
@@ -2076,12 +2108,12 @@
       fov: defaultFov(),
       magLimit: defaultMag(),
       showLines: false,
-      showDso: true,
+      showDso: false,
       message: '',
       orient: null
     });
 
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines === true ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines === true ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso === true ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
 
     initRangeVisuals(app);
     setupSphereFullscreen();
@@ -2593,6 +2625,7 @@
       answered: false,
       autoCheck: false,
       magLimit: defaultMag(),
+      showLines: false,
       inputs: [],
       found: [],
       roundPools: {}
@@ -2614,12 +2647,29 @@
     const scoreId = () => state.mode === '1' ? 'guessconst' : `guessconst${state.mode}`;
     const savedValue = i => esc(state.inputs[i] || '');
 
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="guessConstLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
 
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
     const msg = $('#guessConstMsg');
     const stats = $('#guessConstStats');
+
+    function ensureGuessConstellationLinesLoadedThenDraw() {
+      if (!state.loaded || state.showLines !== true) return;
+      if (skyConstellationLineDb) {
+        draw();
+        return;
+      }
+      if (msg && !state.message) msg.textContent = 'loading constellation lines...';
+      loadSkyConstellationLines().then(() => {
+        if (msg && !state.message) msg.textContent = '';
+        draw();
+      }).catch(err => {
+        console.warn('iloveastro: Guess Constellation lines could not be loaded.', err);
+        if (msg && !state.message) msg.textContent = 'constellation lines unavailable';
+        draw();
+      });
+    }
 
     function updateStats() {
       if (stats) stats.innerHTML = formatScore(scoreId());
@@ -2780,7 +2830,9 @@
       drawnGuessStars = drawConstellationStarMap(canvas, state.target || state.targets[0], {
         magLimit: state.magLimit,
         rotation: state.rotation,
-        stars: state.stars
+        stars: state.stars,
+        showLines: state.showLines === true && !!skyConstellationLineDb,
+        constellations: state.targets
       });
     }
 
@@ -2879,6 +2931,11 @@
     });
     $('#guessConstMag').addEventListener('input', e => setGuessMag(e.target.value));
     $('#guessConstMagSlider').addEventListener('input', e => setGuessMag(e.target.value));
+    $('#guessConstLines').addEventListener('change', e => {
+      state.showLines = e.target.checked;
+      if (state.showLines === true) ensureGuessConstellationLinesLoadedThenDraw();
+      else draw();
+    });
     $('#guessConstRollCCW').addEventListener('click', () => rotateGuess(-1));
     $('#guessConstRollCW').addEventListener('click', () => rotateGuess(1));
     if ($('#guessConstAuto')) $('#guessConstAuto').addEventListener('change', e => {
@@ -2923,6 +2980,7 @@
       });
     }
     draw();
+    if (state.loaded && state.showLines === true && !skyConstellationLineDb) ensureGuessConstellationLinesLoadedThenDraw();
     setTimeout(() => {
       const first = document.querySelector('.guessConstAnswer');
       if (first) first.focus();
@@ -2930,12 +2988,30 @@
   }
 
   function renderAlphaPin() {
-    const state = states.alphapin || (states.alphapin = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), target: null, selectedVec: null, result: '', submitted: false, orient: null });
-    app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find&nbsp;<strong>${esc(state.target ? state.target.constellation : '...')}</strong>.</div><label>FOV degrees<div class="slider-text-row"><input id="alphaFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="alphaMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">○</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaZoomIn">zoom in</button><button type="button" id="alphaZoomOut">zoom out</button></div><div class="controls new-round-controls"><button type="button" id="alphaNew" class="new-round-button">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div><div class="small alpha-pin-hint">(pin the alpha star)</div></aside></div>`;
+    const state = states.alphapin || (states.alphapin = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), showLines: false, target: null, selectedVec: null, result: '', submitted: false, orient: null });
+    app.innerHTML = `<h2>Find Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="alphaCanvas" width="900" height="900" tabindex="0" aria-label="alpha star guessing sphere"></canvas></section><aside class="panel"><div class="prompt">Find&nbsp;<strong>${esc(state.target ? state.target.constellation : '...')}</strong>.</div><label>FOV degrees<div class="slider-text-row"><input id="alphaFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="alphaFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="alphaMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="alphaMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="alphaLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><div class="sky-nav-grid" aria-label="alpha movement controls"><button type="button" data-amove="-1,-1">↖</button><button type="button" data-amove="0,-1">↑</button><button type="button" data-amove="1,-1">↗</button><button type="button" data-amove="-1,0">←</button><button type="button" id="alphaCentre">○</button><button type="button" data-amove="1,0">→</button><button type="button" data-amove="-1,1">↙</button><button type="button" data-amove="0,1">↓</button><button type="button" data-amove="1,1">↘</button></div><div class="controls"><button type="button" id="alphaRollCCW">↺ rotate</button><button type="button" id="alphaRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="alphaSubmit">submit</button><button type="button" id="alphaZoomIn">zoom in</button><button type="button" id="alphaZoomOut">zoom out</button></div><div class="controls new-round-controls"><button type="button" id="alphaNew" class="new-round-button">new constellation</button></div><div id="alphaMsg" class="message">${esc(state.result || '')}</div><div class="stats">${formatPointScore('alphapin')}</div><div class="small alpha-pin-hint">(pin the alpha star)</div></aside></div>`;
     initRangeVisuals(app);
     setupSphereFullscreen();
     const canvas = $('#alphaCanvas'), ctx = canvas.getContext('2d');
     function focusCanvas() { try { canvas.focus({ preventScroll: true }); } catch { focusCanvas(); } }
+    function ensureAlphaConstellationLinesLoadedThenDraw() {
+      if (!state.loaded || state.showLines !== true) return;
+      if (skyConstellationLineDb) {
+        draw();
+        return;
+      }
+      const msg = $('#alphaMsg');
+      if (msg && !state.result) msg.textContent = 'loading constellation lines...';
+      loadSkyConstellationLines().then(() => {
+        if (msg && !state.result) msg.textContent = '';
+        draw();
+      }).catch(err => {
+        console.warn('iloveastro: Find Constellation lines could not be loaded.', err);
+        if (msg && !state.result) msg.textContent = 'constellation lines unavailable';
+        draw();
+      });
+    }
+
     const fovInput = $('#alphaFov');
     const fovSlider = $('#alphaFovSlider');
 
@@ -3056,6 +3132,7 @@
       const b = ensureOrientation();
       ctx.save();
       ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2); ctx.clip();
+      if (state.showLines === true && skyConstellationLineDb) drawSkyAsterismLines(ctx, project, b, radius, fovRad);
       const visible = skyStars.filter(s => s.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
       ctx.fillStyle = 'black';
       for (const s of visible) {
@@ -3137,6 +3214,12 @@
     $('#alphaFovSlider').addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
     $('#alphaMag').addEventListener('input', e => setAlphaMag(e.target.value));
     $('#alphaMagSlider').addEventListener('input', e => setAlphaMag(e.target.value));
+    $('#alphaLines').addEventListener('change', e => {
+      state.showLines = e.target.checked;
+      if (state.showLines === true) ensureAlphaConstellationLinesLoadedThenDraw();
+      else draw();
+      focusCanvas();
+    });
     $('#alphaSubmit').addEventListener('click', submitGuess);
     $('#alphaZoomIn').addEventListener('click', () => zoomAlpha(-10));
     $('#alphaZoomOut').addEventListener('click', () => zoomAlpha(10));
@@ -3221,7 +3304,9 @@
       state.loading = true; showLoadingOverlay('loading sky data');
       loadSkyData().then(() => { state.loaded = true; hideLoadingOverlay(); state.loading = false; skyAlphaCache = null; ensureTarget(); renderAlphaPin(); }).catch(err => { state.error = 'sky data unavailable'; hideLoadingOverlay(); state.loading = false; draw(); });
     }
-    ensureTarget(); draw(); setTimeout(() => canvas.focus(), 0);
+    ensureTarget(); draw();
+    if (state.loaded && state.showLines === true && !skyConstellationLineDb) ensureAlphaConstellationLinesLoadedThenDraw();
+    setTimeout(() => canvas.focus(), 0);
   }
 
   function renderSkyRegions() {
