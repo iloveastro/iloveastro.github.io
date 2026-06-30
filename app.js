@@ -996,7 +996,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=109';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=111';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1557,6 +1557,17 @@
   function drawSkyAsterismLines(ctx, project, basis, radius, fovRad) {
     if (!skyConstellationLineDb || !skyHipByNumber.size) return;
 
+    const edgeMarginRad = Math.max(8 * Math.PI / 180, fovRad * 0.08);
+    const projectLineEndpoint = v => {
+      const z = dot(v, basis.f);
+      const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+      if (ang > fovRad / 2 + edgeMarginRad) return null;
+      const x = dot(v, basis.right), y = dot(v, basis.up);
+      const sin = Math.sin(ang) || 1e-9;
+      const rr = (ang / (fovRad / 2)) * radius;
+      return { x: ctx.canvas.width / 2 + rr * x / sin, y: ctx.canvas.height / 2 - rr * y / sin, z };
+    };
+
     ctx.save();
     ctx.strokeStyle = '#777';
     ctx.globalAlpha = 0.72;
@@ -1566,8 +1577,8 @@
 
     skyLineEdgesFromDatabase().forEach(edge => {
       if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
-      const p1 = project(edge.s1.v, basis, radius, fovRad);
-      const p2 = project(edge.s2.v, basis, radius, fovRad);
+      const p1 = projectLineEndpoint(edge.s1.v);
+      const p2 = projectLineEndpoint(edge.s2.v);
       if (!p1 || !p2) return;
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);

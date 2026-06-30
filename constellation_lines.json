@@ -49,11 +49,11 @@
     "custom_modified_count": 21,
     "total_constellations": 88,
     "total_nodes_per_constellation_sum": 700,
-    "total_edges_per_constellation_sum": 682,
-    "custom_version": "v5-site-enforced-cachebust",
-    "custom_change_summary": "Enforced requested Leo/Orion/Hercules/Apus/Hydrus/Corona Australis/Ophiuchus/Boötes/Lepus/Ara edits and paired the website fetch URL with a cache-busting version.",
-    "total_nodes_across_constellations": 688,
-    "total_edges_across_constellations": 682,
+    "total_edges_per_constellation_sum": 684,
+    "custom_version": "v111-site-line-touchups",
+    "custom_change_summary": "Connected Lepus μ–κ, changed Ophiuchus to α–β–η–ζ–υ–ε–δ–κ–α with no ν, closed Hydrus α–γ, and extended line rendering near projection edges.",
+    "total_nodes_across_constellations": 689,
+    "total_edges_across_constellations": 684,
     "modified_constellations": 21,
     "source_for_site": "Used as the source of truth for iloveastro Sky Map constellation lines.",
     "render_policy": {
@@ -4108,7 +4108,8 @@
           "hip": [
             9236,
             2021,
-            17678
+            17678,
+            9236
           ]
         }
       ],
@@ -4124,16 +4125,22 @@
           "to": 17678,
           "style": "normal",
           "path_index": 1
+        },
+        {
+          "from": 17678,
+          "to": 9236,
+          "style": "normal",
+          "path_index": 1
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
         "nodes": 3,
-        "edges": 2,
+        "edges": 3,
         "paths": 1
       },
       "custom_modified": true,
-      "custom_note": "Hydrus simplified to α–β–γ only.",
+      "custom_note": "Hydrus is α–β–γ with α–γ also connected.",
       "node_labels": {
         "9236": "α Hyi",
         "2021": "β Hyi",
@@ -4470,13 +4477,6 @@
           ]
         },
         {
-          "style": "normal",
-          "hip": [
-            24845,
-            24305
-          ]
-        },
-        {
           "style": "thin",
           "hip": [
             25606,
@@ -4484,6 +4484,13 @@
             27654,
             28910,
             25985
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            24305,
+            24845
           ]
         }
       ],
@@ -4513,33 +4520,33 @@
           "path_index": 1
         },
         {
-          "from": 24845,
-          "to": 24305,
-          "style": "normal",
-          "path_index": 2
-        },
-        {
           "from": 25606,
           "to": 27072,
           "style": "thin",
-          "path_index": 3
+          "path_index": 2
         },
         {
           "from": 27072,
           "to": 27654,
           "style": "thin",
-          "path_index": 3
+          "path_index": 2
         },
         {
           "from": 27654,
           "to": 28910,
           "style": "thin",
-          "path_index": 3
+          "path_index": 2
         },
         {
           "from": 28910,
           "to": 25985,
           "style": "thin",
+          "path_index": 2
+        },
+        {
+          "from": 24305,
+          "to": 24845,
+          "style": "normal",
           "path_index": 3
         }
       ],
@@ -4550,7 +4557,7 @@
         "paths": 3
       },
       "custom_modified": true,
-      "custom_note": "Removed α Lep–ε Lep; ensured μ Lep–κ Lep is connected.",
+      "custom_note": "Removed α Lep–ε Lep; explicitly connected μ Lep–κ Lep.",
       "node_labels": {
         "25985": "α Lep / Arneb",
         "23685": "ε Lep / Ping",
@@ -5363,12 +5370,12 @@
       "nodes_hip": [
         79593,
         79882,
+        80628,
         81377,
         83000,
         84012,
         86032,
-        86742,
-        88048
+        86742
       ],
       "original_paths": [
         {
@@ -5378,10 +5385,11 @@
             86742,
             84012,
             81377,
-            88048,
+            80628,
             79882,
             79593,
-            83000
+            83000,
+            86032
           ]
         }
       ],
@@ -5406,12 +5414,12 @@
         },
         {
           "from": 81377,
-          "to": 88048,
+          "to": 80628,
           "style": "normal",
           "path_index": 1
         },
         {
-          "from": 88048,
+          "from": 80628,
           "to": 79882,
           "style": "normal",
           "path_index": 1
@@ -5427,25 +5435,32 @@
           "to": 83000,
           "style": "normal",
           "path_index": 1
+        },
+        {
+          "from": 83000,
+          "to": 86032,
+          "style": "normal",
+          "path_index": 1
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
         "nodes": 8,
-        "edges": 7,
+        "edges": 8,
         "paths": 1
       },
       "custom_modified": true,
-      "custom_note": "Ophiuchus set to α–β–η–ζ–ν–ε–δ–κ; removed γ and extra ν/kappa/zeta branch connections.",
+      "custom_note": "Ophiuchus set to α–β–η–ζ–υ–ε–δ–κ–α; ν and γ connections removed.",
       "node_labels": {
         "86032": "α Oph / Rasalhague",
         "86742": "β Oph / Cebalrai",
         "84012": "η Oph / Sabik",
         "81377": "ζ Oph",
-        "88048": "ν Oph",
+        "88048": "ν Oph removed",
         "79882": "ε Oph / Yed Posterior",
         "79593": "δ Oph / Yed Prior",
-        "83000": "κ Oph"
+        "83000": "κ Oph",
+        "80628": "υ Oph"
       }
     },
     {
