@@ -1002,7 +1002,10 @@
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
   let skyDataPromise = null;
   let skyStars = [];
+  let skyHipByNumber = new Map();
   let skyConstCentres = new Map();
+  let skyConstellationLineDb = null;
+  let skyConstellationLinePromise = null;
 
   const CONSTELLATION_BOUNDS_URL = 'https://cdn.jsdelivr.net/gh/dieghernan/celestial_data@main/data/constellations.bounds.min.geojson';
   let skyBoundsPromise = null;
@@ -2533,7 +2536,8 @@
         populateMapSearchList();
         draw();
         focusCanvas();
-      }).catch(() => {
+      }).catch(err => {
+        console.warn('iloveastro: Sky Map loading failed.', err);
         state.error = 'sky data unavailable';
         hideLoadingOverlay(); state.loading = false;
         draw();
