@@ -990,7 +990,7 @@
       atlasCanvas.addEventListener('click', selectAtlasObject);
       atlasCanvas.addEventListener('dblclick', openAtlasStarMapZoom);
       redrawAtlasMap();
-      Promise.all([loadSkyData(), loadSkyConstellationLines(), loadConstellationBounds().catch(() => []), loadDsoCoordinateData().catch(() => new Map())]).then(() => { buildSkyDsoObjects(); redrawAtlasMap(); });
+      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => []), loadDsoCoordinateData().catch(() => new Map())]).then(() => { buildSkyDsoObjects(); redrawAtlasMap(); });
     }
   }
 
@@ -1006,6 +1006,7 @@
   let skyConstCentres = new Map();
   let skyConstellationLineDb = null;
   let skyConstellationLinePromise = null;
+  let skyLineEdgesCache = null;
 
   const CONSTELLATION_BOUNDS_URL = 'https://cdn.jsdelivr.net/gh/dieghernan/celestial_data@main/data/constellations.bounds.min.geojson';
   let skyBoundsPromise = null;
@@ -1135,7 +1136,7 @@
       const decI = pickColumn(headers, ['dec', 'DEC', 'declination']);
       const magI = pickColumn(headers, ['mag', 'MAG', 'magnitude']);
       const conI = pickColumn(headers, ['con', 'constellation', 'Constellation']);
-      const hipI = pickColumn(headers, ['hip', 'HIP', 'hipparcos', 'hipparcos_id']);
+      const hipI = pickColumn(headers, ['hip', 'HIP', 'hipparcos', 'hipparcos_id', 'hip_id', 'hip_num', 'hip_number']);
       const nameI = pickColumn(headers, ['proper', 'name', 'star_name']);
       const bayerI = pickColumn(headers, ['bayer', 'Bayer']);
       const bfI = pickColumn(headers, ['bf', 'bayer_flamsteed', 'Bayer Flamsteed']);
@@ -1149,7 +1150,9 @@
         let con = String(row[conI] || '').trim();
         let constellation = CON_ABBR_TO_NAME.get(compact(con)) || DATA.constellations.find(c => compact(c.name) === compact(con))?.name;
         if (!constellation) continue;
-        const hip = hipI >= 0 ? parseInt(row[hipI], 10) : NaN;
+        const hipText = hipI >= 0 ? String(row[hipI] || '') : '';
+        const hipMatch = hipText.match(/\d+/);
+        const hip = hipMatch ? parseInt(hipMatch[0], 10) : NaN;
         const v = vecFromRaDec(ra, dec);
         raw.push({ ra, dec, mag, hip: Number.isFinite(hip) ? hip : null, constellation, name: nameI >= 0 ? row[nameI] : '', bayer: bayerI >= 0 ? row[bayerI] : '', bf: bfI >= 0 ? row[bfI] : '', v });
       }
@@ -1501,17 +1504,20 @@
       })
       .then(data => {
         skyConstellationLineDb = data;
+        skyLineEdgesCache = null;
         return skyConstellationLineDb;
       })
       .catch(err => {
         console.warn('iloveastro: could not load constellation_lines.json; constellation lines disabled.', err);
         skyConstellationLineDb = { constellations: [] };
+        skyLineEdgesCache = [];
         return skyConstellationLineDb;
       });
     return skyConstellationLinePromise;
   }
 
   function skyLineEdgesFromDatabase() {
+    if (skyLineEdgesCache) return skyLineEdgesCache;
     const out = [];
     const missing = new Map();
     if (!skyConstellationLineDb || !Array.isArray(skyConstellationLineDb.constellations)) return out;
@@ -1543,7 +1549,8 @@
       skyConstellationLineDb._missingHipWarningShown = true;
     }
 
-    return out;
+    skyLineEdgesCache = out;
+    return skyLineEdgesCache;
   }
 
   function drawSkyAsterismLines(ctx, project, basis, radius, fovRad) {
@@ -2068,13 +2075,13 @@
       error: '',
       fov: defaultFov(),
       magLimit: defaultMag(),
-      showLines: true,
+      showLines: false,
       showDso: true,
       message: '',
       orient: null
     });
 
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines !== false ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines === true ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
 
     initRangeVisuals(app);
     setupSphereFullscreen();
@@ -2088,6 +2095,26 @@
     const searchInput = $('#mapSearch');
     const searchList = $('#mapSearchList');
     const msg = $('#mapMsg');
+
+    function ensureConstellationLinesLoadedThenDraw() {
+      if (!state.loaded || state.showLines !== true) return;
+      if (skyConstellationLineDb) {
+        draw();
+        return;
+      }
+      state.linesLoading = true;
+      if (msg && !state.message) msg.textContent = 'loading constellation lines...';
+      loadSkyConstellationLines().then(() => {
+        state.linesLoading = false;
+        if (msg && !state.message) msg.textContent = '';
+        draw();
+      }).catch(err => {
+        state.linesLoading = false;
+        console.warn('iloveastro: constellation lines could not be loaded.', err);
+        if (msg && !state.message) msg.textContent = 'constellation lines unavailable';
+        draw();
+      });
+    }
 
     function focusCanvas() {
       try { canvas.focus({ preventScroll: true }); }
@@ -2192,7 +2219,7 @@
       ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
       ctx.clip();
 
-      if (state.showLines !== false) drawSkyAsterismLines(ctx, project, basis, radius, fovRad);
+      if (state.showLines === true && skyConstellationLineDb) drawSkyAsterismLines(ctx, project, basis, radius, fovRad);
 
       const visibleStars = skyStars
         .filter(star => star.mag <= state.magLimit)
@@ -2411,7 +2438,8 @@
 
     $('#mapLines').addEventListener('change', e => {
       state.showLines = e.target.checked;
-      draw();
+      if (state.showLines === true) ensureConstellationLinesLoadedThenDraw();
+      else draw();
       focusCanvas();
     });
 
@@ -2535,6 +2563,7 @@
         hideLoadingOverlay(); state.loading = false;
         populateMapSearchList();
         draw();
+        if (state.showLines === true) ensureConstellationLinesLoadedThenDraw();
         focusCanvas();
       }).catch(err => {
         console.warn('iloveastro: Sky Map loading failed.', err);
@@ -2546,6 +2575,7 @@
 
     if (state.loaded) populateMapSearchList();
     draw();
+    if (state.loaded && state.showLines === true && !skyConstellationLineDb && !state.linesLoading) ensureConstellationLinesLoadedThenDraw();
     setTimeout(focusCanvas, 0);
   }
 
