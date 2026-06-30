@@ -1478,6 +1478,182 @@
   function constellationStarSubset(name, magLimit = 6) {
     return starsForConstellation(name, magLimit);
   }
+
+  // Main constellation stick-figure lines for the Sky Map.
+  // These intentionally favour the dominant memorisable asterism over minor protrusions.
+  const SKY_ASTERISM_LINES = {
+    Andromeda: [['Alp','Bet'], ['Bet','Gam']],
+    Antlia: [['Alp','The'], ['The','Eps']],
+    Apus: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del']],
+    Aquarius: [['Alp','Bet'], ['Alp','Gam'], ['Gam','Zet'], ['Bet','Del'], ['Del','Lam']],
+    Aquila: [['Alp','Bet'], ['Alp','Gam'], ['Alp','Del'], ['Del','Lam']],
+    Ara: [['Bet','Alp'], ['Alp','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Bet']],
+    Aries: [['Alp','Bet'], ['Bet','Gam']],
+    Auriga: [['Alp','Bet'], ['Bet','The'], ['The','Iot'], ['Iot','Elnath'], ['Elnath','Alp']],
+    Boötes: [['Alp','Eps'], ['Eps','Del'], ['Del','Bet'], ['Bet','Gam'], ['Gam','Alp'], ['Alp','Eta']],
+    Caelum: [['Alp','Bet'], ['Bet','Gam']],
+    Camelopardalis: [['Alp','Bet'], ['Bet','Gam']],
+    Cancer: [['Alp','Del'], ['Del','Gam'], ['Gam','Iot'], ['Del','Bet']],
+    'Canes Venatici': [['Alp','Bet']],
+    'Canis Major': [['Alp','Bet'], ['Alp','Eps'], ['Eps','Eta'], ['Eps','Del'], ['Del','Gam'], ['Alp','Gam']],
+    'Canis Minor': [['Alp','Bet']],
+    Capricornus: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
+    Carina: [['Alp','Bet'], ['Bet','Eps'], ['Eps','Iot'], ['Iot','Alp']],
+    Cassiopeia: [['Bet','Alp'], ['Alp','Gam'], ['Gam','Del'], ['Del','Eps']],
+    Centaurus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Eps'], ['Eps','Eta'], ['Eta','The']],
+    Cepheus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Iot'], ['Iot','Zet'], ['Zet','Alp'], ['Alp','Del'], ['Del','Zet']],
+    Cetus: [['Alp','Gam'], ['Gam','Omi'], ['Omi','Bet'], ['Bet','Tau'], ['Tau','Eta'], ['Eta','Alp']],
+    Chamaeleon: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del'], ['Del','Alp']],
+    Circinus: [['Alp','Bet'], ['Bet','Gam']],
+    Columba: [['Alp','Bet'], ['Bet','Eps'], ['Eps','Del'], ['Del','Alp']],
+    'Coma Berenices': [['Alp','Bet'], ['Bet','Gam']],
+    'Corona Australis': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Eps']],
+    'Corona Borealis': [['The','Bet'], ['Bet','Alp'], ['Alp','Gam'], ['Gam','Del'], ['Del','Eps']],
+    Corvus: [['Gam','Eps'], ['Eps','Bet'], ['Bet','Del'], ['Del','Gam']],
+    Crater: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
+    Crux: [['Alp','Gam'], ['Bet','Del']],
+    Cygnus: [['Alp','Gam'], ['Gam','Bet'], ['Gam','Del'], ['Gam','Eps'], ['Eps','Zet']],
+    Delphinus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp'], ['Gam','Eps']],
+    Dorado: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del']],
+    Draco: [['Gam','Bet'], ['Bet','Nu'], ['Nu','Xi'], ['Xi','Alp'], ['Alp','Iot'], ['Iot','The'], ['The','Eta'], ['Eta','Zet'], ['Zet','Del'], ['Del','Gam']],
+    Equuleus: [['Alp','Del'], ['Del','Gam'], ['Gam','Bet']],
+    Eridanus: [['Bet','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Iot'], ['Iot','Tau'], ['Tau','Alp']],
+    Fornax: [['Alp','Bet'], ['Bet','Nu']],
+    Gemini: [['Alp','Bet'], ['Alp','Gam'], ['Gam','Mu'], ['Bet','Del'], ['Del','Gam'], ['Gam','Eta']],
+    Grus: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
+    Hercules: [['Eps','Zet'], ['Zet','Eta'], ['Eta','Pi'], ['Pi','Eps'], ['Alp','Del'], ['Del','Eps'], ['Zet','Bet']],
+    Horologium: [['Alp','Del'], ['Del','Bet']],
+    Hydra: [['Zet','Eps'], ['Eps','Del'], ['Del','Alp'], ['Alp','Lam'], ['Lam','Nu'], ['Nu','Xi'], ['Xi','Bet']],
+    Hydrus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
+    Indus: [['Alp','Bet'], ['Bet','The'], ['The','Alp']],
+    Lacerta: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
+    Leo: [['Alp','Eta'], ['Eta','Gam'], ['Gam','Zet'], ['Gam','Del'], ['Del','Bet'], ['Bet','The'], ['The','Alp']],
+    'Leo Minor': [['Alp','Bet'], ['Bet','Del']],
+    Lepus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp'], ['Alp','Mu']],
+    Libra: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Sig'], ['Sig','Alp']],
+    Lupus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp']],
+    Lynx: [['Alp','38'], ['38','10']],
+    Lyra: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp'], ['Bet','Del']],
+    Mensa: [['Alp','Gam']],
+    Microscopium: [['Alp','Gam'], ['Gam','Eps']],
+    Monoceros: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del']],
+    Musca: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
+    Norma: [['Gam','Eps'], ['Eps','Eta']],
+    Octans: [['Nu','Bet'], ['Bet','Del'], ['Del','Nu']],
+    Ophiuchus: [['Alp','Bet'], ['Bet','Kap'], ['Kap','Eps'], ['Eps','Eta'], ['Eta','Zet'], ['Zet','Alp'], ['Alp','Lam']],
+    Orion: [['Alp','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Bet'], ['Bet','Kap'], ['Kap','Zet'], ['Zet','Alp'], ['Del','Zet'], ['Eps','Zet']],
+    Pavo: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
+    Pegasus: [['Alp','Bet'], ['Bet','Alpheratz'], ['Alpheratz','Gam'], ['Gam','Alp'], ['Alp','Eps']],
+    Perseus: [['Alp','Bet'], ['Alp','Gam'], ['Alp','Del'], ['Del','Eps'], ['Bet','Rho']],
+    Phoenix: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
+    Pictor: [['Alp','Bet'], ['Bet','Gam']],
+    Pisces: [['Alp','Eta'], ['Eta','Omi'], ['Omi','Eps'], ['Alp','Bet'], ['Bet','Gam']],
+    'Piscis Austrinus': [['Alp','Bet'], ['Bet','Del'], ['Del','Eps'], ['Eps','Alp']],
+    Puppis: [['Zet','Pi'], ['Pi','Rho'], ['Rho','Xi']],
+    Pyxis: [['Alp','Bet'], ['Bet','Gam']],
+    Reticulum: [['Alp','Bet'], ['Bet','Del'], ['Del','Eps'], ['Eps','Alp']],
+    Sagitta: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam']],
+    Sagittarius: [['Lam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Tau'], ['Tau','Sig'], ['Sig','Phi'], ['Phi','Lam'], ['Del','Gam'], ['Gam','Eta']],
+    Scorpius: [['Bet','Del'], ['Del','Alp'], ['Alp','Tau'], ['Tau','Eps'], ['Eps','Mu'], ['Mu','Lam'], ['Lam','Kap'], ['Kap','The'], ['The','Eta'], ['Eta','Zet']],
+    Sculptor: [['Alp','Bet'], ['Bet','Gam']],
+    Scutum: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp']],
+    Serpens: [['Alp','Del'], ['Del','Eps'], ['Eta','The'], ['The','Xi']],
+    Sextans: [['Alp','Bet'], ['Bet','Gam']],
+    Taurus: [['Alp','Gam'], ['Gam','Elnath'], ['Alp','The'], ['The','Eps'], ['Alp','Zet']],
+    Telescopium: [['Alp','Zet'], ['Zet','Eps']],
+    Triangulum: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
+    'Triangulum Australe': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
+    Tucana: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del']],
+    'Ursa Major': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Eta'], ['Del','Alp']],
+    'Ursa Minor': [['Alp','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Bet'], ['Bet','Gam'], ['Gam','Eta'], ['Eta','Alp']],
+    Vela: [['Gam','Lam'], ['Lam','Del'], ['Del','Kap']],
+    Virgo: [['Alp','Gam'], ['Gam','Del'], ['Del','Eps'], ['Gam','Eta'], ['Eta','Bet']],
+    Volans: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp']],
+    Vulpecula: [['Alp','13']]
+  };
+
+  function skyAsterismGreekKeys(value) {
+    const c = compact(value);
+    if (!c) return [];
+    const aliases = [
+      ['alp', 'alpha'], ['bet', 'beta'], ['gam', 'gamma'], ['del', 'delta'], ['eps', 'epsilon'],
+      ['zet', 'zeta'], ['eta', 'eta'], ['the', 'theta'], ['iot', 'iota'], ['kap', 'kappa'],
+      ['lam', 'lambda'], ['mu', 'mu'], ['nu', 'nu'], ['xi', 'xi'], ['omi', 'omicron'],
+      ['pi', 'pi'], ['rho', 'rho'], ['sig', 'sigma'], ['tau', 'tau'], ['ups', 'upsilon'],
+      ['phi', 'phi'], ['chi', 'chi'], ['psi', 'psi'], ['ome', 'omega']
+    ];
+    const out = [];
+    aliases.forEach(([shortKey, full]) => {
+      if (c.includes(shortKey) || c.includes(full)) out.push(shortKey, full);
+    });
+    return out;
+  }
+
+  function skyAsterismStarKeys(star) {
+    const keys = new Set();
+    const add = v => { const c = compact(v); if (c) keys.add(c); };
+    const abbr = DATA.constellations.find(c => c.name === star.constellation)?.abbr || '';
+    const genitive = CONSTELLATION_GENITIVE[star.constellation] || star.constellation;
+    [star.name, starDisplayName(star), starDesignation(star), star.bayer, star.bf].forEach(add);
+    [star.bayer, star.bf].forEach(value => {
+      skyAsterismGreekKeys(value).forEach(g => {
+        add(g);
+        add(`${g} ${star.constellation}`);
+        add(`${g} ${genitive}`);
+        add(`${g} ${abbr}`);
+      });
+    });
+    const bf = compact(star.bf);
+    const flam = String(star.bf || '').match(/\d+/);
+    if (flam) {
+      add(flam[0]);
+      add(`${flam[0]} ${star.constellation}`);
+      add(`${flam[0]} ${abbr}`);
+    }
+    return keys;
+  }
+
+  let skyAsterismStarCache = new Map();
+  function skyAsterismEndpointStar(constellation, label, magLimit = 6) {
+    const key = `${constellation}|${label}|${Number(magLimit).toFixed(1)}`;
+    if (skyAsterismStarCache.has(key)) return skyAsterismStarCache.get(key);
+    const target = compact(label);
+    if (!target) return null;
+    const candidates = skyStars.filter(s => s.mag <= magLimit).sort((a, b) => a.mag - b.mag);
+    const matches = s => skyAsterismStarKeys(s).has(target);
+    const scoped = candidates.find(s => s.constellation === constellation && matches(s));
+    const star = scoped || candidates.find(matches) || null;
+    skyAsterismStarCache.set(key, star);
+    return star;
+  }
+
+  function drawSkyAsterismLines(ctx, project, basis, radius, fovRad, magLimit) {
+    ctx.save();
+    ctx.strokeStyle = '#777';
+    ctx.globalAlpha = 0.72;
+    ctx.lineWidth = 1.25;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    Object.entries(SKY_ASTERISM_LINES).forEach(([constellation, segments]) => {
+      segments.forEach(([a, b]) => {
+        const s1 = skyAsterismEndpointStar(constellation, a, magLimit);
+        const s2 = skyAsterismEndpointStar(constellation, b, magLimit);
+        if (!s1 || !s2) return;
+        if (angularDeg(s1.v, s2.v) > 55) return;
+        const p1 = project(s1.v, basis, radius, fovRad);
+        const p2 = project(s2.v, basis, radius, fovRad);
+        if (!p1 || !p2) return;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      });
+    });
+
+    ctx.restore();
+  }
+
   function colourIdFill(ctx, id) {
     const r = id & 255, g = (id >> 8) & 255, b = (id >> 16) & 255;
     ctx.fillStyle = `rgb(${r},${g},${b})`;
@@ -1976,12 +2152,13 @@
       error: '',
       fov: defaultFov(),
       magLimit: defaultMag(),
+      showLines: true,
       showDso: true,
       message: '',
       orient: null
     });
 
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines !== false ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso !== false ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
 
     initRangeVisuals(app);
     setupSphereFullscreen();
@@ -2098,6 +2275,8 @@
       ctx.beginPath();
       ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
       ctx.clip();
+
+      if (state.showLines !== false) drawSkyAsterismLines(ctx, project, basis, radius, fovRad, state.magLimit);
 
       const visibleStars = skyStars
         .filter(star => star.mag <= state.magLimit)
@@ -2312,6 +2491,12 @@
         e.preventDefault();
         runMapSearch();
       }
+    });
+
+    $('#mapLines').addEventListener('change', e => {
+      state.showLines = e.target.checked;
+      draw();
+      focusCanvas();
     });
 
     $('#mapDso').addEventListener('change', e => {
