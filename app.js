@@ -1480,29 +1480,30 @@
   }
 
   // Main constellation stick-figure lines for the Sky Map.
-  // These intentionally favour the dominant memorisable asterism over minor protrusions.
+  // These favour the dominant memorisable stick figure.  They are deliberately
+  // a curated learning overlay, not an attempt to reproduce every small atlas spur.
   const SKY_ASTERISM_LINES = {
-    Andromeda: [['Alp','Bet'], ['Bet','Gam']],
+    Andromeda: [['Alp','Bet'], ['Bet','Gam'], ['Bet','Mu'], ['Mu','Nu']],
     Antlia: [['Alp','The'], ['The','Eps']],
     Apus: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del']],
-    Aquarius: [['Alp','Bet'], ['Alp','Gam'], ['Gam','Zet'], ['Bet','Del'], ['Del','Lam']],
-    Aquila: [['Alp','Bet'], ['Alp','Gam'], ['Alp','Del'], ['Del','Lam']],
+    Aquarius: [['Alp','Bet'], ['Alp','Gam'], ['Gam','Zet'], ['Zet','Eta'], ['Bet','Del'], ['Del','Lam'], ['Lam','Phi']],
+    Aquila: [['Bet','Alp'], ['Alp','Gam'], ['Alp','Del'], ['Del','Lam'], ['Lam','Eta']],
     Ara: [['Bet','Alp'], ['Alp','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Bet']],
     Aries: [['Alp','Bet'], ['Bet','Gam']],
     Auriga: [['Alp','Bet'], ['Bet','The'], ['The','Iot'], ['Iot','Elnath'], ['Elnath','Alp']],
-    Boötes: [['Alp','Eps'], ['Eps','Del'], ['Del','Bet'], ['Bet','Gam'], ['Gam','Alp'], ['Alp','Eta']],
+    Boötes: [['Alp','Eps'], ['Eps','Del'], ['Del','Bet'], ['Bet','Gam'], ['Gam','Alp'], ['Alp','Eta'], ['Alp','Zet']],
     Caelum: [['Alp','Bet'], ['Bet','Gam']],
     Camelopardalis: [['Alp','Bet'], ['Bet','Gam']],
     Cancer: [['Alp','Del'], ['Del','Gam'], ['Gam','Iot'], ['Del','Bet']],
     'Canes Venatici': [['Alp','Bet']],
     'Canis Major': [['Alp','Bet'], ['Alp','Eps'], ['Eps','Eta'], ['Eps','Del'], ['Del','Gam'], ['Alp','Gam']],
     'Canis Minor': [['Alp','Bet']],
-    Capricornus: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
-    Carina: [['Alp','Bet'], ['Bet','Eps'], ['Eps','Iot'], ['Iot','Alp']],
+    Capricornus: [['Alp','Bet'], ['Bet','Psi'], ['Psi','Ome'], ['Ome','Zet'], ['Zet','Del'], ['Del','Gam'], ['Gam','The'], ['The','Iot'], ['Iot','Alp']],
+    Carina: [['Alp','Bet'], ['Bet','Eps'], ['Eps','Iot'], ['Iot','Alp'], ['Eps','The']],
     Cassiopeia: [['Bet','Alp'], ['Alp','Gam'], ['Gam','Del'], ['Del','Eps']],
-    Centaurus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Eps'], ['Eps','Eta'], ['Eta','The']],
+    Centaurus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Eps'], ['Eps','Eta'], ['Eta','The'], ['Eta','Kap']],
     Cepheus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Iot'], ['Iot','Zet'], ['Zet','Alp'], ['Alp','Del'], ['Del','Zet']],
-    Cetus: [['Alp','Gam'], ['Gam','Omi'], ['Omi','Bet'], ['Bet','Tau'], ['Tau','Eta'], ['Eta','Alp']],
+    Cetus: [['Alp','Gam'], ['Gam','Omi'], ['Omi','Bet'], ['Bet','Tau'], ['Tau','Eta'], ['Eta','Alp'], ['Gam','Del']],
     Chamaeleon: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del'], ['Del','Alp']],
     Circinus: [['Alp','Bet'], ['Bet','Gam']],
     Columba: [['Alp','Bet'], ['Bet','Eps'], ['Eps','Del'], ['Del','Alp']],
@@ -1510,51 +1511,51 @@
     'Corona Australis': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Eps']],
     'Corona Borealis': [['The','Bet'], ['Bet','Alp'], ['Alp','Gam'], ['Gam','Del'], ['Del','Eps']],
     Corvus: [['Gam','Eps'], ['Eps','Bet'], ['Bet','Del'], ['Del','Gam']],
-    Crater: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
+    Crater: [['Del','Gam'], ['Gam','Eps'], ['Eps','Bet'], ['Bet','Alp'], ['Alp','The'], ['The','Del'], ['Del','Zet'], ['Zet','Eta'], ['Eta','Eps']],
     Crux: [['Alp','Gam'], ['Bet','Del']],
-    Cygnus: [['Alp','Gam'], ['Gam','Bet'], ['Gam','Del'], ['Gam','Eps'], ['Eps','Zet']],
+    Cygnus: [['Alp','Gam'], ['Gam','Bet'], ['Gam','Del'], ['Gam','Eps'], ['Eps','Zet'], ['Del','Iot']],
     Delphinus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp'], ['Gam','Eps']],
     Dorado: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del']],
     Draco: [['Gam','Bet'], ['Bet','Nu'], ['Nu','Xi'], ['Xi','Alp'], ['Alp','Iot'], ['Iot','The'], ['The','Eta'], ['Eta','Zet'], ['Zet','Del'], ['Del','Gam']],
     Equuleus: [['Alp','Del'], ['Del','Gam'], ['Gam','Bet']],
-    Eridanus: [['Bet','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Iot'], ['Iot','Tau'], ['Tau','Alp']],
+    Eridanus: [['Bet','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Iot'], ['Iot','Kap'], ['Kap','Phi'], ['Phi','Chi'], ['Chi','Tau'], ['Tau','Upsilon'], ['Upsilon','Alp']],
     Fornax: [['Alp','Bet'], ['Bet','Nu']],
-    Gemini: [['Alp','Bet'], ['Alp','Gam'], ['Gam','Mu'], ['Bet','Del'], ['Del','Gam'], ['Gam','Eta']],
-    Grus: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
-    Hercules: [['Eps','Zet'], ['Zet','Eta'], ['Eta','Pi'], ['Pi','Eps'], ['Alp','Del'], ['Del','Eps'], ['Zet','Bet']],
+    Gemini: [['Alp','Bet'], ['Alp','Tau'], ['Tau','Eps'], ['Eps','Mu'], ['Alp','Iot'], ['Bet','Del'], ['Del','Gam'], ['Del','Zet'], ['Bet','Kap']],
+    Grus: [['Gam','Bet'], ['Bet','Alp'], ['Bet','Del'], ['Del','The'], ['The','Bet']],
+    Hercules: [['Eps','Zet'], ['Zet','Eta'], ['Eta','Pi'], ['Pi','Eps'], ['Alp','Del'], ['Del','Eps'], ['Zet','Bet'], ['Eta','The']],
     Horologium: [['Alp','Del'], ['Del','Bet']],
-    Hydra: [['Zet','Eps'], ['Eps','Del'], ['Del','Alp'], ['Alp','Lam'], ['Lam','Nu'], ['Nu','Xi'], ['Xi','Bet']],
+    Hydra: [['Zet','Eps'], ['Eps','Del'], ['Del','Alp'], ['Alp','Lam'], ['Lam','Nu'], ['Nu','Xi'], ['Xi','Bet'], ['Bet','Gam']],
     Hydrus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
     Indus: [['Alp','Bet'], ['Bet','The'], ['The','Alp']],
     Lacerta: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
-    Leo: [['Alp','Eta'], ['Eta','Gam'], ['Gam','Zet'], ['Gam','Del'], ['Del','Bet'], ['Bet','The'], ['The','Alp']],
+    Leo: [['Alp','Eta'], ['Eta','Gam'], ['Gam','Zet'], ['Zet','Mu'], ['Mu','Eps'], ['Gam','Del'], ['Del','Bet'], ['Bet','The'], ['The','Alp']],
     'Leo Minor': [['Alp','Bet'], ['Bet','Del']],
     Lepus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp'], ['Alp','Mu']],
-    Libra: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Sig'], ['Sig','Alp']],
-    Lupus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp']],
+    Libra: [['Bet','Alp'], ['Alp','Gam'], ['Gam','Sig'], ['Sig','Alp'], ['Alp','Ups']],
+    Lupus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp'], ['Alp','Eps']],
     Lynx: [['Alp','38'], ['38','10']],
-    Lyra: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp'], ['Bet','Del']],
+    Lyra: [['Alp','Zet'], ['Zet','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Zet']],
     Mensa: [['Alp','Gam']],
     Microscopium: [['Alp','Gam'], ['Gam','Eps']],
     Monoceros: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del']],
     Musca: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
     Norma: [['Gam','Eps'], ['Eps','Eta']],
     Octans: [['Nu','Bet'], ['Bet','Del'], ['Del','Nu']],
-    Ophiuchus: [['Alp','Bet'], ['Bet','Kap'], ['Kap','Eps'], ['Eps','Eta'], ['Eta','Zet'], ['Zet','Alp'], ['Alp','Lam']],
-    Orion: [['Alp','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Bet'], ['Bet','Kap'], ['Kap','Zet'], ['Zet','Alp'], ['Del','Zet'], ['Eps','Zet']],
+    Ophiuchus: [['Alp','Bet'], ['Bet','Kap'], ['Kap','Eps'], ['Eps','Eta'], ['Eta','Zet'], ['Zet','Alp'], ['Alp','Lam'], ['Zet','The']],
+    Orion: [['Alp','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Alp'], ['Del','Bet'], ['Bet','Kap'], ['Kap','Zet']],
     Pavo: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
     Pegasus: [['Alp','Bet'], ['Bet','Alpheratz'], ['Alpheratz','Gam'], ['Gam','Alp'], ['Alp','Eps']],
     Perseus: [['Alp','Bet'], ['Alp','Gam'], ['Alp','Del'], ['Del','Eps'], ['Bet','Rho']],
     Phoenix: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
     Pictor: [['Alp','Bet'], ['Bet','Gam']],
-    Pisces: [['Alp','Eta'], ['Eta','Omi'], ['Omi','Eps'], ['Alp','Bet'], ['Bet','Gam']],
+    Pisces: [['Alp','Eta'], ['Eta','Omi'], ['Omi','Eps'], ['Eps','Del'], ['Alp','Bet'], ['Bet','Gam'], ['Gam','Kap'], ['Kap','Lam'], ['Lam','Iot'], ['Iot','The'], ['The','Gam']],
     'Piscis Austrinus': [['Alp','Bet'], ['Bet','Del'], ['Del','Eps'], ['Eps','Alp']],
     Puppis: [['Zet','Pi'], ['Pi','Rho'], ['Rho','Xi']],
     Pyxis: [['Alp','Bet'], ['Bet','Gam']],
     Reticulum: [['Alp','Bet'], ['Bet','Del'], ['Del','Eps'], ['Eps','Alp']],
     Sagitta: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam']],
     Sagittarius: [['Lam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Tau'], ['Tau','Sig'], ['Sig','Phi'], ['Phi','Lam'], ['Del','Gam'], ['Gam','Eta']],
-    Scorpius: [['Bet','Del'], ['Del','Alp'], ['Alp','Tau'], ['Tau','Eps'], ['Eps','Mu'], ['Mu','Lam'], ['Lam','Kap'], ['Kap','The'], ['The','Eta'], ['Eta','Zet']],
+    Scorpius: [['Pi','Rho'], ['Rho','Del'], ['Del','Bet'], ['Del','Alp'], ['Alp','Tau'], ['Tau','Eps'], ['Eps','Mu'], ['Mu','Lam'], ['Lam','Kap'], ['Kap','The'], ['The','Eta'], ['Eta','Zet']],
     Sculptor: [['Alp','Bet'], ['Bet','Gam']],
     Scutum: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp']],
     Serpens: [['Alp','Del'], ['Del','Eps'], ['Eta','The'], ['The','Xi']],
@@ -1565,28 +1566,48 @@
     'Triangulum Australe': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
     Tucana: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del']],
     'Ursa Major': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Eta'], ['Del','Alp']],
-    'Ursa Minor': [['Alp','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Bet'], ['Bet','Gam'], ['Gam','Eta'], ['Eta','Alp']],
+    'Ursa Minor': [['Alp','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Bet'], ['Bet','Gam'], ['Gam','Eta'], ['Eta','Zet']],
     Vela: [['Gam','Lam'], ['Lam','Del'], ['Del','Kap']],
-    Virgo: [['Alp','Gam'], ['Gam','Del'], ['Del','Eps'], ['Gam','Eta'], ['Eta','Bet']],
+    Virgo: [['Alp','Gam'], ['Gam','Del'], ['Del','Eps'], ['Gam','Eta'], ['Eta','Bet'], ['Gam','Zet']],
     Volans: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp']],
     Vulpecula: [['Alp','13']]
+  };
+
+  const SKY_ASTERISM_GREEK_ALIASES = [
+    ['alp', ['alp', 'alpha']], ['bet', ['bet', 'beta']], ['gam', ['gam', 'gamma']], ['del', ['del', 'delta']], ['eps', ['eps', 'epsilon']],
+    ['zet', ['zet', 'zeta']], ['eta', ['eta']], ['the', ['the', 'theta']], ['iot', ['iot', 'iota']], ['kap', ['kap', 'kappa']],
+    ['lam', ['lam', 'lambda']], ['mu', ['mu']], ['nu', ['nu']], ['xi', ['xi']], ['omi', ['omi', 'omicron']],
+    ['pi', ['pi']], ['rho', ['rho']], ['sig', ['sig', 'sigma']], ['tau', ['tau']], ['ups', ['ups', 'upsilon']],
+    ['phi', ['phi']], ['chi', ['chi']], ['psi', ['psi']], ['ome', ['ome', 'omega']]
+  ];
+
+  const SKY_ASTERISM_CONTEXT_ENDPOINTS = {
+    Auriga: ['elnath', 'alnath'],
+    Pegasus: ['alpheratz']
   };
 
   function skyAsterismGreekKeys(value) {
     const c = compact(value);
     if (!c) return [];
-    const aliases = [
-      ['alp', 'alpha'], ['bet', 'beta'], ['gam', 'gamma'], ['del', 'delta'], ['eps', 'epsilon'],
-      ['zet', 'zeta'], ['eta', 'eta'], ['the', 'theta'], ['iot', 'iota'], ['kap', 'kappa'],
-      ['lam', 'lambda'], ['mu', 'mu'], ['nu', 'nu'], ['xi', 'xi'], ['omi', 'omicron'],
-      ['pi', 'pi'], ['rho', 'rho'], ['sig', 'sigma'], ['tau', 'tau'], ['ups', 'upsilon'],
-      ['phi', 'phi'], ['chi', 'chi'], ['psi', 'psi'], ['ome', 'omega']
-    ];
-    const out = [];
-    aliases.forEach(([shortKey, full]) => {
-      if (c.includes(shortKey) || c.includes(full)) out.push(shortKey, full);
+    const found = [];
+    SKY_ASTERISM_GREEK_ALIASES.forEach(([code, aliases]) => {
+      if (aliases.some(alias => c === alias || c.startsWith(alias))) {
+        found.push(code, ...aliases);
+      }
     });
-    return out;
+    return found;
+  }
+
+  function skyAsterismLabelLooksLocal(label) {
+    const c = compact(label);
+    if (!c) return true;
+    if (/^\d+$/.test(c)) return true;
+    return SKY_ASTERISM_GREEK_ALIASES.some(([, aliases]) => aliases.some(alias => c === alias || c.startsWith(alias)));
+  }
+
+  function skyAsterismContextAllowsGlobal(constellation, label) {
+    const allowed = SKY_ASTERISM_CONTEXT_ENDPOINTS[constellation] || [];
+    return allowed.includes(compact(label));
   }
 
   function skyAsterismStarKeys(star) {
@@ -1603,7 +1624,6 @@
         add(`${g} ${abbr}`);
       });
     });
-    const bf = compact(star.bf);
     const flam = String(star.bf || '').match(/\d+/);
     if (flam) {
       add(flam[0]);
@@ -1621,8 +1641,16 @@
     if (!target) return null;
     const candidates = skyStars.filter(s => s.mag <= magLimit).sort((a, b) => a.mag - b.mag);
     const matches = s => skyAsterismStarKeys(s).has(target);
-    const scoped = candidates.find(s => s.constellation === constellation && matches(s));
-    const star = scoped || candidates.find(matches) || null;
+    let star = candidates.find(s => s.constellation === constellation && matches(s)) || null;
+
+    // Only a very small number of learning-line endpoints are intentionally
+    // borrowed from a neighbouring official constellation.  All generic Bayer
+    // and Flamsteed labels are strictly local, which prevents long false lines
+    // such as Orion accidentally connecting to Caelum when a local endpoint is absent.
+    if (!star && skyAsterismContextAllowsGlobal(constellation, label) && !skyAsterismLabelLooksLocal(label)) {
+      star = candidates.find(matches) || null;
+    }
+
     skyAsterismStarCache.set(key, star);
     return star;
   }
@@ -1640,7 +1668,7 @@
         const s1 = skyAsterismEndpointStar(constellation, a, magLimit);
         const s2 = skyAsterismEndpointStar(constellation, b, magLimit);
         if (!s1 || !s2) return;
-        if (angularDeg(s1.v, s2.v) > 55) return;
+        if (angularDeg(s1.v, s2.v) > 38) return;
         const p1 = project(s1.v, basis, radius, fovRad);
         const p2 = project(s2.v, basis, radius, fovRad);
         if (!p1 || !p2) return;
