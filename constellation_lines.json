@@ -1,0 +1,8455 @@
+{
+  "metadata": {
+    "title": "Custom constellation line-figure graph database, JingHeng custom v2 cleaned",
+    "node_identifier": "Hipparcos catalogue number (HIP)",
+    "source_family": "IAU constellation charts produced with Sky & Telescope; Alan MacRobert green line patterns; cross-checked with Stellarium western_SnT skyculture index.json",
+    "important_note": "IAU formally defines constellation boundary regions, not one official stick-figure graph. These are custom line figures in IAU/S&T chart style represented as HIP-node graph paths.",
+    "style_tokens": {
+      "normal": "ordinary green line",
+      "thin": "thin green line",
+      "bold": "bold green line"
+    },
+    "path_rule": "Each path is an ordered polyline. Adjacent HIP numbers form edges. Optional leading style token applies to that polyline.",
+    "edge_rule": "Edges are expanded from adjacent HIP pairs. Self-loops caused by repeated adjacent HIPs are skipped in the edge list but preserved in original_paths.",
+    "derived_from": "Original IAU/Sky & Telescope green-line extraction; modified according to user-supplied constellation adjustments on 2026-06-30.",
+    "custom_policy": "Paths are custom aesthetic line-art choices, not official IAU stick figures.",
+    "assumptions": [
+      "Cancer uses χ Cnc, HIP 40843, connected from γ Cnc, HIP 42806.",
+      "Cepheus triangle is Errai–ι Cep–β Cep; square is β Cep–Alderamin–λ Cep–ι Cep.",
+      "Scorpius has Antares as common base for β, δ, π, and the body/tail chain; ρ and ν are not used.",
+      "Andromeda is α–δ–β–γ.",
+      "Aquila removes the θ–λ–ζ path.",
+      "Auriga is only a six-star loop.",
+      "Taurus and Sagittarius keep only the major graph.",
+      "Disconnected components are allowed when the line figure naturally has them."
+    ],
+    "custom_modified_constellations": [
+      "AND",
+      "AQL",
+      "ARA",
+      "AUR",
+      "BOO",
+      "CEP",
+      "CNC",
+      "CRA",
+      "CRV",
+      "CYG",
+      "HER",
+      "LEO",
+      "LEP",
+      "MEN",
+      "MIC",
+      "NOR",
+      "SCO"
+    ],
+    "custom_modified_count": 17,
+    "total_constellations": 88,
+    "total_nodes_per_constellation_sum": 709,
+    "total_edges_per_constellation_sum": 697,
+    "custom_version": "v3-site-cleaned",
+    "custom_change_summary": "Updated Cancer x->chi, revised Cepheus triangle/square, and cleaned Scorpius to a 3-finger fork.",
+    "total_nodes_across_constellations": 697,
+    "total_edges_across_constellations": 697,
+    "modified_constellations": 17,
+    "source_for_site": "Used as the source of truth for iloveastro Sky Map constellation lines.",
+    "render_policy": {
+      "source": "constellation_lines.json original HIP edges cleaned from original_paths",
+      "matching": "HIP only",
+      "magnitude": "Line endpoints are independent of the Sky Map magnitude slider; ordinary stars still obey the slider.",
+      "missing_hip_policy": "Warn to browser developer console only.",
+      "line_style_policy": "Website ignores bold/normal/thin and draws all constellation lines uniformly."
+    },
+    "edge_count_meaning": "total_edges_per_constellation_sum counts deduplicated undirected edges within each constellation; total_edges_across_constellations counts unique undirected HIP pairs across the full database.",
+    "zero_length_pairs_cleaned": true,
+    "duplicate_edges_cleaned_within_constellation": true
+  },
+  "constellations": [
+    {
+      "iau": "And",
+      "pdf_code": "AND",
+      "name": "Andromeda",
+      "nodes_hip": [
+        677,
+        3092,
+        5447,
+        9640
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            677,
+            3092,
+            5447,
+            9640
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 677,
+          "to": 3092,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 3092,
+          "to": 5447,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 5447,
+          "to": 9640,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 3,
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "Four-star Andromeda: α–δ–β–γ.",
+      "node_labels": {
+        "677": "α And / Alpheratz",
+        "5447": "β And / Mirach",
+        "9640": "γ And / Almach",
+        "3092": "δ And"
+      }
+    },
+    {
+      "iau": "Ant",
+      "pdf_code": "ANT",
+      "name": "Antlia",
+      "nodes_hip": [
+        46515,
+        51172,
+        53502
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            53502,
+            51172,
+            46515
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 53502,
+          "to": 51172,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 51172,
+          "to": 46515,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Aps",
+      "pdf_code": "APS",
+      "name": "Apus",
+      "nodes_hip": [
+        72370,
+        80047,
+        81065,
+        81852
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            72370,
+            81065
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            80047,
+            81852,
+            81065
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 72370,
+          "to": 81065,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80047,
+          "to": 81852,
+          "style": "thin",
+          "path_index": 2
+        },
+        {
+          "from": 81852,
+          "to": 81065,
+          "style": "thin",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 3,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Aql",
+      "pdf_code": "AQL",
+      "name": "Aquila",
+      "nodes_hip": [
+        93747,
+        93805,
+        95501,
+        97278,
+        97649,
+        98036,
+        99473
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            98036,
+            97649,
+            97278
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            97649,
+            95501,
+            93805
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            95501,
+            93747
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            95501,
+            99473
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 98036,
+          "to": 97649,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 97649,
+          "to": 97278,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 97649,
+          "to": 95501,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 95501,
+          "to": 93805,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 95501,
+          "to": 93747,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 95501,
+          "to": 99473,
+          "style": "normal",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 7,
+        "edges": 6,
+        "paths": 4
+      },
+      "custom_modified": true,
+      "custom_note": "Only α β γ δ ζ θ λ retained; δ connects to α; removed θ–λ–ζ.",
+      "node_labels": {
+        "97649": "α Aql / Altair",
+        "98036": "β Aql / Alshain",
+        "97278": "γ Aql / Tarazed",
+        "95501": "δ Aql",
+        "93747": "ζ Aql",
+        "99473": "θ Aql",
+        "93805": "λ Aql"
+      }
+    },
+    {
+      "iau": "Aqr",
+      "pdf_code": "AQR",
+      "name": "Aquarius",
+      "nodes_hip": [
+        102618,
+        106278,
+        109074,
+        109139,
+        110003,
+        110395,
+        110672,
+        110960,
+        111497,
+        112716,
+        112961,
+        113136,
+        114341,
+        114724,
+        115033,
+        115438
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            102618,
+            106278,
+            109074,
+            110395,
+            110960,
+            111497
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            110960,
+            110672,
+            109074
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            109139,
+            106278
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            109074,
+            110003,
+            112961,
+            114724,
+            115033,
+            115438
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            115033,
+            114341
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            115033,
+            113136,
+            112716,
+            112961
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 102618,
+          "to": 106278,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 106278,
+          "to": 109074,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 109074,
+          "to": 110395,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110395,
+          "to": 110960,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110960,
+          "to": 111497,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110960,
+          "to": 110672,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 110672,
+          "to": 109074,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 109139,
+          "to": 106278,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 109074,
+          "to": 110003,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 110003,
+          "to": 112961,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 112961,
+          "to": 114724,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 114724,
+          "to": 115033,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 115033,
+          "to": 115438,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 115033,
+          "to": 114341,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 115033,
+          "to": 113136,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 113136,
+          "to": 112716,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 112716,
+          "to": 112961,
+          "style": "normal",
+          "path_index": 6
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 16,
+        "edges": 17,
+        "paths": 6
+      }
+    },
+    {
+      "iau": "Ara",
+      "pdf_code": "ARA",
+      "name": "Ara",
+      "nodes_hip": [
+        82363,
+        83081,
+        85258,
+        85267,
+        85727,
+        85792,
+        88714
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            85267,
+            85727,
+            82363,
+            83081,
+            85792,
+            88714
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            85792,
+            85258
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 85267,
+          "to": 85727,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 85727,
+          "to": 82363,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 82363,
+          "to": 83081,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 83081,
+          "to": 85792,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 85792,
+          "to": 88714,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 85792,
+          "to": 85258,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 7,
+        "edges": 6,
+        "paths": 2
+      },
+      "custom_modified": true,
+      "custom_note": "θ Ara removed from the main chain so no line connects to θ.",
+      "node_labels": {
+        "83153": "θ Ara removed"
+      }
+    },
+    {
+      "iau": "Ari",
+      "pdf_code": "ARI",
+      "name": "Aries",
+      "nodes_hip": [
+        8832,
+        8903,
+        9884,
+        13209
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            8832,
+            8903,
+            9884,
+            13209
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 8832,
+          "to": 8903,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 8903,
+          "to": 9884,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 9884,
+          "to": 13209,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 3,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Aur",
+      "pdf_code": "AUR",
+      "name": "Auriga",
+      "nodes_hip": [
+        23015,
+        23416,
+        24608,
+        25428,
+        28360,
+        28380
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            25428,
+            23015,
+            23416,
+            24608,
+            28360,
+            28380,
+            25428
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 25428,
+          "to": 23015,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 23015,
+          "to": 23416,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 23416,
+          "to": 24608,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 24608,
+          "to": 28360,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 28360,
+          "to": 28380,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 28380,
+          "to": 25428,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 6,
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "Only a six-star loop retained; δ and branch lines removed.",
+      "node_labels": {
+        "23767": "δ Aur removed",
+        "25428": "β Tau / Elnath",
+        "23015": "ι Aur",
+        "23416": "ε Aur",
+        "24608": "α Aur / Capella",
+        "28360": "β Aur / Menkalinan",
+        "28380": "θ Aur"
+      }
+    },
+    {
+      "iau": "Boo",
+      "pdf_code": "BOO",
+      "name": "Bootes",
+      "nodes_hip": [
+        67275,
+        67927,
+        69673,
+        69732,
+        70497,
+        71053,
+        71075,
+        72105,
+        73555
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            69673,
+            72105,
+            73555,
+            71075,
+            71053,
+            69673,
+            67927,
+            67275
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            71075,
+            69732,
+            70497,
+            69732
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 69673,
+          "to": 72105,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 72105,
+          "to": 73555,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 73555,
+          "to": 71075,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 71075,
+          "to": 71053,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 71053,
+          "to": 69673,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 69673,
+          "to": 67927,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 67927,
+          "to": 67275,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 71075,
+          "to": 69732,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 69732,
+          "to": 70497,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 9,
+        "edges": 9,
+        "paths": 2
+      },
+      "custom_modified": true,
+      "custom_note": "λ, δ, κ Boötis removed.",
+      "node_labels": {
+        "71795": "λ Boo removed",
+        "74666": "δ Boo removed",
+        "69483": "κ Boo removed"
+      }
+    },
+    {
+      "iau": "Cae",
+      "pdf_code": "CAE",
+      "name": "Caelum",
+      "nodes_hip": [
+        21060,
+        21770,
+        21861,
+        23595
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            23595,
+            21861,
+            21770,
+            21060
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 23595,
+          "to": 21861,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 21861,
+          "to": 21770,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 21770,
+          "to": 21060,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 3,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Cam",
+      "pdf_code": "CAM",
+      "name": "Camelopardalis",
+      "nodes_hip": [
+        16228,
+        17884,
+        17959,
+        22783,
+        23040,
+        23522,
+        29997,
+        33694
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            23040,
+            23522,
+            22783,
+            29997,
+            33694
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            22783,
+            17959,
+            17884,
+            16228
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 23040,
+          "to": 23522,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 23522,
+          "to": 22783,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 22783,
+          "to": 29997,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 29997,
+          "to": 33694,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 22783,
+          "to": 17959,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 17959,
+          "to": 17884,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 17884,
+          "to": 16228,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 8,
+        "edges": 7,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Cap",
+      "pdf_code": "CAP",
+      "name": "Capricornus",
+      "nodes_hip": [
+        100064,
+        100345,
+        102485,
+        102978,
+        104139,
+        105881,
+        106723,
+        106985,
+        107556
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            100064,
+            100345,
+            102485,
+            102978,
+            105881,
+            106723,
+            107556,
+            106985,
+            104139,
+            100064
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 100064,
+          "to": 100345,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 100345,
+          "to": 102485,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 102485,
+          "to": 102978,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 102978,
+          "to": 105881,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 105881,
+          "to": 106723,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 106723,
+          "to": 107556,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 107556,
+          "to": 106985,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 106985,
+          "to": 104139,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 104139,
+          "to": 100064,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 9,
+        "edges": 9,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Car",
+      "pdf_code": "CAR",
+      "name": "Carina",
+      "nodes_hip": [
+        30438,
+        38827,
+        39953,
+        41037,
+        42913,
+        45238,
+        45556,
+        50099,
+        50371,
+        51576,
+        52419,
+        53253,
+        54301,
+        54463,
+        54751
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            30438,
+            45238,
+            50099,
+            52419,
+            51576,
+            50371,
+            45556,
+            42913
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            51576,
+            53253
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            52419,
+            54301,
+            54751,
+            54463,
+            53253
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            45556,
+            41037,
+            38827,
+            39953
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 30438,
+          "to": 45238,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 45238,
+          "to": 50099,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 50099,
+          "to": 52419,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 52419,
+          "to": 51576,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 51576,
+          "to": 50371,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 50371,
+          "to": 45556,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 45556,
+          "to": 42913,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 51576,
+          "to": 53253,
+          "style": "thin",
+          "path_index": 2
+        },
+        {
+          "from": 52419,
+          "to": 54301,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 54301,
+          "to": 54751,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 54751,
+          "to": 54463,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 54463,
+          "to": 53253,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 45556,
+          "to": 41037,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 41037,
+          "to": 38827,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 38827,
+          "to": 39953,
+          "style": "thin",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 15,
+        "edges": 15,
+        "paths": 4
+      }
+    },
+    {
+      "iau": "Cas",
+      "pdf_code": "CAS",
+      "name": "Cassiopeia",
+      "nodes_hip": [
+        746,
+        3179,
+        4427,
+        6686,
+        8886
+      ],
+      "original_paths": [
+        {
+          "style": "bold",
+          "hip": [
+            746,
+            3179,
+            4427,
+            6686,
+            8886
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 746,
+          "to": 3179,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 3179,
+          "to": 4427,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 4427,
+          "to": 6686,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 6686,
+          "to": 8886,
+          "style": "bold",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 5,
+        "edges": 4,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Cen",
+      "pdf_code": "CEN",
+      "name": "Centaurus",
+      "nodes_hip": [
+        55425,
+        56243,
+        59196,
+        59449,
+        60823,
+        61789,
+        61932,
+        65109,
+        65936,
+        66657,
+        67464,
+        68002,
+        68245,
+        68282,
+        68702,
+        68862,
+        68933,
+        70090,
+        71352,
+        71683,
+        73334
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            61932,
+            66657,
+            68702,
+            71683
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            66657,
+            68002,
+            61932
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            68002,
+            68282,
+            68245,
+            71352
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            68245,
+            68862,
+            70090,
+            68933,
+            67464,
+            68002
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            55425,
+            59196,
+            60823,
+            61932
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            60823,
+            59449,
+            56243
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            67464,
+            65936,
+            65109,
+            61789
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            71352,
+            73334
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 61932,
+          "to": 66657,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 66657,
+          "to": 68702,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 68702,
+          "to": 71683,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 66657,
+          "to": 68002,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 68002,
+          "to": 61932,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 68002,
+          "to": 68282,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 68282,
+          "to": 68245,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 68245,
+          "to": 71352,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 68245,
+          "to": 68862,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 68862,
+          "to": 70090,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 70090,
+          "to": 68933,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 68933,
+          "to": 67464,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 67464,
+          "to": 68002,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 55425,
+          "to": 59196,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 59196,
+          "to": 60823,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 60823,
+          "to": 61932,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 60823,
+          "to": 59449,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 59449,
+          "to": 56243,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 67464,
+          "to": 65936,
+          "style": "thin",
+          "path_index": 7
+        },
+        {
+          "from": 65936,
+          "to": 65109,
+          "style": "thin",
+          "path_index": 7
+        },
+        {
+          "from": 65109,
+          "to": 61789,
+          "style": "thin",
+          "path_index": 7
+        },
+        {
+          "from": 71352,
+          "to": 73334,
+          "style": "normal",
+          "path_index": 8
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 21,
+        "edges": 22,
+        "paths": 8
+      }
+    },
+    {
+      "iau": "Cep",
+      "pdf_code": "CEP",
+      "name": "Cepheus",
+      "nodes_hip": [
+        105199,
+        106032,
+        109556,
+        112724,
+        116727
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            116727,
+            112724,
+            106032,
+            116727
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            106032,
+            105199,
+            109556,
+            112724,
+            106032
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 116727,
+          "to": 112724,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 112724,
+          "to": 106032,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 106032,
+          "to": 116727,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 106032,
+          "to": 105199,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 105199,
+          "to": 109556,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 109556,
+          "to": 112724,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 5,
+        "edges": 6,
+        "paths": 2
+      },
+      "custom_modified": true,
+      "custom_note": "Triangle = Errai–ι–β; square = β–Alderamin–λ–ι.",
+      "node_labels": {
+        "116727": "γ Cep / Errai",
+        "106032": "β Cep / Alfirk",
+        "112724": "ι Cep",
+        "105199": "α Cep / Alderamin",
+        "109556": "λ Cep"
+      }
+    },
+    {
+      "iau": "Cet",
+      "pdf_code": "CET",
+      "name": "Cetus",
+      "nodes_hip": [
+        1562,
+        3419,
+        5364,
+        6537,
+        8102,
+        8645,
+        10826,
+        11484,
+        12387,
+        12706,
+        12828,
+        13954,
+        14135
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            12706,
+            14135,
+            13954,
+            12828,
+            11484,
+            12706,
+            12387,
+            10826,
+            8645,
+            8102,
+            3419,
+            1562,
+            5364,
+            6537,
+            8645
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 12706,
+          "to": 14135,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 14135,
+          "to": 13954,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 13954,
+          "to": 12828,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12828,
+          "to": 11484,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 11484,
+          "to": 12706,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12706,
+          "to": 12387,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12387,
+          "to": 10826,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 10826,
+          "to": 8645,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 8645,
+          "to": 8102,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 8102,
+          "to": 3419,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 3419,
+          "to": 1562,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 1562,
+          "to": 5364,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 5364,
+          "to": 6537,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 6537,
+          "to": 8645,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 13,
+        "edges": 14,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Cha",
+      "pdf_code": "CHA",
+      "name": "Chamaeleon",
+      "nodes_hip": [
+        40702,
+        51839,
+        52633,
+        58484,
+        60000
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            40702,
+            51839,
+            52633,
+            60000,
+            58484,
+            51839
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 40702,
+          "to": 51839,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 51839,
+          "to": 52633,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 52633,
+          "to": 60000,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 60000,
+          "to": 58484,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 58484,
+          "to": 51839,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 5,
+        "edges": 5,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Cir",
+      "pdf_code": "CIR",
+      "name": "Circinus",
+      "nodes_hip": [
+        71908,
+        74824,
+        75323
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            74824,
+            71908,
+            75323
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 74824,
+          "to": 71908,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 71908,
+          "to": 75323,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "CMa",
+      "pdf_code": "CMA",
+      "name": "Canis Major",
+      "nodes_hip": [
+        30324,
+        31592,
+        32349,
+        33152,
+        33160,
+        33347,
+        33579,
+        34045,
+        34444,
+        35904
+      ],
+      "original_paths": [
+        {
+          "style": "bold",
+          "hip": [
+            30324,
+            32349,
+            34444,
+            33579
+          ]
+        },
+        {
+          "style": "bold",
+          "hip": [
+            34444,
+            35904
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            30324,
+            31592,
+            33152,
+            33579
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            32349,
+            33347,
+            34045,
+            33160,
+            33347
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 30324,
+          "to": 32349,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 32349,
+          "to": 34444,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 34444,
+          "to": 33579,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 34444,
+          "to": 35904,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 30324,
+          "to": 31592,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 31592,
+          "to": 33152,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 33152,
+          "to": 33579,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 32349,
+          "to": 33347,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 33347,
+          "to": 34045,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 34045,
+          "to": 33160,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 33160,
+          "to": 33347,
+          "style": "normal",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 10,
+        "edges": 11,
+        "paths": 4
+      }
+    },
+    {
+      "iau": "CMi",
+      "pdf_code": "CMI",
+      "name": "Canis Minor",
+      "nodes_hip": [
+        36188,
+        37279
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            37279,
+            36188
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 37279,
+          "to": 36188,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 2,
+        "edges": 1,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Cnc",
+      "pdf_code": "CNC",
+      "name": "Cancer",
+      "nodes_hip": [
+        40526,
+        40843,
+        42806,
+        42911,
+        43103,
+        44066
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            44066,
+            42911,
+            40526
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            42911,
+            42806,
+            43103
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            42806,
+            40843
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 44066,
+          "to": 42911,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 42911,
+          "to": 40526,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 42911,
+          "to": 42806,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 42806,
+          "to": 43103,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 42806,
+          "to": 40843,
+          "style": "normal",
+          "path_index": 3
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 5,
+        "paths": 3
+      },
+      "custom_modified": true,
+      "custom_note": "χ Cnc connected from γ Cnc.",
+      "node_labels": {
+        "42806": "γ Cnc",
+        "40843": "χ Cnc"
+      }
+    },
+    {
+      "iau": "Col",
+      "pdf_code": "COL",
+      "name": "Columba",
+      "nodes_hip": [
+        25859,
+        26634,
+        27628,
+        28199,
+        28328,
+        30277
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            26634,
+            27628
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            25859,
+            26634
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            28328,
+            27628,
+            28199,
+            30277
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 26634,
+          "to": 27628,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 25859,
+          "to": 26634,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 28328,
+          "to": 27628,
+          "style": "thin",
+          "path_index": 3
+        },
+        {
+          "from": 27628,
+          "to": 28199,
+          "style": "thin",
+          "path_index": 3
+        },
+        {
+          "from": 28199,
+          "to": 30277,
+          "style": "thin",
+          "path_index": 3
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 5,
+        "paths": 3
+      }
+    },
+    {
+      "iau": "Com",
+      "pdf_code": "COM",
+      "name": "Coma Berenices",
+      "nodes_hip": [
+        60742,
+        64241,
+        64394
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            64241,
+            64394,
+            60742
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 64241,
+          "to": 64394,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 64394,
+          "to": 60742,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "CrA",
+      "pdf_code": "CRA",
+      "name": "Corona Australis",
+      "nodes_hip": [
+        93174,
+        93825,
+        94005,
+        94114,
+        94160
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            93825,
+            94114,
+            94160,
+            94005,
+            93174
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 93825,
+          "to": 94114,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 94114,
+          "to": 94160,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 94160,
+          "to": 94005,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 94005,
+          "to": 93174,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 5,
+        "edges": 4,
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "θ CrA removed; ε CrA added to close/continue the crown.",
+      "node_labels": {
+        "90982": "θ CrA removed",
+        "93174": "ε CrA"
+      }
+    },
+    {
+      "iau": "CrB",
+      "pdf_code": "CRB",
+      "name": "Corona Borealis",
+      "nodes_hip": [
+        75695,
+        76127,
+        76267,
+        76952,
+        77512,
+        78159,
+        78493
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            76127,
+            75695,
+            76267,
+            76952,
+            77512,
+            78159,
+            78493
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 76127,
+          "to": 75695,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 75695,
+          "to": 76267,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 76267,
+          "to": 76952,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 76952,
+          "to": 77512,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 77512,
+          "to": 78159,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 78159,
+          "to": 78493,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 7,
+        "edges": 6,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Crt",
+      "pdf_code": "CRT",
+      "name": "Crater",
+      "nodes_hip": [
+        53740,
+        54682,
+        55282,
+        55687,
+        55705,
+        56633,
+        57283,
+        58188
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            53740,
+            54682,
+            55705,
+            57283,
+            58188
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            55705,
+            55282,
+            55687,
+            56633
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            55282,
+            53740
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 53740,
+          "to": 54682,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 54682,
+          "to": 55705,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 55705,
+          "to": 57283,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 57283,
+          "to": 58188,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 55705,
+          "to": 55282,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 55282,
+          "to": 55687,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 55687,
+          "to": 56633,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 55282,
+          "to": 53740,
+          "style": "normal",
+          "path_index": 3
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 8,
+        "edges": 8,
+        "paths": 3
+      }
+    },
+    {
+      "iau": "Cru",
+      "pdf_code": "CRU",
+      "name": "Crux",
+      "nodes_hip": [
+        59747,
+        60718,
+        61084,
+        62434
+      ],
+      "original_paths": [
+        {
+          "style": "bold",
+          "hip": [
+            60718,
+            61084
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            62434,
+            59747
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 60718,
+          "to": 61084,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 62434,
+          "to": 59747,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 2,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Crv",
+      "pdf_code": "CRV",
+      "name": "Corvus",
+      "nodes_hip": [
+        59316,
+        59803,
+        60965,
+        61359
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            60965,
+            59803,
+            59316,
+            61359,
+            60965
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 60965,
+          "to": 59803,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 59803,
+          "to": 59316,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 59316,
+          "to": 61359,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 61359,
+          "to": 60965,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 4,
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "α Crv removed.",
+      "node_labels": {
+        "59199": "α Crv / Alchiba removed"
+      }
+    },
+    {
+      "iau": "CVn",
+      "pdf_code": "CVN",
+      "name": "Canes Venatici",
+      "nodes_hip": [
+        61317,
+        63125
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            63125,
+            61317
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 63125,
+          "to": 61317,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 2,
+        "edges": 1,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Cyg",
+      "pdf_code": "CYG",
+      "name": "Cygnus",
+      "nodes_hip": [
+        94779,
+        95947,
+        97165,
+        98110,
+        100453,
+        102098,
+        102488,
+        104732
+      ],
+      "original_paths": [
+        {
+          "style": "bold",
+          "hip": [
+            104732,
+            102488,
+            100453,
+            97165,
+            94779
+          ]
+        },
+        {
+          "style": "bold",
+          "hip": [
+            102098,
+            100453,
+            98110,
+            95947
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 104732,
+          "to": 102488,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 102488,
+          "to": 100453,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 100453,
+          "to": 97165,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 97165,
+          "to": 94779,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 102098,
+          "to": 100453,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 100453,
+          "to": 98110,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 98110,
+          "to": 95947,
+          "style": "bold",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 8,
+        "edges": 7,
+        "paths": 2
+      },
+      "custom_modified": true,
+      "custom_note": "Only ζ–ε–γ–δ–κ wings and Deneb–γ–η–β swan/body retained.",
+      "node_labels": {
+        "104732": "ζ Cyg",
+        "102488": "ε Cyg",
+        "100453": "γ Cyg / Sadr",
+        "97165": "δ Cyg",
+        "94779": "κ Cyg",
+        "102098": "α Cyg / Deneb",
+        "98110": "η Cyg",
+        "95947": "β Cyg / Albireo"
+      }
+    },
+    {
+      "iau": "Del",
+      "pdf_code": "DEL",
+      "name": "Delphinus",
+      "nodes_hip": [
+        101421,
+        101769,
+        101958,
+        102281,
+        102532
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            101421,
+            101769,
+            101958,
+            102532,
+            102281,
+            101769
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 101421,
+          "to": 101769,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 101769,
+          "to": 101958,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 101958,
+          "to": 102532,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 102532,
+          "to": 102281,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 102281,
+          "to": 101769,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 5,
+        "edges": 5,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Dor",
+      "pdf_code": "DOR",
+      "name": "Dorado",
+      "nodes_hip": [
+        19893,
+        21281,
+        23693,
+        26069,
+        27100,
+        27890
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            19893,
+            21281,
+            23693,
+            26069,
+            21281
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            26069,
+            27100,
+            27890,
+            26069
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 19893,
+          "to": 21281,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 21281,
+          "to": 23693,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 23693,
+          "to": 26069,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 26069,
+          "to": 21281,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 26069,
+          "to": 27100,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 27100,
+          "to": 27890,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 27890,
+          "to": 26069,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 7,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Dra",
+      "pdf_code": "DRA",
+      "name": "Draco",
+      "nodes_hip": [
+        56211,
+        61281,
+        68756,
+        75458,
+        78527,
+        80331,
+        83895,
+        85670,
+        85829,
+        87585,
+        87833,
+        89908,
+        89937,
+        94376,
+        97433
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            56211,
+            61281,
+            68756,
+            75458,
+            78527,
+            80331,
+            83895,
+            89908,
+            89937
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            89908,
+            94376,
+            97433
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            94376,
+            87585,
+            85829,
+            85670,
+            87833,
+            87585
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 56211,
+          "to": 61281,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 61281,
+          "to": 68756,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 68756,
+          "to": 75458,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 75458,
+          "to": 78527,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 78527,
+          "to": 80331,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80331,
+          "to": 83895,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 83895,
+          "to": 89908,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 89908,
+          "to": 89937,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 89908,
+          "to": 94376,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 94376,
+          "to": 97433,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 94376,
+          "to": 87585,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 87585,
+          "to": 85829,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 85829,
+          "to": 85670,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 85670,
+          "to": 87833,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 87833,
+          "to": 87585,
+          "style": "normal",
+          "path_index": 3
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 15,
+        "edges": 15,
+        "paths": 3
+      }
+    },
+    {
+      "iau": "Equ",
+      "pdf_code": "EQU",
+      "name": "Equuleus",
+      "nodes_hip": [
+        104521,
+        104858,
+        104987
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            104987,
+            104858,
+            104521
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 104987,
+          "to": 104858,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 104858,
+          "to": 104521,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Eri",
+      "pdf_code": "ERI",
+      "name": "Eridanus",
+      "nodes_hip": [
+        7588,
+        9007,
+        11407,
+        12413,
+        12486,
+        12770,
+        12843,
+        13701,
+        13847,
+        14146,
+        15474,
+        15510,
+        16537,
+        16611,
+        16870,
+        17378,
+        17593,
+        17651,
+        17874,
+        18216,
+        18543,
+        18673,
+        19587,
+        20042,
+        20535,
+        21248,
+        21393,
+        21444,
+        22109,
+        23875
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            23875,
+            22109,
+            21444,
+            19587,
+            18543,
+            17593,
+            17378,
+            16537,
+            13701,
+            12770,
+            12843,
+            14146,
+            15474,
+            16611,
+            17651,
+            18216,
+            18673,
+            21248,
+            21393,
+            20535,
+            20042,
+            17874,
+            16870,
+            15510,
+            13847,
+            12486,
+            12413,
+            11407,
+            9007,
+            7588
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 23875,
+          "to": 22109,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 22109,
+          "to": 21444,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 21444,
+          "to": 19587,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 19587,
+          "to": 18543,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 18543,
+          "to": 17593,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 17593,
+          "to": 17378,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 17378,
+          "to": 16537,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 16537,
+          "to": 13701,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 13701,
+          "to": 12770,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12770,
+          "to": 12843,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12843,
+          "to": 14146,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 14146,
+          "to": 15474,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 15474,
+          "to": 16611,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 16611,
+          "to": 17651,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 17651,
+          "to": 18216,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 18216,
+          "to": 18673,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 18673,
+          "to": 21248,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 21248,
+          "to": 21393,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 21393,
+          "to": 20535,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 20535,
+          "to": 20042,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 20042,
+          "to": 17874,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 17874,
+          "to": 16870,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 16870,
+          "to": 15510,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 15510,
+          "to": 13847,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 13847,
+          "to": 12486,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12486,
+          "to": 12413,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12413,
+          "to": 11407,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 11407,
+          "to": 9007,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 9007,
+          "to": 7588,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 30,
+        "edges": 29,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "For",
+      "pdf_code": "FOR",
+      "name": "Fornax",
+      "nodes_hip": [
+        9677,
+        13147,
+        14879
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            14879,
+            13147,
+            9677
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 14879,
+          "to": 13147,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 13147,
+          "to": 9677,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Gem",
+      "pdf_code": "GEM",
+      "name": "Gemini",
+      "nodes_hip": [
+        28734,
+        29655,
+        30343,
+        30883,
+        31681,
+        32246,
+        32362,
+        33018,
+        34088,
+        34693,
+        35350,
+        35550,
+        36046,
+        36850,
+        36962,
+        37740,
+        37826
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            32362,
+            35350,
+            35550,
+            34088,
+            31681
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            35550,
+            36962,
+            37740
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            36962,
+            37826
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            36962,
+            36046,
+            34693,
+            36850
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            34693,
+            33018
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            34693,
+            32246,
+            30883
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            32246,
+            30343,
+            29655,
+            28734
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 32362,
+          "to": 35350,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 35350,
+          "to": 35550,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 35550,
+          "to": 34088,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 34088,
+          "to": 31681,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 35550,
+          "to": 36962,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 36962,
+          "to": 37740,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 36962,
+          "to": 37826,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 36962,
+          "to": 36046,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 36046,
+          "to": 34693,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 34693,
+          "to": 36850,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 34693,
+          "to": 33018,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 34693,
+          "to": 32246,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 32246,
+          "to": 30883,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 32246,
+          "to": 30343,
+          "style": "normal",
+          "path_index": 7
+        },
+        {
+          "from": 30343,
+          "to": 29655,
+          "style": "normal",
+          "path_index": 7
+        },
+        {
+          "from": 29655,
+          "to": 28734,
+          "style": "normal",
+          "path_index": 7
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 17,
+        "edges": 16,
+        "paths": 7
+      }
+    },
+    {
+      "iau": "Gru",
+      "pdf_code": "GRU",
+      "name": "Grus",
+      "nodes_hip": [
+        108085,
+        109111,
+        109268,
+        110997,
+        112122,
+        112623,
+        113638
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            108085,
+            109111,
+            110997,
+            109268,
+            112122,
+            110997
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            112122,
+            112623,
+            113638
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 108085,
+          "to": 109111,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 109111,
+          "to": 110997,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110997,
+          "to": 109268,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 109268,
+          "to": 112122,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 112122,
+          "to": 110997,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 112122,
+          "to": 112623,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 112623,
+          "to": 113638,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 7,
+        "edges": 7,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Her",
+      "pdf_code": "HER",
+      "name": "Hercules",
+      "nodes_hip": [
+        77760,
+        79101,
+        79992,
+        80170,
+        80463,
+        80816,
+        81008,
+        81126,
+        81693,
+        81833,
+        83207,
+        84379,
+        84380,
+        85112,
+        85693,
+        86414,
+        86974,
+        87808,
+        87933,
+        88794
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            84379,
+            80816,
+            80170
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            80816,
+            81693,
+            83207
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            81693,
+            81833,
+            81126,
+            79992
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            81833,
+            84380,
+            85112,
+            87808,
+            86414
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            84380,
+            83207,
+            84379,
+            85693,
+            86974,
+            87933,
+            88794
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            77760,
+            79101,
+            79992
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            80170,
+            80463,
+            81008
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 84379,
+          "to": 80816,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80816,
+          "to": 80170,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80816,
+          "to": 81693,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 81693,
+          "to": 83207,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 81693,
+          "to": 81833,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 81833,
+          "to": 81126,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 81126,
+          "to": 79992,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 81833,
+          "to": 84380,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 84380,
+          "to": 85112,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 85112,
+          "to": 87808,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 87808,
+          "to": 86414,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 84380,
+          "to": 83207,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 83207,
+          "to": 84379,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 84379,
+          "to": 85693,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 85693,
+          "to": 86974,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 86974,
+          "to": 87933,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 87933,
+          "to": 88794,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 77760,
+          "to": 79101,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 79101,
+          "to": 79992,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 80170,
+          "to": 80463,
+          "style": "thin",
+          "path_index": 7
+        },
+        {
+          "from": 80463,
+          "to": 81008,
+          "style": "thin",
+          "path_index": 7
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 20,
+        "edges": 21,
+        "paths": 7
+      },
+      "custom_modified": true,
+      "custom_note": "α Her removed; neighbouring retained nodes contracted.",
+      "node_labels": {
+        "84345": "α Her / Rasalgethi removed"
+      }
+    },
+    {
+      "iau": "Hor",
+      "pdf_code": "HOR",
+      "name": "Horologium",
+      "nodes_hip": [
+        12225,
+        12484,
+        12653,
+        13884,
+        14240,
+        19747
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            19747,
+            12653,
+            12225,
+            12484,
+            14240,
+            13884
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 19747,
+          "to": 12653,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12653,
+          "to": 12225,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12225,
+          "to": 12484,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 12484,
+          "to": 14240,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 14240,
+          "to": 13884,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 5,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Hya",
+      "pdf_code": "HYA",
+      "name": "Hydra",
+      "nodes_hip": [
+        42313,
+        42402,
+        42799,
+        43109,
+        43234,
+        43813,
+        45336,
+        46390,
+        47431,
+        48356,
+        49402,
+        49841,
+        51069,
+        52943,
+        53740,
+        54682,
+        56343,
+        57936,
+        64962,
+        68895,
+        72571
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            43234,
+            42799,
+            42402,
+            42313,
+            43109,
+            43813,
+            45336,
+            47431,
+            46390,
+            48356,
+            49402,
+            49841,
+            51069,
+            52943,
+            53740
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            54682,
+            56343,
+            57936,
+            64962,
+            68895,
+            72571
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 43234,
+          "to": 42799,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 42799,
+          "to": 42402,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 42402,
+          "to": 42313,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 42313,
+          "to": 43109,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 43109,
+          "to": 43813,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 43813,
+          "to": 45336,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 45336,
+          "to": 47431,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 47431,
+          "to": 46390,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 46390,
+          "to": 48356,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 48356,
+          "to": 49402,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 49402,
+          "to": 49841,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 49841,
+          "to": 51069,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 51069,
+          "to": 52943,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 52943,
+          "to": 53740,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 54682,
+          "to": 56343,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 56343,
+          "to": 57936,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 57936,
+          "to": 64962,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 64962,
+          "to": 68895,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 68895,
+          "to": 72571,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 21,
+        "edges": 19,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Hyi",
+      "pdf_code": "HYI",
+      "name": "Hydrus",
+      "nodes_hip": [
+        2021,
+        9236,
+        11001,
+        17678
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            2021,
+            17678,
+            11001,
+            9236,
+            2021
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 2021,
+          "to": 17678,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 17678,
+          "to": 11001,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 11001,
+          "to": 9236,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 9236,
+          "to": 2021,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 4,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Ind",
+      "pdf_code": "IND",
+      "name": "Indus",
+      "nodes_hip": [
+        101772,
+        102333,
+        103227,
+        105319,
+        108431
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            103227,
+            102333,
+            101772,
+            105319,
+            108431,
+            103227
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 103227,
+          "to": 102333,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 102333,
+          "to": 101772,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 101772,
+          "to": 105319,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 105319,
+          "to": 108431,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 108431,
+          "to": 103227,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 5,
+        "edges": 5,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Lac",
+      "pdf_code": "LAC",
+      "name": "Lacerta",
+      "nodes_hip": [
+        109754,
+        109937,
+        110351,
+        110538,
+        110609,
+        111022,
+        111104,
+        111169,
+        111944
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            111022,
+            111169,
+            110538,
+            110609,
+            111022,
+            110351,
+            111104,
+            111944,
+            111022
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            111104,
+            109754,
+            109937
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 111022,
+          "to": 111169,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 111169,
+          "to": 110538,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110538,
+          "to": 110609,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110609,
+          "to": 111022,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 111022,
+          "to": 110351,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110351,
+          "to": 111104,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 111104,
+          "to": 111944,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 111944,
+          "to": 111022,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 111104,
+          "to": 109754,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 109754,
+          "to": 109937,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 9,
+        "edges": 10,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Leo",
+      "pdf_code": "LEO",
+      "name": "Leo",
+      "nodes_hip": [
+        47908,
+        48455,
+        49583,
+        49669,
+        50335,
+        50583,
+        54872,
+        54879,
+        57632
+      ],
+      "original_paths": [
+        {
+          "style": "bold",
+          "hip": [
+            49669,
+            49583,
+            50583,
+            50335,
+            48455,
+            47908
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            50583,
+            54872,
+            57632,
+            54879,
+            54872
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            54879,
+            49669
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            48455,
+            47908,
+            49583
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 49669,
+          "to": 49583,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 49583,
+          "to": 50583,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 50583,
+          "to": 50335,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 50335,
+          "to": 48455,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 48455,
+          "to": 47908,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 50583,
+          "to": 54872,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 54872,
+          "to": 57632,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 57632,
+          "to": 54879,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 54879,
+          "to": 54872,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 54879,
+          "to": 49669,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 47908,
+          "to": 49583,
+          "style": "normal",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 9,
+        "edges": 11,
+        "paths": 4
+      },
+      "custom_modified": true,
+      "custom_note": "κ, λ, ι, σ Leo removed; θ Leo connected to Regulus instead of η Leo.",
+      "node_labels": {
+        "49669": "α Leo / Regulus",
+        "54879": "θ Leo",
+        "49583": "η Leo",
+        "46146": "κ Leo removed",
+        "46750": "λ Leo removed",
+        "55642": "ι Leo removed",
+        "55434": "σ Leo removed"
+      }
+    },
+    {
+      "iau": "Lep",
+      "pdf_code": "LEP",
+      "name": "Lepus",
+      "nodes_hip": [
+        23685,
+        24305,
+        24845,
+        25606,
+        25985,
+        27072,
+        27654,
+        28910
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            23685,
+            24305,
+            25985,
+            25606,
+            23685
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            25985,
+            23685
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            24845,
+            24305
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            25606,
+            27072,
+            27654,
+            28910,
+            25985
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 23685,
+          "to": 24305,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 24305,
+          "to": 25985,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 25985,
+          "to": 25606,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 25606,
+          "to": 23685,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 25985,
+          "to": 23685,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 24845,
+          "to": 24305,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 25606,
+          "to": 27072,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 27072,
+          "to": 27654,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 27654,
+          "to": 28910,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 28910,
+          "to": 25985,
+          "style": "thin",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 8,
+        "edges": 10,
+        "paths": 4
+      },
+      "custom_modified": true,
+      "custom_note": "α Lep connected directly to δ Lep; θ, ζ, η Lep removed.",
+      "node_labels": {
+        "25985": "α Lep / Arneb",
+        "23685": "δ Lep",
+        "24327": "θ Lep removed",
+        "27288": "ζ Lep removed",
+        "28103": "η Lep removed"
+      }
+    },
+    {
+      "iau": "Lib",
+      "pdf_code": "LIB",
+      "name": "Libra",
+      "nodes_hip": [
+        72622,
+        73714,
+        74785,
+        76333,
+        76470,
+        76600
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            72622,
+            74785
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            72622,
+            73714
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            74785,
+            76333,
+            72622
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            76333,
+            76470,
+            76600
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 72622,
+          "to": 74785,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 72622,
+          "to": 73714,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 74785,
+          "to": 76333,
+          "style": "thin",
+          "path_index": 3
+        },
+        {
+          "from": 76333,
+          "to": 72622,
+          "style": "thin",
+          "path_index": 3
+        },
+        {
+          "from": 76333,
+          "to": 76470,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 76470,
+          "to": 76600,
+          "style": "thin",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 6,
+        "paths": 4
+      }
+    },
+    {
+      "iau": "LMi",
+      "pdf_code": "LMI",
+      "name": "Leo Minor",
+      "nodes_hip": [
+        46952,
+        49593,
+        51056,
+        51233,
+        53229
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            46952,
+            49593,
+            51233,
+            53229,
+            51056,
+            49593
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 46952,
+          "to": 49593,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 49593,
+          "to": 51233,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 51233,
+          "to": 53229,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 53229,
+          "to": 51056,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 51056,
+          "to": 49593,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 5,
+        "edges": 5,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Lup",
+      "pdf_code": "LUP",
+      "name": "Lupus",
+      "nodes_hip": [
+        71860,
+        73273,
+        74395,
+        75141,
+        75177,
+        75264,
+        76297,
+        77634,
+        78384
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            71860,
+            74395,
+            75264,
+            76297,
+            75141,
+            73273
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            76297,
+            78384,
+            75177,
+            77634,
+            78384,
+            74395
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 71860,
+          "to": 74395,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 74395,
+          "to": 75264,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 75264,
+          "to": 76297,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 76297,
+          "to": 75141,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 75141,
+          "to": 73273,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 76297,
+          "to": 78384,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 78384,
+          "to": 75177,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 75177,
+          "to": 77634,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 77634,
+          "to": 78384,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 78384,
+          "to": 74395,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 9,
+        "edges": 10,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Lyn",
+      "pdf_code": "LYN",
+      "name": "Lynx",
+      "nodes_hip": [
+        30060,
+        33449,
+        36145,
+        41075,
+        44248,
+        44700,
+        45688,
+        45860
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            45860,
+            45688,
+            44700,
+            44248,
+            41075,
+            36145,
+            33449,
+            30060
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 45860,
+          "to": 45688,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 45688,
+          "to": 44700,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 44700,
+          "to": 44248,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 44248,
+          "to": 41075,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 41075,
+          "to": 36145,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 36145,
+          "to": 33449,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 33449,
+          "to": 30060,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 8,
+        "edges": 7,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Lyr",
+      "pdf_code": "LYR",
+      "name": "Lyra",
+      "nodes_hip": [
+        91262,
+        91919,
+        91971,
+        92420,
+        92791,
+        93194
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            91262,
+            91919,
+            91971,
+            91262
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            91971,
+            92791,
+            93194,
+            92420,
+            91971
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 91262,
+          "to": 91919,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 91919,
+          "to": 91971,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 91971,
+          "to": 91262,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 91971,
+          "to": 92791,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 92791,
+          "to": 93194,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 93194,
+          "to": 92420,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 92420,
+          "to": 91971,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 7,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Men",
+      "pdf_code": "MEN",
+      "name": "Mensa",
+      "nodes_hip": [
+        23467,
+        25918,
+        29271
+      ],
+      "original_paths": [
+        {
+          "style": "thin",
+          "hip": [
+            29271,
+            23467,
+            25918
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 29271,
+          "to": 23467,
+          "style": "thin",
+          "path_index": 1
+        },
+        {
+          "from": 23467,
+          "to": 25918,
+          "style": "thin",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "Mensa changed to α–β–γ.",
+      "node_labels": {
+        "29271": "α Men",
+        "23467": "β Men",
+        "25918": "γ Men"
+      }
+    },
+    {
+      "iau": "Mic",
+      "pdf_code": "MIC",
+      "name": "Microscopium",
+      "nodes_hip": [
+        102831,
+        103738,
+        105140
+      ],
+      "original_paths": [
+        {
+          "style": "thin",
+          "hip": [
+            102831,
+            103738,
+            105140
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 102831,
+          "to": 103738,
+          "style": "thin",
+          "path_index": 1
+        },
+        {
+          "from": 103738,
+          "to": 105140,
+          "style": "thin",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "Microscopium changed to α–γ–ε.",
+      "node_labels": {
+        "102831": "α Mic",
+        "103738": "γ Mic",
+        "105140": "ε Mic"
+      }
+    },
+    {
+      "iau": "Mon",
+      "pdf_code": "MON",
+      "name": "Monoceros",
+      "nodes_hip": [
+        29651,
+        30419,
+        30867,
+        31216,
+        31978,
+        32578,
+        34769,
+        37447,
+        39863
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            31978,
+            31216,
+            30419,
+            32578,
+            31216
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            32578,
+            34769,
+            30867,
+            29651
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            34769,
+            39863,
+            37447
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 31978,
+          "to": 31216,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 31216,
+          "to": 30419,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 30419,
+          "to": 32578,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 32578,
+          "to": 31216,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 32578,
+          "to": 34769,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 34769,
+          "to": 30867,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 30867,
+          "to": 29651,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 34769,
+          "to": 39863,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 39863,
+          "to": 37447,
+          "style": "normal",
+          "path_index": 3
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 9,
+        "edges": 9,
+        "paths": 3
+      }
+    },
+    {
+      "iau": "Mus",
+      "pdf_code": "MUS",
+      "name": "Musca",
+      "nodes_hip": [
+        57363,
+        59929,
+        61199,
+        61585,
+        62322,
+        63613
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            57363,
+            59929,
+            61585,
+            62322,
+            63613,
+            61199,
+            61585
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 57363,
+          "to": 59929,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 59929,
+          "to": 61585,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 61585,
+          "to": 62322,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 62322,
+          "to": 63613,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 63613,
+          "to": 61199,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 61199,
+          "to": 61585,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 6,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Nor",
+      "pdf_code": "NOR",
+      "name": "Norma",
+      "nodes_hip": [
+        78639,
+        80000,
+        80582
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            78639,
+            80000,
+            80582,
+            78639
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 78639,
+          "to": 80000,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80000,
+          "to": 80582,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80582,
+          "to": 78639,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 3,
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "δ Nor removed; remaining figure contracted to triangle.",
+      "node_labels": {
+        "78914": "δ Nor removed"
+      }
+    },
+    {
+      "iau": "Oct",
+      "pdf_code": "OCT",
+      "name": "Octans",
+      "nodes_hip": [
+        70638,
+        107089,
+        112405
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            70638,
+            107089,
+            112405,
+            70638
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 70638,
+          "to": 107089,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 107089,
+          "to": 112405,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 112405,
+          "to": 70638,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 3,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Oph",
+      "pdf_code": "OPH",
+      "name": "Ophiuchus",
+      "nodes_hip": [
+        79593,
+        79882,
+        80343,
+        80473,
+        80569,
+        80628,
+        80883,
+        80894,
+        81377,
+        83000,
+        84012,
+        84970,
+        85423,
+        86032,
+        86742,
+        87108,
+        88048
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            86032,
+            83000,
+            80883,
+            79593,
+            79882,
+            80628,
+            81377,
+            83000
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            81377,
+            84012,
+            86742,
+            87108,
+            88048
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            86742,
+            86032
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            84012,
+            84970,
+            85423
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            81377,
+            80894,
+            80569,
+            80343,
+            80473
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 86032,
+          "to": 83000,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 83000,
+          "to": 80883,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80883,
+          "to": 79593,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 79593,
+          "to": 79882,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 79882,
+          "to": 80628,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80628,
+          "to": 81377,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 81377,
+          "to": 83000,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 81377,
+          "to": 84012,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 84012,
+          "to": 86742,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 86742,
+          "to": 87108,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 87108,
+          "to": 88048,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 86742,
+          "to": 86032,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 84012,
+          "to": 84970,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 84970,
+          "to": 85423,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 81377,
+          "to": 80894,
+          "style": "thin",
+          "path_index": 5
+        },
+        {
+          "from": 80894,
+          "to": 80569,
+          "style": "thin",
+          "path_index": 5
+        },
+        {
+          "from": 80569,
+          "to": 80343,
+          "style": "thin",
+          "path_index": 5
+        },
+        {
+          "from": 80343,
+          "to": 80473,
+          "style": "thin",
+          "path_index": 5
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 17,
+        "edges": 18,
+        "paths": 5
+      }
+    },
+    {
+      "iau": "Ori",
+      "pdf_code": "ORI",
+      "name": "Orion",
+      "nodes_hip": [
+        22449,
+        22509,
+        22549,
+        22797,
+        22845,
+        22957,
+        23123,
+        23607,
+        24436,
+        25281,
+        25336,
+        25930,
+        26207,
+        26311,
+        26727,
+        27366,
+        27913,
+        27989,
+        28614,
+        28716,
+        29038,
+        29426
+      ],
+      "original_paths": [
+        {
+          "style": "bold",
+          "hip": [
+            27989,
+            26727,
+            27366
+          ]
+        },
+        {
+          "style": "bold",
+          "hip": [
+            26727,
+            26311,
+            25930,
+            25336
+          ]
+        },
+        {
+          "style": "bold",
+          "hip": [
+            25930,
+            25281,
+            24436
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            27989,
+            25336,
+            26207,
+            27989
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            23607,
+            22957,
+            22845,
+            22509,
+            22449,
+            25336
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            22449,
+            22549,
+            22797,
+            23123
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            27989,
+            28614,
+            29038
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            29426,
+            28716,
+            27913,
+            29038
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 27989,
+          "to": 26727,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 26727,
+          "to": 27366,
+          "style": "bold",
+          "path_index": 1
+        },
+        {
+          "from": 26727,
+          "to": 26311,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 26311,
+          "to": 25930,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 25930,
+          "to": 25336,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 25930,
+          "to": 25281,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 25281,
+          "to": 24436,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 27989,
+          "to": 25336,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 25336,
+          "to": 26207,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 26207,
+          "to": 27989,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 23607,
+          "to": 22957,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 22957,
+          "to": 22845,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 22845,
+          "to": 22509,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 22509,
+          "to": 22449,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 22449,
+          "to": 25336,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 22449,
+          "to": 22549,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 22549,
+          "to": 22797,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 22797,
+          "to": 23123,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 27989,
+          "to": 28614,
+          "style": "thin",
+          "path_index": 7
+        },
+        {
+          "from": 28614,
+          "to": 29038,
+          "style": "thin",
+          "path_index": 7
+        },
+        {
+          "from": 29426,
+          "to": 28716,
+          "style": "normal",
+          "path_index": 8
+        },
+        {
+          "from": 28716,
+          "to": 27913,
+          "style": "normal",
+          "path_index": 8
+        },
+        {
+          "from": 27913,
+          "to": 29038,
+          "style": "normal",
+          "path_index": 8
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 22,
+        "edges": 23,
+        "paths": 8
+      }
+    },
+    {
+      "iau": "Pav",
+      "pdf_code": "PAV",
+      "name": "Pavo",
+      "nodes_hip": [
+        86929,
+        88866,
+        90098,
+        91792,
+        92609,
+        93015,
+        98495,
+        99240,
+        100751,
+        102395,
+        105858
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            100751,
+            99240,
+            102395
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            100751,
+            105858,
+            102395
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            91792,
+            99240,
+            98495
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            99240,
+            93015,
+            88866,
+            86929
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            88866,
+            90098,
+            92609,
+            99240
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 100751,
+          "to": 99240,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 99240,
+          "to": 102395,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 100751,
+          "to": 105858,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 105858,
+          "to": 102395,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 91792,
+          "to": 99240,
+          "style": "thin",
+          "path_index": 3
+        },
+        {
+          "from": 99240,
+          "to": 98495,
+          "style": "thin",
+          "path_index": 3
+        },
+        {
+          "from": 99240,
+          "to": 93015,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 93015,
+          "to": 88866,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 88866,
+          "to": 86929,
+          "style": "thin",
+          "path_index": 4
+        },
+        {
+          "from": 88866,
+          "to": 90098,
+          "style": "thin",
+          "path_index": 5
+        },
+        {
+          "from": 90098,
+          "to": 92609,
+          "style": "thin",
+          "path_index": 5
+        },
+        {
+          "from": 92609,
+          "to": 99240,
+          "style": "thin",
+          "path_index": 5
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 11,
+        "edges": 12,
+        "paths": 5
+      }
+    },
+    {
+      "iau": "Peg",
+      "pdf_code": "PEG",
+      "name": "Pegasus",
+      "nodes_hip": [
+        677,
+        1067,
+        107315,
+        107354,
+        109176,
+        109410,
+        109427,
+        112029,
+        112158,
+        112440,
+        112748,
+        113881,
+        113963
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            109410,
+            112158,
+            113881,
+            112748,
+            112440,
+            109176,
+            107354
+          ]
+        },
+        {
+          "style": "bold",
+          "hip": [
+            677,
+            113881,
+            113963,
+            1067,
+            677
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            107315,
+            109427,
+            112029,
+            113963
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 109410,
+          "to": 112158,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 112158,
+          "to": 113881,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 113881,
+          "to": 112748,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 112748,
+          "to": 112440,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 112440,
+          "to": 109176,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 109176,
+          "to": 107354,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 677,
+          "to": 113881,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 113881,
+          "to": 113963,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 113963,
+          "to": 1067,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 1067,
+          "to": 677,
+          "style": "bold",
+          "path_index": 2
+        },
+        {
+          "from": 107315,
+          "to": 109427,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 109427,
+          "to": 112029,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 112029,
+          "to": 113963,
+          "style": "normal",
+          "path_index": 3
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 13,
+        "edges": 13,
+        "paths": 3
+      }
+    },
+    {
+      "iau": "Per",
+      "pdf_code": "PER",
+      "name": "Perseus",
+      "nodes_hip": [
+        8068,
+        12777,
+        13268,
+        13531,
+        14328,
+        14354,
+        14576,
+        14632,
+        14668,
+        15863,
+        17358,
+        17448,
+        18246,
+        18532,
+        18614,
+        19167,
+        19343,
+        19812,
+        20070
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            17448,
+            18246,
+            18614,
+            18532,
+            17358,
+            15863,
+            14328,
+            13268,
+            13531,
+            14328
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            13531,
+            14632,
+            15863
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            14632,
+            14668,
+            14576,
+            18532
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            14576,
+            14354
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            17358,
+            19343,
+            19812,
+            20070,
+            19167
+          ]
+        },
+        {
+          "style": "thin",
+          "hip": [
+            14632,
+            12777,
+            8068
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 17448,
+          "to": 18246,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 18246,
+          "to": 18614,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 18614,
+          "to": 18532,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 18532,
+          "to": 17358,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 17358,
+          "to": 15863,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 15863,
+          "to": 14328,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 14328,
+          "to": 13268,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 13268,
+          "to": 13531,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 13531,
+          "to": 14328,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 13531,
+          "to": 14632,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 14632,
+          "to": 15863,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 14632,
+          "to": 14668,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 14668,
+          "to": 14576,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 14576,
+          "to": 18532,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 14576,
+          "to": 14354,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 17358,
+          "to": 19343,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 19343,
+          "to": 19812,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 19812,
+          "to": 20070,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 20070,
+          "to": 19167,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 14632,
+          "to": 12777,
+          "style": "thin",
+          "path_index": 6
+        },
+        {
+          "from": 12777,
+          "to": 8068,
+          "style": "thin",
+          "path_index": 6
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 19,
+        "edges": 21,
+        "paths": 6
+      }
+    },
+    {
+      "iau": "Phe",
+      "pdf_code": "PHE",
+      "name": "Phoenix",
+      "nodes_hip": [
+        765,
+        2081,
+        5165,
+        5348,
+        6867,
+        7083
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            2081,
+            5165,
+            6867
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            2081,
+            765,
+            5165,
+            5348,
+            7083,
+            6867
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 2081,
+          "to": 5165,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 5165,
+          "to": 6867,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 2081,
+          "to": 765,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 765,
+          "to": 5165,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 5165,
+          "to": 5348,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 5348,
+          "to": 7083,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 7083,
+          "to": 6867,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 7,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Pic",
+      "pdf_code": "PIC",
+      "name": "Pictor",
+      "nodes_hip": [
+        27321,
+        27530,
+        32607
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            32607,
+            27530,
+            27321
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 32607,
+          "to": 27530,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 27530,
+          "to": 27321,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "PsA",
+      "pdf_code": "PSA",
+      "name": "Piscis Austrinus",
+      "nodes_hip": [
+        107380,
+        107608,
+        109285,
+        111188,
+        111954,
+        112948,
+        113246,
+        113368
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            113368,
+            113246,
+            112948,
+            111188,
+            109285,
+            107380,
+            107608,
+            109285,
+            111954,
+            113368
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 113368,
+          "to": 113246,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 113246,
+          "to": 112948,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 112948,
+          "to": 111188,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 111188,
+          "to": 109285,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 109285,
+          "to": 107380,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 107380,
+          "to": 107608,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 107608,
+          "to": 109285,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 109285,
+          "to": 111954,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 111954,
+          "to": 113368,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 8,
+        "edges": 9,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Psc",
+      "pdf_code": "PSC",
+      "name": "Pisces",
+      "nodes_hip": [
+        3786,
+        4906,
+        5586,
+        5742,
+        6193,
+        7097,
+        7884,
+        8198,
+        9487,
+        114971,
+        115738,
+        115830,
+        116771,
+        116928,
+        118268
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            5742,
+            6193,
+            5586,
+            5742,
+            7097,
+            8198,
+            9487,
+            7884,
+            4906,
+            3786,
+            118268,
+            116771,
+            115830,
+            114971,
+            115738,
+            116928,
+            116771
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 5742,
+          "to": 6193,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 6193,
+          "to": 5586,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 5586,
+          "to": 5742,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 5742,
+          "to": 7097,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 7097,
+          "to": 8198,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 8198,
+          "to": 9487,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 9487,
+          "to": 7884,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 7884,
+          "to": 4906,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 4906,
+          "to": 3786,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 3786,
+          "to": 118268,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 118268,
+          "to": 116771,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 116771,
+          "to": 115830,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 115830,
+          "to": 114971,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 114971,
+          "to": 115738,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 115738,
+          "to": 116928,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 116928,
+          "to": 116771,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 15,
+        "edges": 16,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Pup",
+      "pdf_code": "PUP",
+      "name": "Puppis",
+      "nodes_hip": [
+        30438,
+        31685,
+        35264,
+        36917,
+        37229,
+        37677,
+        38070,
+        38170,
+        39429,
+        39757,
+        39953
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            39953,
+            39429,
+            39757,
+            38170,
+            37229,
+            36917,
+            35264,
+            31685,
+            30438
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            36917,
+            37677,
+            38070,
+            38170
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 39953,
+          "to": 39429,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 39429,
+          "to": 39757,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 39757,
+          "to": 38170,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 38170,
+          "to": 37229,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 37229,
+          "to": 36917,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 36917,
+          "to": 35264,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 35264,
+          "to": 31685,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 31685,
+          "to": 30438,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 36917,
+          "to": 37677,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 37677,
+          "to": 38070,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 38070,
+          "to": 38170,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 11,
+        "edges": 11,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Pyx",
+      "pdf_code": "PYX",
+      "name": "Pyxis",
+      "nodes_hip": [
+        39429,
+        42515,
+        42828,
+        43409
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            39429,
+            42515,
+            42828,
+            43409
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 39429,
+          "to": 42515,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 42515,
+          "to": 42828,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 42828,
+          "to": 43409,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 3,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Ret",
+      "pdf_code": "RET",
+      "name": "Reticulum",
+      "nodes_hip": [
+        17440,
+        18597,
+        19780,
+        19921
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            19780,
+            17440,
+            18597,
+            19921,
+            19780
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 19780,
+          "to": 17440,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 17440,
+          "to": 18597,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 18597,
+          "to": 19921,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 19921,
+          "to": 19780,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 4,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Scl",
+      "pdf_code": "SCL",
+      "name": "Sculptor",
+      "nodes_hip": [
+        4577,
+        115102,
+        116231,
+        117452
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            4577,
+            117452,
+            115102,
+            116231
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 4577,
+          "to": 117452,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 117452,
+          "to": 115102,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 115102,
+          "to": 116231,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 3,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Sco",
+      "pdf_code": "SCO",
+      "name": "Scorpius",
+      "nodes_hip": [
+        78265,
+        78401,
+        78820,
+        80763,
+        81266,
+        82396,
+        82514,
+        82729,
+        84143,
+        85696,
+        85927,
+        86228,
+        86670,
+        87073,
+        87261
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            80763,
+            78820
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            80763,
+            78401
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            80763,
+            78265
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            80763,
+            81266,
+            82396,
+            82514,
+            82729,
+            84143,
+            86228,
+            87073,
+            86670,
+            85696,
+            85927,
+            87261
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 80763,
+          "to": 78820,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 80763,
+          "to": 78401,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 80763,
+          "to": 78265,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 80763,
+          "to": 81266,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 81266,
+          "to": 82396,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 82396,
+          "to": 82514,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 82514,
+          "to": 82729,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 82729,
+          "to": 84143,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 84143,
+          "to": 86228,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 86228,
+          "to": 87073,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 87073,
+          "to": 86670,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 86670,
+          "to": 85696,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 85696,
+          "to": 85927,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 85927,
+          "to": 87261,
+          "style": "normal",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 15,
+        "edges": 14,
+        "paths": 4
+      },
+      "custom_modified": true,
+      "custom_note": "Antares is the fork base to β, δ, π, and the body/tail chain. ρ and ν are not used.",
+      "node_labels": {
+        "80763": "α Sco / Antares",
+        "78820": "β Sco",
+        "78401": "δ Sco",
+        "78265": "π Sco"
+      }
+    },
+    {
+      "iau": "Sct",
+      "pdf_code": "SCT",
+      "name": "Scutum",
+      "nodes_hip": [
+        90595,
+        91117,
+        91726,
+        92175
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            92175,
+            91117,
+            90595,
+            91726,
+            92175
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 92175,
+          "to": 91117,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 91117,
+          "to": 90595,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 90595,
+          "to": 91726,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 91726,
+          "to": 92175,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 4,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Ser",
+      "pdf_code": "SER",
+      "name": "Serpens",
+      "nodes_hip": [
+        76276,
+        76852,
+        77070,
+        77233,
+        77450,
+        77516,
+        77622,
+        78072,
+        79593,
+        84012,
+        86263,
+        88048,
+        89962,
+        92946
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            77233,
+            78072,
+            77450,
+            76852,
+            77233,
+            76276,
+            77070,
+            77622,
+            77516,
+            79593
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            84012,
+            86263,
+            88048,
+            89962,
+            92946
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 77233,
+          "to": 78072,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 78072,
+          "to": 77450,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 77450,
+          "to": 76852,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 76852,
+          "to": 77233,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 77233,
+          "to": 76276,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 76276,
+          "to": 77070,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 77070,
+          "to": 77622,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 77622,
+          "to": 77516,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 77516,
+          "to": 79593,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 84012,
+          "to": 86263,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 86263,
+          "to": 88048,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 88048,
+          "to": 89962,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 89962,
+          "to": 92946,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 14,
+        "edges": 13,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Sex",
+      "pdf_code": "SEX",
+      "name": "Sextans",
+      "nodes_hip": [
+        48437,
+        49641,
+        51362,
+        51437
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            48437,
+            49641,
+            51437,
+            51362
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 48437,
+          "to": 49641,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 49641,
+          "to": 51437,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 51437,
+          "to": 51362,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 3,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Sge",
+      "pdf_code": "SGE",
+      "name": "Sagitta",
+      "nodes_hip": [
+        96757,
+        96837,
+        97365,
+        98337
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            98337,
+            97365,
+            96757
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            97365,
+            96837
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 98337,
+          "to": 97365,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 97365,
+          "to": 96757,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 97365,
+          "to": 96837,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 3,
+        "paths": 2
+      }
+    },
+    {
+      "iau": "Sgr",
+      "pdf_code": "SGR",
+      "name": "Sagittarius",
+      "nodes_hip": [
+        88635,
+        89642,
+        89931,
+        90185,
+        90496,
+        92041,
+        92855,
+        93506,
+        93864
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            90185,
+            88635,
+            89931,
+            90185
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            89931,
+            90496,
+            92041,
+            89931
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            92041,
+            92855,
+            93864,
+            93506,
+            92041
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            93506,
+            90185,
+            89642
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 90185,
+          "to": 88635,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 88635,
+          "to": 89931,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 89931,
+          "to": 90185,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 89931,
+          "to": 90496,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 90496,
+          "to": 92041,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 92041,
+          "to": 89931,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 92041,
+          "to": 92855,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 92855,
+          "to": 93864,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 93864,
+          "to": 93506,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 93506,
+          "to": 92041,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 93506,
+          "to": 90185,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 90185,
+          "to": 89642,
+          "style": "normal",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 9,
+        "edges": 12,
+        "paths": 4
+      },
+      "custom_modified": true,
+      "custom_note": "Only the major Sagittarius graph retained; minor detached/extra paths removed."
+    },
+    {
+      "iau": "Tau",
+      "pdf_code": "TAU",
+      "name": "Taurus",
+      "nodes_hip": [
+        16083,
+        18724,
+        20205,
+        20455,
+        20889,
+        20894,
+        21421,
+        25428,
+        26451
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            26451,
+            21421,
+            20894,
+            20205,
+            20455,
+            20889,
+            25428
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            20205,
+            18724,
+            16083
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 26451,
+          "to": 21421,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 21421,
+          "to": 20894,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 20894,
+          "to": 20205,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 20205,
+          "to": 20455,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 20455,
+          "to": 20889,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 20889,
+          "to": 25428,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 20205,
+          "to": 18724,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 18724,
+          "to": 16083,
+          "style": "normal",
+          "path_index": 2
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 9,
+        "edges": 8,
+        "paths": 2
+      },
+      "custom_modified": true,
+      "custom_note": "Only the major Taurus graph retained; omicron/minor detached strokes removed."
+    },
+    {
+      "iau": "Tel",
+      "pdf_code": "TEL",
+      "name": "Telescopium",
+      "nodes_hip": [
+        89112,
+        90422,
+        90568
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            89112,
+            90422,
+            90568
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 89112,
+          "to": 90422,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 90422,
+          "to": 90568,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 2,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "TrA",
+      "pdf_code": "TRA",
+      "name": "Triangulum Australe",
+      "nodes_hip": [
+        74946,
+        76440,
+        77952,
+        82273
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            82273,
+            77952,
+            76440,
+            74946,
+            82273
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 82273,
+          "to": 77952,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 77952,
+          "to": 76440,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 76440,
+          "to": 74946,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 74946,
+          "to": 82273,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 4,
+        "edges": 4,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Tri",
+      "pdf_code": "TRI",
+      "name": "Triangulum",
+      "nodes_hip": [
+        8796,
+        10064,
+        10670
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            8796,
+            10064,
+            10670,
+            8796
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 8796,
+          "to": 10064,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 10064,
+          "to": 10670,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 10670,
+          "to": 8796,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 3,
+        "edges": 3,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Tuc",
+      "pdf_code": "TUC",
+      "name": "Tucana",
+      "nodes_hip": [
+        1599,
+        2484,
+        110130,
+        110838,
+        114996,
+        118322
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            2484,
+            1599,
+            118322,
+            110838,
+            110130,
+            114996,
+            2484
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 2484,
+          "to": 1599,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 1599,
+          "to": 118322,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 118322,
+          "to": 110838,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110838,
+          "to": 110130,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 110130,
+          "to": 114996,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 114996,
+          "to": 2484,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 6,
+        "edges": 6,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "UMa",
+      "pdf_code": "UMA",
+      "name": "Ursa Major",
+      "nodes_hip": [
+        41704,
+        44127,
+        44471,
+        46733,
+        46853,
+        48319,
+        50372,
+        50801,
+        53910,
+        54061,
+        54539,
+        55203,
+        55219,
+        57399,
+        58001,
+        59774,
+        62956,
+        65378,
+        67301
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            58001,
+            57399,
+            54539,
+            50801,
+            50372
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            57399,
+            55219,
+            55203
+          ]
+        },
+        {
+          "style": "bold",
+          "hip": [
+            59774,
+            54061,
+            53910,
+            58001,
+            59774,
+            62956,
+            65378,
+            67301
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            54061,
+            46733,
+            48319
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            46733,
+            41704,
+            48319,
+            53910
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            48319,
+            46853,
+            44471,
+            44127
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 58001,
+          "to": 57399,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 57399,
+          "to": 54539,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 54539,
+          "to": 50801,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 50801,
+          "to": 50372,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 57399,
+          "to": 55219,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 55219,
+          "to": 55203,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 59774,
+          "to": 54061,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 54061,
+          "to": 53910,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 53910,
+          "to": 58001,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 58001,
+          "to": 59774,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 59774,
+          "to": 62956,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 62956,
+          "to": 65378,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 65378,
+          "to": 67301,
+          "style": "bold",
+          "path_index": 3
+        },
+        {
+          "from": 54061,
+          "to": 46733,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 46733,
+          "to": 48319,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 46733,
+          "to": 41704,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 41704,
+          "to": 48319,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 48319,
+          "to": 53910,
+          "style": "normal",
+          "path_index": 5
+        },
+        {
+          "from": 48319,
+          "to": 46853,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 46853,
+          "to": 44471,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 44471,
+          "to": 44127,
+          "style": "normal",
+          "path_index": 6
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 19,
+        "edges": 21,
+        "paths": 6
+      }
+    },
+    {
+      "iau": "UMi",
+      "pdf_code": "UMI",
+      "name": "Ursa Minor",
+      "nodes_hip": [
+        11767,
+        72607,
+        75097,
+        77055,
+        79822,
+        82080,
+        85822
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            11767,
+            85822,
+            82080,
+            77055,
+            79822,
+            75097,
+            72607,
+            77055
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 11767,
+          "to": 85822,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 85822,
+          "to": 82080,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 82080,
+          "to": 77055,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 77055,
+          "to": 79822,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 79822,
+          "to": 75097,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 75097,
+          "to": 72607,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 72607,
+          "to": 77055,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 7,
+        "edges": 7,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Vel",
+      "pdf_code": "VEL",
+      "name": "Vela",
+      "nodes_hip": [
+        39953,
+        42913,
+        44816,
+        45941,
+        46651,
+        48774,
+        50191,
+        52727
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            42913,
+            39953,
+            44816,
+            46651,
+            50191,
+            52727,
+            48774,
+            45941,
+            42913
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 42913,
+          "to": 39953,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 39953,
+          "to": 44816,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 44816,
+          "to": 46651,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 46651,
+          "to": 50191,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 50191,
+          "to": 52727,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 52727,
+          "to": 48774,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 48774,
+          "to": 45941,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 45941,
+          "to": 42913,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 8,
+        "edges": 8,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Vir",
+      "pdf_code": "VIR",
+      "name": "Virgo",
+      "nodes_hip": [
+        57380,
+        57757,
+        58948,
+        60129,
+        61941,
+        63090,
+        63608,
+        64238,
+        65474,
+        66249,
+        68520,
+        69701,
+        71957,
+        72220
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            60129,
+            58948,
+            57380,
+            57757,
+            60129,
+            61941,
+            63090,
+            63608
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            61941,
+            64238,
+            65474
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            61941,
+            66249,
+            68520,
+            72220
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            66249,
+            69701,
+            71957
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 60129,
+          "to": 58948,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 58948,
+          "to": 57380,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 57380,
+          "to": 57757,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 57757,
+          "to": 60129,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 60129,
+          "to": 61941,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 61941,
+          "to": 63090,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 63090,
+          "to": 63608,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 61941,
+          "to": 64238,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 64238,
+          "to": 65474,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 61941,
+          "to": 66249,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 66249,
+          "to": 68520,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 68520,
+          "to": 72220,
+          "style": "normal",
+          "path_index": 3
+        },
+        {
+          "from": 66249,
+          "to": 69701,
+          "style": "normal",
+          "path_index": 4
+        },
+        {
+          "from": 69701,
+          "to": 71957,
+          "style": "normal",
+          "path_index": 4
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 14,
+        "edges": 14,
+        "paths": 4
+      }
+    },
+    {
+      "iau": "Vol",
+      "pdf_code": "VOL",
+      "name": "Volans",
+      "nodes_hip": [
+        34481,
+        35228,
+        39794,
+        41312,
+        44382
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            44382,
+            41312,
+            39794,
+            35228,
+            34481,
+            39794,
+            44382
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 44382,
+          "to": 41312,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 41312,
+          "to": 39794,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 39794,
+          "to": 35228,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 35228,
+          "to": 34481,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 34481,
+          "to": 39794,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 39794,
+          "to": 44382,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 5,
+        "edges": 6,
+        "paths": 1
+      }
+    },
+    {
+      "iau": "Vul",
+      "pdf_code": "VUL",
+      "name": "Vulpecula",
+      "nodes_hip": [
+        95771,
+        97886
+      ],
+      "original_paths": [
+        {
+          "style": "normal",
+          "hip": [
+            95771,
+            97886
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": 95771,
+          "to": 97886,
+          "style": "normal",
+          "path_index": 1
+        }
+      ],
+      "zero_length_pairs_skipped_in_edges": [],
+      "counts": {
+        "nodes": 2,
+        "edges": 1,
+        "paths": 1
+      }
+    }
+  ]
+}

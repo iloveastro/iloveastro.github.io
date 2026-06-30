@@ -990,12 +990,13 @@
       atlasCanvas.addEventListener('click', selectAtlasObject);
       atlasCanvas.addEventListener('dblclick', openAtlasStarMapZoom);
       redrawAtlasMap();
-      Promise.all([loadSkyData(), loadConstellationBounds().catch(() => []), loadDsoCoordinateData().catch(() => new Map())]).then(() => { buildSkyDsoObjects(); redrawAtlasMap(); });
+      Promise.all([loadSkyData(), loadSkyConstellationLines(), loadConstellationBounds().catch(() => []), loadDsoCoordinateData().catch(() => new Map())]).then(() => { buildSkyDsoObjects(); redrawAtlasMap(); });
     }
   }
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1131,6 +1132,7 @@
       const decI = pickColumn(headers, ['dec', 'DEC', 'declination']);
       const magI = pickColumn(headers, ['mag', 'MAG', 'magnitude']);
       const conI = pickColumn(headers, ['con', 'constellation', 'Constellation']);
+      const hipI = pickColumn(headers, ['hip', 'HIP', 'hipparcos', 'hipparcos_id']);
       const nameI = pickColumn(headers, ['proper', 'name', 'star_name']);
       const bayerI = pickColumn(headers, ['bayer', 'Bayer']);
       const bfI = pickColumn(headers, ['bf', 'bayer_flamsteed', 'Bayer Flamsteed']);
@@ -1140,14 +1142,21 @@
         if (!lines[i].trim()) continue;
         const row = parseCsvLine(lines[i]);
         const ra = sexaToDeg(row[raI], true), dec = sexaToDeg(row[decI], false), mag = parseFloat(row[magI]);
-        if (!Number.isFinite(ra) || !Number.isFinite(dec) || !Number.isFinite(mag) || mag > 6) continue;
+        if (!Number.isFinite(ra) || !Number.isFinite(dec) || !Number.isFinite(mag) || mag > 6.5) continue;
         let con = String(row[conI] || '').trim();
         let constellation = CON_ABBR_TO_NAME.get(compact(con)) || DATA.constellations.find(c => compact(c.name) === compact(con))?.name;
         if (!constellation) continue;
+        const hip = hipI >= 0 ? parseInt(row[hipI], 10) : NaN;
         const v = vecFromRaDec(ra, dec);
-        raw.push({ ra, dec, mag, constellation, name: nameI >= 0 ? row[nameI] : '', bayer: bayerI >= 0 ? row[bayerI] : '', bf: bfI >= 0 ? row[bfI] : '', v });
+        raw.push({ ra, dec, mag, hip: Number.isFinite(hip) ? hip : null, constellation, name: nameI >= 0 ? row[nameI] : '', bayer: bayerI >= 0 ? row[bayerI] : '', bf: bfI >= 0 ? row[bfI] : '', v });
       }
       skyStars = raw.sort((a, b) => a.mag - b.mag);
+      skyHipByNumber = new Map();
+      skyStars.forEach(star => {
+        if (Number.isFinite(star.hip) && !skyHipByNumber.has(star.hip)) skyHipByNumber.set(star.hip, star);
+      });
+      if (!skyHipByNumber.size) console.warn('iloveastro: HYG sky data did not expose HIP identifiers; constellation line overlay cannot be drawn.');
+
       const sums = new Map();
       skyStars.forEach(s => {
         const cur = sums.get(s.constellation) || { x: 0, y: 0, z: 0, n: 0 };
@@ -1479,183 +1488,64 @@
     return starsForConstellation(name, magLimit);
   }
 
-  // Main constellation stick-figure lines for the Sky Map.
-  // These favour the dominant memorisable stick figure.  They are deliberately
-  // a curated learning overlay, not an attempt to reproduce every small atlas spur.
-  const SKY_ASTERISM_LINES = {
-    Andromeda: [['Alp','Bet'], ['Bet','Gam'], ['Bet','Mu'], ['Mu','Nu']],
-    Antlia: [['Alp','The'], ['The','Eps']],
-    Apus: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del'], ['Del','Gam']],
-    Aquarius: [['Alp','Bet'], ['Alp','Gam'], ['Gam','Zet'], ['Zet','Eta'], ['Bet','Del'], ['Del','Lam'], ['Lam','Phi']],
-    Aquila: [['Bet','Alp'], ['Alp','Gam'], ['Alp','Del'], ['Del','Lam'], ['Alp','Zet']],
-    Ara: [['Bet','Alp'], ['Alp','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Bet']],
-    Aries: [['Alp','Bet'], ['Bet','Gam']],
-    Auriga: [['Alp','Bet'], ['Bet','The'], ['The','Iot'], ['Iot','Elnath'], ['Elnath','Alp']],
-    Boötes: [['Alp','Eps'], ['Eps','Del'], ['Del','Bet'], ['Bet','Gam'], ['Gam','Alp'], ['Alp','Eta'], ['Alp','Zet']],
-    Caelum: [['Alp','Bet'], ['Bet','Gam']],
-    Camelopardalis: [['Alp','Bet'], ['Bet','Gam']],
-    Cancer: [['Alp','Del'], ['Del','Gam'], ['Gam','Iot'], ['Del','Bet']],
-    'Canes Venatici': [['Alp','Bet']],
-    'Canis Major': [['Alp','Bet'], ['Alp','Eps'], ['Eps','Eta'], ['Eps','Del'], ['Del','Gam'], ['Alp','Gam']],
-    'Canis Minor': [['Alp','Bet']],
-    Capricornus: [['Alp','Bet'], ['Bet','Psi'], ['Psi','Ome'], ['Ome','Del'], ['Del','Gam'], ['Gam','Iot'], ['Iot','The'], ['The','Zet'], ['Zet','Alp']],
-    Carina: [['Alp','Bet'], ['Bet','Eps'], ['Eps','Iot'], ['Iot','Alp'], ['Eps','The']],
-    Cassiopeia: [['Bet','Alp'], ['Alp','Gam'], ['Gam','Del'], ['Del','Eps']],
-    Centaurus: [['Alp','Bet'], ['Bet','Eps'], ['Eps','Del'], ['Del','Gam'], ['Gam','Bet'], ['Eps','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Iot'], ['Iot','Kap']],
-    Cepheus: [['Iot','Gam'], ['Gam','Bet'], ['Bet','Alp'], ['Alp','Iot'], ['Iot','Del'], ['Del','Alp']],
-    Cetus: [['Alp','Gam'], ['Gam','Omi'], ['Omi','Bet'], ['Bet','Tau'], ['Tau','Eta'], ['Eta','Alp'], ['Gam','Del']],
-    Chamaeleon: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del'], ['Del','Alp']],
-    Circinus: [['Alp','Bet'], ['Bet','Gam']],
-    Columba: [['Alp','Bet'], ['Bet','Del'], ['Del','Eps'], ['Eps','Alp']],
-    'Coma Berenices': [['Alp','Bet'], ['Bet','Gam']],
-    'Corona Australis': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Eps']],
-    'Corona Borealis': [['The','Bet'], ['Bet','Alp'], ['Alp','Gam'], ['Gam','Del'], ['Del','Eps']],
-    Corvus: [['Gam','Eps'], ['Eps','Bet'], ['Bet','Del'], ['Del','Gam']],
-    Crater: [['Del','Alp'], ['Alp','Bet'], ['Bet','The'], ['The','Eta'], ['Eta','Gam'], ['Gam','Del'], ['Del','Zet'], ['Zet','Eps'], ['Eps','Gam']],
-    Crux: [['Alp','Gam'], ['Bet','Del']],
-    Cygnus: [['Alp','Gam'], ['Gam','Bet'], ['Gam','Del'], ['Gam','Eps'], ['Eps','Zet'], ['Del','Iot']],
-    Delphinus: [['Bet','Alp'], ['Alp','Del'], ['Del','Gam'], ['Gam','Bet'], ['Gam','Eps']],
-    Dorado: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del']],
-    Draco: [['Gam','Bet'], ['Bet','Nu'], ['Nu','Xi'], ['Xi','Gam'], ['Xi','Del'], ['Del','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Iot'], ['Iot','Kap']],
-    Equuleus: [['Alp','Del'], ['Del','Gam'], ['Gam','Bet']],
-    Eridanus: [['Bet','Gam'], ['Gam','Pi'], ['Pi','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Eta'], ['Eta','The'], ['The','Iot'], ['Iot','Kap'], ['Kap','Phi'], ['Phi','Chi'], ['Chi','Tau'], ['Tau','Ups'], ['Ups','Alp']],
-    Fornax: [['Alp','Bet'], ['Bet','Nu']],
-    Gemini: [['Alp','Bet'], ['Alp','Tau'], ['Tau','Eps'], ['Eps','Mu'], ['Mu','Eta'], ['Bet','Del'], ['Del','Zet'], ['Zet','Gam'], ['Gam','Kap'], ['Tau','Del'], ['Mu','Iot']],
-    Grus: [['Gam','Bet'], ['Bet','Alp'], ['Bet','Del'], ['Del','The'], ['The','Gam']],
-    Hercules: [['Pi','Eta'], ['Eta','Zet'], ['Zet','Eps'], ['Eps','Pi'], ['Pi','Alp'], ['Eps','Del'], ['Zet','Bet'], ['Eta','The']],
-    Horologium: [['Alp','Bet'], ['Bet','Gam']],
-    Hydra: [['Zet','Eps'], ['Eps','Del'], ['Del','Sig'], ['Sig','Alp'], ['Alp','Nu'], ['Nu','Mu'], ['Mu','Lam'], ['Lam','Xi'], ['Xi','Bet'], ['Bet','Gam']],
-    Hydrus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
-    Indus: [['Alp','Bet'], ['Bet','The'], ['The','Alp']],
-    Lacerta: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
-    Leo: [['Alp','Eta'], ['Eta','Gam'], ['Gam','Zet'], ['Zet','Mu'], ['Mu','Eps'], ['Gam','Del'], ['Del','Bet'], ['Bet','The'], ['The','Alp']],
-    'Leo Minor': [['Alp','Bet'], ['Bet','Del']],
-    Lepus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp'], ['Alp','Mu']],
-    Libra: [['Alp','Bet'], ['Bet','Gam'], ['Bet','Sig'], ['Bet','Ups']],
-    Lupus: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Eta']],
-    Lynx: [['Alp','38'], ['38','10']],
-    Lyra: [['Alp','Zet'], ['Zet','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Zet']],
-    Mensa: [['Alp','Gam']],
-    Microscopium: [['Alp','Gam'], ['Gam','Eps']],
-    Monoceros: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del']],
-    Musca: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp'], ['Bet','Eps']],
-    Norma: [['Gam','Eps'], ['Eps','Eta']],
-    Octans: [['Nu','Bet'], ['Bet','Del'], ['Del','Nu']],
-    Ophiuchus: [['Alp','Bet'], ['Bet','Kap'], ['Kap','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Eta'], ['Eta','Zet'], ['Zet','Alp'], ['Kap','Lam'], ['Zet','The']],
-    Orion: [['Alp','Gam'], ['Gam','Lam'], ['Lam','Alp'], ['Lam','Bet'], ['Lam','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Alp'], ['Del','Bet'], ['Bet','Kap'], ['Kap','Zet']],
-    Pavo: [['Alp','Bet'], ['Bet','Del'], ['Del','Gam'], ['Gam','Alp']],
-    Pegasus: [['Alp','Bet'], ['Bet','Alpheratz'], ['Alpheratz','Gam'], ['Gam','Alp'], ['Alp','Eps']],
-    Perseus: [['Alp','Bet'], ['Alp','Gam'], ['Alp','Del'], ['Del','Eps'], ['Bet','Rho']],
-    Phoenix: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
-    Pictor: [['Alp','Bet'], ['Bet','Gam']],
-    Pisces: [['Alp','Eta'], ['Eta','Omi'], ['Omi','Eps'], ['Eps','Del'], ['Alp','Bet'], ['Bet','Gam'], ['Gam','Kap'], ['Kap','Lam'], ['Lam','Iot'], ['Iot','The'], ['The','Gam']],
-    'Piscis Austrinus': [['Alp','Bet'], ['Bet','Del'], ['Del','Eps'], ['Eps','Alp']],
-    Puppis: [['Zet','Pi'], ['Pi','Rho'], ['Rho','Xi']],
-    Pyxis: [['Alp','Bet'], ['Bet','Gam']],
-    Reticulum: [['Alp','Bet'], ['Bet','Del'], ['Del','Eps'], ['Eps','Alp']],
-    Sagitta: [['Alp','Del'], ['Del','Gam'], ['Gam','Bet'], ['Bet','Del'], ['Del','Eta']],
-    Sagittarius: [['Lam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Tau'], ['Tau','Sig'], ['Sig','Phi'], ['Phi','Lam'], ['Del','Gam'], ['Gam','Eta']],
-    Scorpius: [['Pi','Rho'], ['Rho','Del'], ['Del','Alp'], ['Bet','Alp'], ['Pi','Alp'], ['Alp','Tau'], ['Tau','Eps'], ['Eps','Mu'], ['Mu','Lam'], ['Lam','Ups'], ['Ups','Kap'], ['Kap','The'], ['The','Eta'], ['Eta','Zet']],
-    Sculptor: [['Alp','Bet'], ['Bet','Gam']],
-    Scutum: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp']],
-    Serpens: [['Alp','Mu'], ['Mu','Eps'], ['Eps','Del'], ['Del','Bet'], ['Bet','Gam'], ['Eta','Nu'], ['Nu','Xi'], ['Xi','Omi'], ['Omi','The']],
-    Sextans: [['Alp','Bet'], ['Bet','Gam']],
-    Taurus: [['Alp','Gam'], ['Gam','Elnath'], ['Alp','The'], ['The','Eps'], ['Alp','Zet']],
-    Telescopium: [['Alp','Zet'], ['Zet','Eps']],
-    Triangulum: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
-    'Triangulum Australe': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Alp']],
-    Tucana: [['Alp','Gam'], ['Gam','Bet'], ['Bet','Del'], ['Del','Alp'], ['Gam','Zet']],
-    'Ursa Major': [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Eta'], ['Del','Alp']],
-    'Ursa Minor': [['Alp','Del'], ['Del','Eps'], ['Eps','Zet'], ['Zet','Bet'], ['Bet','Gam'], ['Gam','Eta'], ['Eta','Zet']],
-    Vela: [['Gam','Lam'], ['Lam','Del'], ['Del','Kap']],
-    Virgo: [['Alp','Gam'], ['Gam','Del'], ['Del','Eps'], ['Gam','Eta'], ['Eta','Bet'], ['Gam','Zet']],
-    Volans: [['Alp','Bet'], ['Bet','Gam'], ['Gam','Del'], ['Del','Alp']],
-    Vulpecula: [['Alp','13']]
-  };
-
-  const SKY_ASTERISM_GREEK_ALIASES = [
-    ['alp', ['alp', 'alpha']], ['bet', ['bet', 'beta']], ['gam', ['gam', 'gamma']], ['del', ['del', 'delta']], ['eps', ['eps', 'epsilon']],
-    ['zet', ['zet', 'zeta']], ['eta', ['eta']], ['the', ['the', 'theta']], ['iot', ['iot', 'iota']], ['kap', ['kap', 'kappa']],
-    ['lam', ['lam', 'lambda']], ['mu', ['mu']], ['nu', ['nu']], ['xi', ['xi']], ['omi', ['omi', 'omicron']],
-    ['pi', ['pi']], ['rho', ['rho']], ['sig', ['sig', 'sigma']], ['tau', ['tau']], ['ups', ['ups', 'upsilon']],
-    ['phi', ['phi']], ['chi', ['chi']], ['psi', ['psi']], ['ome', ['ome', 'omega']]
-  ];
-
-  const SKY_ASTERISM_CONTEXT_ENDPOINTS = {
-    Auriga: ['elnath', 'alnath'],
-    Pegasus: ['alpheratz']
-  };
-
-  function skyAsterismGreekKeys(value) {
-    const c = compact(value);
-    if (!c) return [];
-    const found = [];
-    SKY_ASTERISM_GREEK_ALIASES.forEach(([code, aliases]) => {
-      if (aliases.some(alias => c === alias || c.startsWith(alias))) {
-        found.push(code, ...aliases);
-      }
-    });
-    return found;
+  function loadSkyConstellationLines() {
+    if (skyConstellationLineDb) return Promise.resolve(skyConstellationLineDb);
+    if (skyConstellationLinePromise) return skyConstellationLinePromise;
+    skyConstellationLinePromise = fetch(CONSTELLATION_LINES_URL, { cache: 'force-cache' })
+      .then(res => {
+        if (!res.ok) throw new Error('constellation line database unavailable.');
+        return res.json();
+      })
+      .then(data => {
+        skyConstellationLineDb = data;
+        return skyConstellationLineDb;
+      })
+      .catch(err => {
+        console.warn('iloveastro: could not load constellation_lines.json; constellation lines disabled.', err);
+        skyConstellationLineDb = { constellations: [] };
+        return skyConstellationLineDb;
+      });
+    return skyConstellationLinePromise;
   }
 
-  function skyAsterismLabelLooksLocal(label) {
-    const c = compact(label);
-    if (!c) return true;
-    if (/^\d+$/.test(c)) return true;
-    return SKY_ASTERISM_GREEK_ALIASES.some(([, aliases]) => aliases.some(alias => c === alias || c.startsWith(alias)));
-  }
+  function skyLineEdgesFromDatabase() {
+    const out = [];
+    const missing = new Map();
+    if (!skyConstellationLineDb || !Array.isArray(skyConstellationLineDb.constellations)) return out;
 
-  function skyAsterismContextAllowsGlobal(constellation, label) {
-    const allowed = SKY_ASTERISM_CONTEXT_ENDPOINTS[constellation] || [];
-    return allowed.includes(compact(label));
-  }
+    skyConstellationLineDb.constellations.forEach(entry => {
+      const seen = new Set();
+      (entry.edges || []).forEach(edge => {
+        const a = Number(edge.from), b = Number(edge.to);
+        if (!Number.isFinite(a) || !Number.isFinite(b) || a === b) return;
+        const key = a < b ? `${a}-${b}` : `${b}-${a}`;
+        if (seen.has(key)) return;
+        seen.add(key);
 
-  function skyAsterismStarKeys(star) {
-    const keys = new Set();
-    const add = v => { const c = compact(v); if (c) keys.add(c); };
-    const abbr = DATA.constellations.find(c => c.name === star.constellation)?.abbr || '';
-    const genitive = CONSTELLATION_GENITIVE[star.constellation] || star.constellation;
-    [star.name, starDisplayName(star), starDesignation(star), star.bayer, star.bf].forEach(add);
-    [star.bayer, star.bf].forEach(value => {
-      skyAsterismGreekKeys(value).forEach(g => {
-        add(g);
-        add(`${g} ${star.constellation}`);
-        add(`${g} ${genitive}`);
-        add(`${g} ${abbr}`);
+        const s1 = skyHipByNumber.get(a);
+        const s2 = skyHipByNumber.get(b);
+        if (!s1 || !s2) {
+          if (!missing.has(entry.pdf_code || entry.iau || entry.name || 'unknown')) missing.set(entry.pdf_code || entry.iau || entry.name || 'unknown', []);
+          if (!s1) missing.get(entry.pdf_code || entry.iau || entry.name || 'unknown').push(a);
+          if (!s2) missing.get(entry.pdf_code || entry.iau || entry.name || 'unknown').push(b);
+          return;
+        }
+        out.push({ constellation: entry.name, fromHip: a, toHip: b, s1, s2 });
       });
     });
-    const flam = String(star.bf || '').match(/\d+/);
-    if (flam) {
-      add(flam[0]);
-      add(`${flam[0]} ${star.constellation}`);
-      add(`${flam[0]} ${abbr}`);
-    }
-    return keys;
-  }
 
-  let skyAsterismStarCache = new Map();
-  function skyAsterismEndpointStar(constellation, label, magLimit = 6) {
-    const key = `${constellation}|${label}|${Number(magLimit).toFixed(1)}`;
-    if (skyAsterismStarCache.has(key)) return skyAsterismStarCache.get(key);
-    const target = compact(label);
-    if (!target) return null;
-    const candidates = skyStars.filter(s => s.mag <= magLimit).sort((a, b) => a.mag - b.mag);
-    const matches = s => skyAsterismStarKeys(s).has(target);
-    let star = candidates.find(s => s.constellation === constellation && matches(s)) || null;
-
-    // Only a very small number of learning-line endpoints are intentionally
-    // borrowed from a neighbouring official constellation.  All generic Bayer
-    // and Flamsteed labels are strictly local, which prevents long false lines
-    // such as Orion accidentally connecting to Caelum when a local endpoint is absent.
-    if (!star && skyAsterismContextAllowsGlobal(constellation, label) && !skyAsterismLabelLooksLocal(label)) {
-      star = candidates.find(matches) || null;
+    if (missing.size && !skyConstellationLineDb._missingHipWarningShown) {
+      const detail = [...missing.entries()].map(([name, hips]) => `${name}: ${[...new Set(hips)].join(', ')}`).join(' | ');
+      console.warn(`iloveastro: some constellation-line HIP endpoints are missing from the loaded sky data, so those segments were skipped. ${detail}`);
+      skyConstellationLineDb._missingHipWarningShown = true;
     }
 
-    skyAsterismStarCache.set(key, star);
-    return star;
+    return out;
   }
 
-  function drawSkyAsterismLines(ctx, project, basis, radius, fovRad, magLimit) {
+  function drawSkyAsterismLines(ctx, project, basis, radius, fovRad) {
+    if (!skyConstellationLineDb || !skyHipByNumber.size) return;
+
     ctx.save();
     ctx.strokeStyle = '#777';
     ctx.globalAlpha = 0.72;
@@ -1663,20 +1553,15 @@
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    Object.entries(SKY_ASTERISM_LINES).forEach(([constellation, segments]) => {
-      segments.forEach(([a, b]) => {
-        const s1 = skyAsterismEndpointStar(constellation, a, magLimit);
-        const s2 = skyAsterismEndpointStar(constellation, b, magLimit);
-        if (!s1 || !s2) return;
-        if (angularDeg(s1.v, s2.v) > 38) return;
-        const p1 = project(s1.v, basis, radius, fovRad);
-        const p2 = project(s2.v, basis, radius, fovRad);
-        if (!p1 || !p2) return;
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
-      });
+    skyLineEdgesFromDatabase().forEach(edge => {
+      if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
+      const p1 = project(edge.s1.v, basis, radius, fovRad);
+      const p2 = project(edge.s2.v, basis, radius, fovRad);
+      if (!p1 || !p2) return;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
     });
 
     ctx.restore();
@@ -2304,7 +2189,7 @@
       ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
       ctx.clip();
 
-      if (state.showLines !== false) drawSkyAsterismLines(ctx, project, basis, radius, fovRad, state.magLimit);
+      if (state.showLines !== false) drawSkyAsterismLines(ctx, project, basis, radius, fovRad);
 
       const visibleStars = skyStars
         .filter(star => star.mag <= state.magLimit)
