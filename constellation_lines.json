@@ -25,6 +25,7 @@
     ],
     "custom_modified_constellations": [
       "AND",
+      "APS",
       "AQL",
       "ARA",
       "AUR",
@@ -35,22 +36,25 @@
       "CRV",
       "CYG",
       "HER",
+      "HYI",
       "LEO",
       "LEP",
       "MEN",
       "MIC",
       "NOR",
+      "OPH",
+      "ORI",
       "SCO"
     ],
-    "custom_modified_count": 17,
+    "custom_modified_count": 21,
     "total_constellations": 88,
-    "total_nodes_per_constellation_sum": 709,
-    "total_edges_per_constellation_sum": 697,
-    "custom_version": "v3-site-cleaned",
-    "custom_change_summary": "Updated Cancer x->chi, revised Cepheus triangle/square, and cleaned Scorpius to a 3-finger fork.",
-    "total_nodes_across_constellations": 697,
-    "total_edges_across_constellations": 697,
-    "modified_constellations": 17,
+    "total_nodes_per_constellation_sum": 700,
+    "total_edges_per_constellation_sum": 682,
+    "custom_version": "v4-site-tuned",
+    "custom_change_summary": "Applied requested v4 line edits for Leo, Orion, Hercules, Apus, Hydrus, Corona Australis, Ophiuchus, Boötes, Lepus, and Ara.",
+    "total_nodes_across_constellations": 688,
+    "total_edges_across_constellations": 682,
+    "modified_constellations": 21,
     "source_for_site": "Used as the source of truth for iloveastro Sky Map constellation lines.",
     "render_policy": {
       "source": "constellation_lines.json original HIP edges cleaned from original_paths",
@@ -175,12 +179,6 @@
           "style": "normal",
           "hip": [
             72370,
-            81065
-          ]
-        },
-        {
-          "style": "thin",
-          "hip": [
             80047,
             81852,
             81065
@@ -190,28 +188,36 @@
       "edges": [
         {
           "from": 72370,
-          "to": 81065,
+          "to": 80047,
           "style": "normal",
           "path_index": 1
         },
         {
           "from": 80047,
           "to": 81852,
-          "style": "thin",
-          "path_index": 2
+          "style": "normal",
+          "path_index": 1
         },
         {
           "from": 81852,
           "to": 81065,
-          "style": "thin",
-          "path_index": 2
+          "style": "normal",
+          "path_index": 1
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
         "nodes": 4,
         "edges": 3,
-        "paths": 2
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "Apus simplified to α–δ–β–γ.",
+      "node_labels": {
+        "72370": "α Aps",
+        "80047": "δ Aps",
+        "81852": "β Aps",
+        "81065": "γ Aps"
       }
     },
     {
@@ -523,7 +529,12 @@
             85267,
             85727,
             82363,
-            83081,
+            83081
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
             85792,
             88714
           ]
@@ -532,7 +543,8 @@
           "style": "normal",
           "hip": [
             85792,
-            85258
+            85258,
+            83081
           ]
         }
       ],
@@ -556,34 +568,37 @@
           "path_index": 1
         },
         {
-          "from": 83081,
-          "to": 85792,
-          "style": "normal",
-          "path_index": 1
-        },
-        {
           "from": 85792,
           "to": 88714,
           "style": "normal",
-          "path_index": 1
+          "path_index": 2
         },
         {
           "from": 85792,
           "to": 85258,
           "style": "normal",
-          "path_index": 2
+          "path_index": 3
+        },
+        {
+          "from": 85258,
+          "to": 83081,
+          "style": "normal",
+          "path_index": 3
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
         "nodes": 7,
         "edges": 6,
-        "paths": 2
+        "paths": 3
       },
       "custom_modified": true,
-      "custom_note": "θ Ara removed from the main chain so no line connects to θ.",
+      "custom_note": "Removed α Ara–ζ Ara; added α Ara–ε Ara–ζ Ara.",
       "node_labels": {
-        "83153": "θ Ara removed"
+        "83153": "θ Ara removed",
+        "85792": "α Ara",
+        "85258": "ε¹ Ara",
+        "83081": "ζ Ara"
       }
     },
     {
@@ -729,7 +744,8 @@
         71053,
         71075,
         72105,
-        73555
+        73555,
+        74666
       ],
       "original_paths": [
         {
@@ -737,6 +753,7 @@
           "hip": [
             69673,
             72105,
+            74666,
             73555,
             71075,
             71053,
@@ -764,6 +781,12 @@
         },
         {
           "from": 72105,
+          "to": 74666,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 74666,
           "to": 73555,
           "style": "normal",
           "path_index": 1
@@ -813,16 +836,18 @@
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
-        "nodes": 9,
-        "edges": 9,
+        "nodes": 10,
+        "edges": 10,
         "paths": 2
       },
       "custom_modified": true,
-      "custom_note": "λ, δ, κ Boötis removed.",
+      "custom_note": "Changed ε–β to ε–δ–β.",
       "node_labels": {
         "71795": "λ Boo removed",
-        "74666": "δ Boo removed",
-        "69483": "κ Boo removed"
+        "74666": "δ Boo",
+        "69483": "κ Boo removed",
+        "72105": "ε Boo / Izar",
+        "73555": "β Boo / Nekkar"
       }
     },
     {
@@ -2197,7 +2222,9 @@
       "pdf_code": "CRA",
       "name": "Corona Australis",
       "nodes_hip": [
+        92308,
         93174,
+        93542,
         93825,
         94005,
         94114,
@@ -2207,15 +2234,23 @@
         {
           "style": "normal",
           "hip": [
+            93174,
             93825,
             94114,
             94160,
             94005,
-            93174
+            93542,
+            92308
           ]
         }
       ],
       "edges": [
+        {
+          "from": 93174,
+          "to": 93825,
+          "style": "normal",
+          "path_index": 1
+        },
         {
           "from": 93825,
           "to": 94114,
@@ -2236,22 +2271,34 @@
         },
         {
           "from": 94005,
-          "to": 93174,
+          "to": 93542,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 93542,
+          "to": 92308,
           "style": "normal",
           "path_index": 1
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
-        "nodes": 5,
-        "edges": 4,
+        "nodes": 7,
+        "edges": 6,
         "paths": 1
       },
       "custom_modified": true,
-      "custom_note": "θ CrA removed; ε CrA added to close/continue the crown.",
+      "custom_note": "Corona Australis set to ε–γ–α–β–δ–ζ–η; δ–ε disconnected.",
       "node_labels": {
         "90982": "θ CrA removed",
-        "93174": "ε CrA"
+        "93174": "ε CrA",
+        "93825": "γ CrA",
+        "94114": "α CrA",
+        "94160": "β CrA",
+        "94005": "δ CrA",
+        "93542": "ζ CrA",
+        "92308": "η¹ CrA"
       }
     },
     {
@@ -3603,7 +3650,6 @@
         {
           "style": "normal",
           "hip": [
-            84379,
             80816,
             80170
           ]
@@ -3665,12 +3711,6 @@
         }
       ],
       "edges": [
-        {
-          "from": 84379,
-          "to": 80816,
-          "style": "normal",
-          "path_index": 1
-        },
         {
           "from": 80816,
           "to": 80170,
@@ -3795,13 +3835,15 @@
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
         "nodes": 20,
-        "edges": 21,
+        "edges": 20,
         "paths": 7
       },
       "custom_modified": true,
-      "custom_note": "α Her removed; neighbouring retained nodes contracted.",
+      "custom_note": "Removed the β Her–δ Her connection.",
       "node_labels": {
-        "84345": "α Her / Rasalgethi removed"
+        "84345": "α Her / Rasalgethi removed",
+        "80816": "β Her",
+        "84379": "δ Her"
       }
     },
     {
@@ -4058,52 +4100,44 @@
       "nodes_hip": [
         2021,
         9236,
-        11001,
         17678
       ],
       "original_paths": [
         {
           "style": "normal",
           "hip": [
-            2021,
-            17678,
-            11001,
             9236,
-            2021
+            2021,
+            17678
           ]
         }
       ],
       "edges": [
         {
-          "from": 2021,
-          "to": 17678,
-          "style": "normal",
-          "path_index": 1
-        },
-        {
-          "from": 17678,
-          "to": 11001,
-          "style": "normal",
-          "path_index": 1
-        },
-        {
-          "from": 11001,
-          "to": 9236,
-          "style": "normal",
-          "path_index": 1
-        },
-        {
           "from": 9236,
           "to": 2021,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 2021,
+          "to": 17678,
           "style": "normal",
           "path_index": 1
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
-        "nodes": 4,
-        "edges": 4,
+        "nodes": 3,
+        "edges": 2,
         "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "Hydrus simplified to α–β–γ only.",
+      "node_labels": {
+        "9236": "α Hyi",
+        "2021": "β Hyi",
+        "17678": "γ Hyi"
       }
     },
     {
@@ -4325,8 +4359,7 @@
           "style": "normal",
           "hip": [
             48455,
-            47908,
-            49583
+            47908
           ]
         }
       ],
@@ -4390,22 +4423,16 @@
           "to": 49669,
           "style": "normal",
           "path_index": 3
-        },
-        {
-          "from": 47908,
-          "to": 49583,
-          "style": "normal",
-          "path_index": 4
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
         "nodes": 9,
-        "edges": 11,
+        "edges": 10,
         "paths": 4
       },
       "custom_modified": true,
-      "custom_note": "κ, λ, ι, σ Leo removed; θ Leo connected to Regulus instead of η Leo.",
+      "custom_note": "Removed ε Leo–η Leo; retained the rest of the Leo figure.",
       "node_labels": {
         "49669": "α Leo / Regulus",
         "54879": "θ Leo",
@@ -4413,7 +4440,8 @@
         "46146": "κ Leo removed",
         "46750": "λ Leo removed",
         "55642": "ι Leo removed",
-        "55434": "σ Leo removed"
+        "55434": "σ Leo removed",
+        "47908": "ε Leo"
       }
     },
     {
@@ -4438,13 +4466,6 @@
             24305,
             25985,
             25606,
-            23685
-          ]
-        },
-        {
-          "style": "normal",
-          "hip": [
-            25985,
             23685
           ]
         },
@@ -4492,56 +4513,52 @@
           "path_index": 1
         },
         {
-          "from": 25985,
-          "to": 23685,
-          "style": "normal",
-          "path_index": 2
-        },
-        {
           "from": 24845,
           "to": 24305,
           "style": "normal",
-          "path_index": 3
+          "path_index": 2
         },
         {
           "from": 25606,
           "to": 27072,
           "style": "thin",
-          "path_index": 4
+          "path_index": 3
         },
         {
           "from": 27072,
           "to": 27654,
           "style": "thin",
-          "path_index": 4
+          "path_index": 3
         },
         {
           "from": 27654,
           "to": 28910,
           "style": "thin",
-          "path_index": 4
+          "path_index": 3
         },
         {
           "from": 28910,
           "to": 25985,
           "style": "thin",
-          "path_index": 4
+          "path_index": 3
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
         "nodes": 8,
-        "edges": 10,
-        "paths": 4
+        "edges": 9,
+        "paths": 3
       },
       "custom_modified": true,
-      "custom_note": "α Lep connected directly to δ Lep; θ, ζ, η Lep removed.",
+      "custom_note": "Removed α Lep–ε Lep; ensured μ Lep–κ Lep is connected.",
       "node_labels": {
         "25985": "α Lep / Arneb",
-        "23685": "δ Lep",
+        "23685": "ε Lep / Ping",
         "24327": "θ Lep removed",
         "27288": "ζ Lep removed",
-        "28103": "η Lep removed"
+        "28103": "η Lep removed",
+        "24305": "μ Lep / Bade",
+        "24845": "κ Lep"
       }
     },
     {
@@ -5346,20 +5363,11 @@
       "nodes_hip": [
         79593,
         79882,
-        80343,
-        80473,
-        80569,
-        80628,
-        80883,
-        80894,
         81377,
         83000,
         84012,
-        84970,
-        85423,
         86032,
         86742,
-        87108,
         88048
       ],
       "original_paths": [
@@ -5367,166 +5375,77 @@
           "style": "normal",
           "hip": [
             86032,
-            83000,
-            80883,
-            79593,
+            86742,
+            84012,
+            81377,
+            88048,
             79882,
-            80628,
-            81377,
+            79593,
             83000
-          ]
-        },
-        {
-          "style": "normal",
-          "hip": [
-            81377,
-            84012,
-            86742,
-            87108,
-            88048
-          ]
-        },
-        {
-          "style": "normal",
-          "hip": [
-            86742,
-            86032
-          ]
-        },
-        {
-          "style": "normal",
-          "hip": [
-            84012,
-            84970,
-            85423
-          ]
-        },
-        {
-          "style": "thin",
-          "hip": [
-            81377,
-            80894,
-            80569,
-            80343,
-            80473
           ]
         }
       ],
       "edges": [
         {
           "from": 86032,
-          "to": 83000,
+          "to": 86742,
           "style": "normal",
           "path_index": 1
         },
         {
-          "from": 83000,
-          "to": 80883,
+          "from": 86742,
+          "to": 84012,
           "style": "normal",
           "path_index": 1
         },
         {
-          "from": 80883,
-          "to": 79593,
-          "style": "normal",
-          "path_index": 1
-        },
-        {
-          "from": 79593,
-          "to": 79882,
-          "style": "normal",
-          "path_index": 1
-        },
-        {
-          "from": 79882,
-          "to": 80628,
-          "style": "normal",
-          "path_index": 1
-        },
-        {
-          "from": 80628,
+          "from": 84012,
           "to": 81377,
           "style": "normal",
           "path_index": 1
         },
         {
           "from": 81377,
-          "to": 83000,
+          "to": 88048,
           "style": "normal",
           "path_index": 1
         },
         {
-          "from": 81377,
-          "to": 84012,
+          "from": 88048,
+          "to": 79882,
           "style": "normal",
-          "path_index": 2
+          "path_index": 1
         },
         {
-          "from": 84012,
-          "to": 86742,
+          "from": 79882,
+          "to": 79593,
           "style": "normal",
-          "path_index": 2
+          "path_index": 1
         },
         {
-          "from": 86742,
-          "to": 87108,
+          "from": 79593,
+          "to": 83000,
           "style": "normal",
-          "path_index": 2
-        },
-        {
-          "from": 87108,
-          "to": 88048,
-          "style": "normal",
-          "path_index": 2
-        },
-        {
-          "from": 86742,
-          "to": 86032,
-          "style": "normal",
-          "path_index": 3
-        },
-        {
-          "from": 84012,
-          "to": 84970,
-          "style": "normal",
-          "path_index": 4
-        },
-        {
-          "from": 84970,
-          "to": 85423,
-          "style": "normal",
-          "path_index": 4
-        },
-        {
-          "from": 81377,
-          "to": 80894,
-          "style": "thin",
-          "path_index": 5
-        },
-        {
-          "from": 80894,
-          "to": 80569,
-          "style": "thin",
-          "path_index": 5
-        },
-        {
-          "from": 80569,
-          "to": 80343,
-          "style": "thin",
-          "path_index": 5
-        },
-        {
-          "from": 80343,
-          "to": 80473,
-          "style": "thin",
-          "path_index": 5
+          "path_index": 1
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
-        "nodes": 17,
-        "edges": 18,
-        "paths": 5
+        "nodes": 8,
+        "edges": 7,
+        "paths": 1
+      },
+      "custom_modified": true,
+      "custom_note": "Ophiuchus set to α–β–η–ζ–ν–ε–δ–κ; removed γ and extra ν/kappa/zeta branch connections.",
+      "node_labels": {
+        "86032": "α Oph / Rasalhague",
+        "86742": "β Oph / Cebalrai",
+        "84012": "η Oph / Sabik",
+        "81377": "ζ Oph",
+        "88048": "ν Oph",
+        "79882": "ε Oph / Yed Posterior",
+        "79593": "δ Oph / Yed Prior",
+        "83000": "κ Oph"
       }
     },
     {
@@ -5553,9 +5472,7 @@
         27913,
         27989,
         28614,
-        28716,
-        29038,
-        29426
+        29038
       ],
       "original_paths": [
         {
@@ -5623,8 +5540,6 @@
         {
           "style": "normal",
           "hip": [
-            29426,
-            28716,
             27913,
             29038
           ]
@@ -5752,18 +5667,6 @@
           "path_index": 7
         },
         {
-          "from": 29426,
-          "to": 28716,
-          "style": "normal",
-          "path_index": 8
-        },
-        {
-          "from": 28716,
-          "to": 27913,
-          "style": "normal",
-          "path_index": 8
-        },
-        {
           "from": 27913,
           "to": 29038,
           "style": "normal",
@@ -5772,9 +5675,15 @@
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
-        "nodes": 22,
-        "edges": 23,
+        "nodes": 20,
+        "edges": 21,
         "paths": 8
+      },
+      "custom_modified": true,
+      "custom_note": "Removed ξ Ori and χ² Ori from the arm/branch figure.",
+      "node_labels": {
+        "29426": "ξ Ori removed",
+        "28716": "χ² Ori removed"
       }
     },
     {
