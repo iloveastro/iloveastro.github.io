@@ -49,12 +49,12 @@
     ],
     "custom_modified_count": 22,
     "total_constellations": 88,
-    "total_nodes_per_constellation_sum": 704,
-    "total_edges_per_constellation_sum": 686,
-    "custom_version": "v113-site-line-edits",
-    "custom_change_summary": "Added Mic γ–θ¹, Ara α–ε¹–ζ and β–γ, Sagittarius α–ι–β¹ and ι–θ¹–ω–τ, removed Norma ε–η, and re-enforced Lepus μ–κ with fallback rendering support.",
-    "total_nodes_across_constellations": 693,
-    "total_edges_across_constellations": 686,
+    "total_nodes_per_constellation_sum": 707,
+    "total_edges_per_constellation_sum": 690,
+    "custom_version": "v114-site-verified-bayer-hip-lines",
+    "custom_change_summary": "Corrected Ara to θ–α–ε–ζ–η–δ–γ plus α–β, Norma to ε–γ–η, and re-enforced Lepus μ–κ using checked Bayer/HIP mappings. Removed the hard-coded Lepus fallback node mechanism from app.js.",
+    "total_nodes_across_constellations": 696,
+    "total_edges_across_constellations": 690,
     "modified_constellations": 22,
     "source_for_site": "Used as the source of truth for iloveastro Sky Map constellation lines.",
     "render_policy": {
@@ -66,7 +66,12 @@
     },
     "edge_count_meaning": "total_edges_per_constellation_sum counts deduplicated undirected edges within each constellation; total_edges_across_constellations counts unique undirected HIP pairs across the full database.",
     "zero_length_pairs_cleaned": true,
-    "duplicate_edges_cleaned_within_constellation": true
+    "duplicate_edges_cleaned_within_constellation": true,
+    "checked_bayer_hip_notes": {
+      "Lepus": "μ Lep HIP 24305; κ Lep HIP 24327. HIP 24845 is not used for κ.",
+      "Ara": "θ 88714; α 85792; ε¹ 83153; ζ 83081; η 82363; δ 85727; γ 85267; β 85258.",
+      "Norma": "ε 80582; γ² 80000; η 78639."
+    }
   },
   "constellations": [
     {
@@ -515,30 +520,43 @@
       "pdf_code": "ARA",
       "name": "Ara",
       "nodes_hip": [
+        82363,
         83081,
         83153,
         85258,
         85267,
-        85792
+        85727,
+        85792,
+        88714
       ],
       "original_paths": [
         {
           "style": "normal",
           "hip": [
+            88714,
             85792,
             83153,
-            83081
+            83081,
+            82363,
+            85727,
+            85267
           ]
         },
         {
           "style": "normal",
           "hip": [
-            85258,
-            85267
+            85792,
+            85258
           ]
         }
       ],
       "edges": [
+        {
+          "from": 88714,
+          "to": 85792,
+          "style": "normal",
+          "path_index": 1
+        },
         {
           "from": 85792,
           "to": 83153,
@@ -552,26 +570,47 @@
           "path_index": 1
         },
         {
-          "from": 85258,
+          "from": 83081,
+          "to": 82363,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 82363,
+          "to": 85727,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 85727,
           "to": 85267,
+          "style": "normal",
+          "path_index": 1
+        },
+        {
+          "from": 85792,
+          "to": 85258,
           "style": "normal",
           "path_index": 2
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
-        "nodes": 5,
-        "edges": 3,
+        "nodes": 8,
+        "edges": 7,
         "paths": 2
       },
       "custom_modified": true,
-      "custom_note": "Ara set to α–ε¹–ζ plus β–γ.",
+      "custom_note": "Ara corrected to θ–α–ε¹–ζ–η–δ–γ and α–β using checked Bayer/HIP IDs.",
       "node_labels": {
         "83153": "ε¹ Ara",
-        "85792": "α Ara",
+        "85792": "α Ara / Choo",
         "85258": "β Ara",
         "83081": "ζ Ara",
-        "85267": "γ Ara"
+        "85267": "γ Ara",
+        "88714": "θ Ara",
+        "82363": "η Ara",
+        "85727": "δ Ara"
       }
     },
     {
@@ -4530,15 +4569,17 @@
         "paths": 3
       },
       "custom_modified": true,
-      "custom_note": "Explicitly connected μ Lep–κ Lep using κ Lep HIP 24327; α–ε remains disconnected.",
+      "custom_note": "μ Lep–κ Lep explicitly connected using μ Lep HIP 24305 and κ Lep HIP 24327; α Lep–ε Lep remains disconnected; old wrong HIP 24845 is not used as κ.",
       "node_labels": {
-        "25985": "α Lep / Arneb",
         "23685": "ε Lep / Ping",
-        "24327": "κ Lep",
-        "27288": "ζ Lep removed",
-        "28103": "η Lep removed",
         "24305": "μ Lep / Bade",
-        "24845": "λ Lep (not κ)"
+        "24327": "κ Lep",
+        "25606": "β Lep / Nihal",
+        "25985": "α Lep / Arneb",
+        "27072": "γ Lep",
+        "27654": "δ Lep",
+        "28910": "λ Lep",
+        "24845": "removed; not κ Lep"
       }
     },
     {
@@ -5265,44 +5306,38 @@
         {
           "style": "normal",
           "hip": [
-            78639,
-            80000
-          ]
-        },
-        {
-          "style": "normal",
-          "hip": [
             80582,
+            80000,
             78639
           ]
         }
       ],
       "edges": [
         {
-          "from": 78639,
+          "from": 80582,
           "to": 80000,
           "style": "normal",
           "path_index": 1
         },
         {
-          "from": 80582,
+          "from": 80000,
           "to": 78639,
           "style": "normal",
-          "path_index": 2
+          "path_index": 1
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
         "nodes": 3,
         "edges": 2,
-        "paths": 2
+        "paths": 1
       },
       "custom_modified": true,
-      "custom_note": "Removed ε Nor–η Nor; kept γ–η and γ–ε.",
+      "custom_note": "Norma corrected to ε–γ²–η.",
       "node_labels": {
         "78914": "δ Nor removed",
-        "78639": "γ² Nor",
-        "80000": "η Nor",
+        "78639": "η Nor",
+        "80000": "γ² Nor",
         "80582": "ε Nor"
       }
     },

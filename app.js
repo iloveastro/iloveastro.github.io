@@ -996,7 +996,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=113';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=114';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1007,10 +1007,6 @@
   let skyConstellationLineDb = null;
   let skyConstellationLinePromise = null;
   let skyLineEdgesCache = null;
-  const SKY_LINE_FALLBACK_NODES = {
-    24305: { hip: 24305, ra: 78.232875, dec: -16.205278, mag: 3.29, constellation: 'Lepus', name: 'Mu Leporis', bayer: 'mu', bf: 'mu Lep' },
-    24327: { hip: 24327, ra: 78.304167, dec: -12.941111, mag: 4.43, constellation: 'Lepus', name: 'Kappa Leporis', bayer: 'kappa', bf: 'kappa Lep' }
-  };
 
   const CONSTELLATION_BOUNDS_URL = 'https://cdn.jsdelivr.net/gh/dieghernan/celestial_data@main/data/constellations.bounds.min.geojson';
   let skyBoundsPromise = null;
@@ -1521,13 +1517,45 @@
     return skyConstellationLinePromise;
   }
 
-  function skyLineStarByHip(hip) {
+  const SKY_LINE_GREEK_LABELS = new Map([
+    ['α', ['alp', 'alpha']], ['β', ['bet', 'beta']], ['γ', ['gam', 'gamma']], ['δ', ['del', 'delta']],
+    ['ε', ['eps', 'epsilon']], ['ζ', ['zet', 'zeta']], ['η', ['eta']], ['θ', ['the', 'theta']],
+    ['ι', ['iot', 'iota']], ['κ', ['kap', 'kappa']], ['λ', ['lam', 'lambda']], ['μ', ['mu']],
+    ['ν', ['nu']], ['ξ', ['xi']], ['ο', ['omi', 'omicron']], ['π', ['pi']], ['ρ', ['rho']],
+    ['σ', ['sig', 'sigma']], ['τ', ['tau']], ['υ', ['ups', 'upsilon']], ['φ', ['phi']],
+    ['χ', ['chi']], ['ψ', ['psi']], ['ω', ['ome', 'omega']]
+  ]);
+
+  function skyLineBayerKeysFromNodeLabel(label) {
+    const raw = String(label || '').trim();
+    if (!raw || /removed/i.test(raw)) return [];
+    const compacted = compact(raw.split('/')[0] || raw);
+    const keys = new Set();
+    SKY_LINE_GREEK_LABELS.forEach((aliases, symbol) => {
+      if (raw.includes(symbol)) aliases.forEach(a => keys.add(a));
+      aliases.forEach(a => {
+        if (compacted === a || compacted.startsWith(a)) keys.add(a);
+      });
+    });
+    return [...keys];
+  }
+
+  function skyLineStarByHip(entry, hip) {
     const star = skyHipByNumber.get(hip);
     if (star) return star;
-    const fallback = SKY_LINE_FALLBACK_NODES[hip];
-    if (!fallback) return null;
-    if (!fallback.v) fallback.v = vecFromRaDec(fallback.ra, fallback.dec);
-    return fallback;
+
+    // Generic catalogue resolver only: if the loaded star catalogue lacks a HIP
+    // key for an endpoint, try the endpoint's own Bayer label inside the same
+    // constellation. This avoids hard-coded coordinates/special stars.
+    const label = entry && entry.node_labels ? entry.node_labels[String(hip)] : '';
+    const keys = skyLineBayerKeysFromNodeLabel(label);
+    if (!keys.length) return null;
+    const constName = entry && entry.name;
+    return skyStars.find(s => s.constellation === constName && keys.some(key => {
+      const b = compact(s.bayer || '');
+      const bf = compact(s.bf || '');
+      return b === key || b.startsWith(key) || bf === key || bf.startsWith(key);
+    })) || null;
   }
 
   function skyLineEdgesFromDatabase() {
@@ -1545,8 +1573,8 @@
         if (seen.has(key)) return;
         seen.add(key);
 
-        const s1 = skyLineStarByHip(a);
-        const s2 = skyLineStarByHip(b);
+        const s1 = skyLineStarByHip(entry, a);
+        const s2 = skyLineStarByHip(entry, b);
         if (!s1 || !s2) {
           if (!missing.has(entry.pdf_code || entry.iau || entry.name || 'unknown')) missing.set(entry.pdf_code || entry.iau || entry.name || 'unknown', []);
           if (!s1) missing.get(entry.pdf_code || entry.iau || entry.name || 'unknown').push(a);
