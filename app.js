@@ -996,7 +996,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=112';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=113';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1007,6 +1007,10 @@
   let skyConstellationLineDb = null;
   let skyConstellationLinePromise = null;
   let skyLineEdgesCache = null;
+  const SKY_LINE_FALLBACK_NODES = {
+    24305: { hip: 24305, ra: 78.232875, dec: -16.205278, mag: 3.29, constellation: 'Lepus', name: 'Mu Leporis', bayer: 'mu', bf: 'mu Lep' },
+    24327: { hip: 24327, ra: 78.304167, dec: -12.941111, mag: 4.43, constellation: 'Lepus', name: 'Kappa Leporis', bayer: 'kappa', bf: 'kappa Lep' }
+  };
 
   const CONSTELLATION_BOUNDS_URL = 'https://cdn.jsdelivr.net/gh/dieghernan/celestial_data@main/data/constellations.bounds.min.geojson';
   let skyBoundsPromise = null;
@@ -1517,6 +1521,15 @@
     return skyConstellationLinePromise;
   }
 
+  function skyLineStarByHip(hip) {
+    const star = skyHipByNumber.get(hip);
+    if (star) return star;
+    const fallback = SKY_LINE_FALLBACK_NODES[hip];
+    if (!fallback) return null;
+    if (!fallback.v) fallback.v = vecFromRaDec(fallback.ra, fallback.dec);
+    return fallback;
+  }
+
   function skyLineEdgesFromDatabase() {
     if (skyLineEdgesCache) return skyLineEdgesCache;
     const out = [];
@@ -1532,8 +1545,8 @@
         if (seen.has(key)) return;
         seen.add(key);
 
-        const s1 = skyHipByNumber.get(a);
-        const s2 = skyHipByNumber.get(b);
+        const s1 = skyLineStarByHip(a);
+        const s2 = skyLineStarByHip(b);
         if (!s1 || !s2) {
           if (!missing.has(entry.pdf_code || entry.iau || entry.name || 'unknown')) missing.set(entry.pdf_code || entry.iau || entry.name || 'unknown', []);
           if (!s1) missing.get(entry.pdf_code || entry.iau || entry.name || 'unknown').push(a);
