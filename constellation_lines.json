@@ -49,12 +49,12 @@
     ],
     "custom_modified_count": 22,
     "total_constellations": 88,
-    "total_nodes_per_constellation_sum": 707,
-    "total_edges_per_constellation_sum": 690,
-    "custom_version": "v114-site-verified-bayer-hip-lines",
-    "custom_change_summary": "Corrected Ara to θ–α–ε–ζ–η–δ–γ plus α–β, Norma to ε–γ–η, and re-enforced Lepus μ–κ using checked Bayer/HIP mappings. Removed the hard-coded Lepus fallback node mechanism from app.js.",
-    "total_nodes_across_constellations": 696,
-    "total_edges_across_constellations": 690,
+    "total_nodes_per_constellation_sum": 714,
+    "total_edges_per_constellation_sum": 697,
+    "custom_version": "v115-site-lepus-sagittarius-verified",
+    "custom_change_summary": "Corrected Lepus to κ–μ–λ, μ–ε–β–γ–δ–θ–α–μ, α–β; updated Sagittarius with τ–χ¹–ω, λ–μ, σ–ο–π–ρ¹, and ο–ξ²; removed Bayer fallback resolver from app.",
+    "total_nodes_across_constellations": 703,
+    "total_edges_across_constellations": 697,
     "modified_constellations": 22,
     "source_for_site": "Used as the source of truth for iloveastro Sky Map constellation lines.",
     "render_policy": {
@@ -4471,6 +4471,7 @@
         23685,
         24305,
         24327,
+        24845,
         25606,
         25985,
         27072,
@@ -4481,55 +4482,56 @@
         {
           "style": "normal",
           "hip": [
-            23685,
+            24327,
             24305,
-            25985,
-            25606,
-            23685
+            24845
           ]
         },
         {
           "style": "normal",
           "hip": [
+            24305,
+            23685,
             25606,
             27072,
             27654,
             28910,
-            25985
+            25985,
+            24305
           ]
         },
         {
           "style": "normal",
           "hip": [
-            24305,
-            24327
+            25985,
+            25606
           ]
         }
       ],
       "edges": [
         {
-          "from": 23685,
+          "from": 24327,
           "to": 24305,
           "style": "normal",
           "path_index": 1
         },
         {
           "from": 24305,
-          "to": 25985,
+          "to": 24845,
           "style": "normal",
           "path_index": 1
         },
         {
-          "from": 25985,
-          "to": 25606,
-          "style": "normal",
-          "path_index": 1
-        },
-        {
-          "from": 25606,
+          "from": 24305,
           "to": 23685,
           "style": "normal",
-          "path_index": 1
+          "path_index": 2
+        },
+        {
+          "from": 23685,
+          "to": 25606,
+          "style": "normal",
+          "path_index": 2
         },
         {
           "from": 25606,
@@ -4556,30 +4558,36 @@
           "path_index": 2
         },
         {
-          "from": 24305,
-          "to": 24327,
+          "from": 25985,
+          "to": 24305,
+          "style": "normal",
+          "path_index": 2
+        },
+        {
+          "from": 25985,
+          "to": 25606,
           "style": "normal",
           "path_index": 3
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
-        "nodes": 8,
-        "edges": 9,
+        "nodes": 9,
+        "edges": 10,
         "paths": 3
       },
       "custom_modified": true,
-      "custom_note": "μ Lep–κ Lep explicitly connected using μ Lep HIP 24305 and κ Lep HIP 24327; α Lep–ε Lep remains disconnected; old wrong HIP 24845 is not used as κ.",
+      "custom_note": "Lepus corrected to κ–μ–λ, μ–ε–β–γ–δ–θ–α–μ, and α–β.",
       "node_labels": {
-        "23685": "ε Lep / Ping",
-        "24305": "μ Lep / Bade",
         "24327": "κ Lep",
+        "24305": "μ Lep / Bade",
+        "24845": "λ Lep",
+        "23685": "ε Lep / Ping",
         "25606": "β Lep / Nihal",
-        "25985": "α Lep / Arneb",
         "27072": "γ Lep",
         "27654": "δ Lep",
-        "28910": "λ Lep",
-        "24845": "removed; not κ Lep"
+        "28910": "θ Lep",
+        "25985": "α Lep / Arneb"
       }
     },
     {
@@ -7321,16 +7329,22 @@
       "name": "Sagittarius",
       "nodes_hip": [
         88635,
+        89341,
         89642,
         89931,
         90185,
         90496,
         92041,
         92855,
+        93085,
         93506,
+        93683,
         93864,
+        94141,
+        95168,
         95241,
         95347,
+        95477,
         98032,
         98066,
         98412
@@ -7386,7 +7400,31 @@
             98032,
             98412,
             98066,
+            95477,
             93864
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            90496,
+            89341
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            92855,
+            93683,
+            94141,
+            95168
+          ]
+        },
+        {
+          "style": "normal",
+          "hip": [
+            93683,
+            93085
           ]
         }
       ],
@@ -7489,26 +7527,76 @@
         },
         {
           "from": 98066,
+          "to": 95477,
+          "style": "normal",
+          "path_index": 6
+        },
+        {
+          "from": 95477,
           "to": 93864,
           "style": "normal",
           "path_index": 6
+        },
+        {
+          "from": 90496,
+          "to": 89341,
+          "style": "normal",
+          "path_index": 7
+        },
+        {
+          "from": 92855,
+          "to": 93683,
+          "style": "normal",
+          "path_index": 8
+        },
+        {
+          "from": 93683,
+          "to": 94141,
+          "style": "normal",
+          "path_index": 8
+        },
+        {
+          "from": 94141,
+          "to": 95168,
+          "style": "normal",
+          "path_index": 8
+        },
+        {
+          "from": 93683,
+          "to": 93085,
+          "style": "normal",
+          "path_index": 9
         }
       ],
       "zero_length_pairs_skipped_in_edges": [],
       "counts": {
-        "nodes": 14,
-        "edges": 17,
-        "paths": 6
+        "nodes": 20,
+        "edges": 23,
+        "paths": 9
       },
       "custom_modified": true,
-      "custom_note": "Kept the major Sagittarius graph and added α–ι–β¹ plus ι–θ¹–ω–τ.",
+      "custom_note": "Sagittarius retained major graph; replaced τ–ω with τ–χ¹–ω; added λ–μ, σ–ο–π–ρ¹, and ο–ξ².",
       "node_labels": {
+        "90185": "δ Sgr / Kaus Media",
+        "88635": "γ² Sgr / Alnasl",
+        "89931": "ε Sgr / Kaus Australis",
+        "90496": "λ Sgr / Kaus Borealis",
+        "92041": "ζ Sgr / Ascella",
+        "92855": "σ Sgr / Nunki",
+        "93864": "τ Sgr",
+        "93506": "φ Sgr",
+        "89642": "η Sgr",
         "95347": "α Sgr / Rukbat",
         "98032": "ι Sgr",
         "95241": "β¹ Sgr / Arkab Prior",
         "98412": "θ¹ Sgr",
         "98066": "ω Sgr / Terebellum",
-        "93864": "τ Sgr"
+        "95477": "χ¹ Sgr",
+        "89341": "μ Sgr / Polis",
+        "93683": "ο Sgr",
+        "94141": "π Sgr / Albaldah",
+        "95168": "ρ¹ Sgr",
+        "93085": "ξ² Sgr"
       }
     },
     {
