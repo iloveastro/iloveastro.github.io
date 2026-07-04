@@ -726,3 +726,19 @@ input[type='range']::-moz-range-thumb {
   font-size: 0.85rem;
   color: #888;
 }
+
+
+.study-panel { min-height: 320px; }
+.study-card { max-width: 900px; line-height: 1.35; }
+.study-card h3 { margin-top: 0; font-size: 24px; }
+.study-card h4 { margin: 14px 0 6px; }
+.study-facts { display: grid; grid-template-columns: minmax(110px, 165px) minmax(0, 1fr); gap: 6px 12px; margin: 10px 0; }
+.study-facts dt { font-weight: 700; color: #333; }
+.study-facts dd { margin: 0; }
+.study-card ul { margin-top: 6px; }
+.wiki-link { color: #0645ad; text-decoration: underline; text-underline-offset: 2px; }
+.study-card .wiki-link { font-weight: 700; }
+@media (max-width: 850px) {
+  .study-facts { grid-template-columns: 1fr; gap: 2px; }
+  .study-facts dd { margin-bottom: 6px; }
+}
