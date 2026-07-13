@@ -1059,7 +1059,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=116';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=121';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2115,11 +2115,11 @@
   function drawSkyAsterismLines(ctx, project, basis, radius, fovRad) {
     if (!skyConstellationLineDb || !skyHipByNumber.size) return;
 
-    const edgeMarginRad = Math.max(8 * Math.PI / 180, fovRad * 0.08);
+    const edgeMarginRad = Math.min(Math.PI, Math.max(35 * Math.PI / 180, fovRad * 0.45));
     const projectLineEndpoint = v => {
       const z = dot(v, basis.f);
       const ang = Math.acos(Math.max(-1, Math.min(1, z)));
-      if (ang > fovRad / 2 + edgeMarginRad) return null;
+      if (ang > Math.min(Math.PI, fovRad / 2 + edgeMarginRad)) return null;
       const x = dot(v, basis.right), y = dot(v, basis.up);
       const sin = Math.sin(ang) || 1e-9;
       const rr = (ang / (fovRad / 2)) * radius;
@@ -2173,14 +2173,17 @@
   }
   function pickFromLayer(pick, x, y) {
     if (!pick) return null;
-    let best = null;
+    const hits = [];
     for (const target of pick.targets || []) {
       const d = Math.hypot(target.x - x, target.y - y);
-      if (d > target.r) continue;
-      const score = d / Math.max(1, target.r);
-      if (!best || score < best.score || (score === best.score && d < best.d)) best = { score, d, payload: target.payload };
+      if (d <= target.r) hits.push({ d, payload: target.payload });
     }
-    if (best) return best.payload;
+    hits.sort((a, b) => a.d - b.d);
+    if (hits.length) {
+      if (hits[0].d <= 6) return hits[0].payload;
+      if (hits[1] && hits[1].d - hits[0].d < 4) return null;
+      return hits[0].payload;
+    }
 
     const px = Math.round(x), py = Math.round(y);
     const probes = [[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1],[2,0],[-2,0],[0,2],[0,-2]];
@@ -2828,24 +2831,37 @@
       return state.noteEdges.findIndex(edge => noteEdgeKeyFromIds(edge.a, edge.b) === key);
     }
 
+    function projectNoteLineEndpoint(v, basis, radius, fovRad) {
+      const edgeMarginRad = Math.min(Math.PI, Math.max(35 * Math.PI / 180, fovRad * 0.45));
+      const z = dot(v, basis.f);
+      const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+      if (ang > Math.min(Math.PI, fovRad / 2 + edgeMarginRad)) return null;
+      const x = dot(v, basis.right), y = dot(v, basis.up);
+      const sin = Math.sin(ang) || 1e-9;
+      const rr = (ang / (fovRad / 2)) * radius;
+      return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
+    }
+
     function noteVisibleTargets(visibleStars, basis, radius, fovRad) {
       const targets = [];
       const byId = new Map();
+      const starById = new Map();
       for (const star of visibleStars) {
+        const id = noteStarId(star);
+        if (!starById.has(id)) starById.set(id, star);
         const p = project(star.v, basis, radius, fovRad);
         if (!p) continue;
-        const id = noteStarId(star);
         const r = Math.max(0.8, Math.min(4.6, 4.1 - star.mag * 0.54));
-        const target = { id, star, x: p.x, y: p.y, r, snap: Math.max(14, r + 10) };
+        const target = { id, star, x: p.x, y: p.y, r, snap: Math.max(12, r + 8) };
         targets.push(target);
         if (!byId.has(id)) byId.set(id, target);
       }
       canvas._noteTargets = targets;
       canvas._noteTargetIds = new Set(targets.map(t => t.id));
-      return { targets, byId };
+      return { targets, byId, starById };
     }
 
-    function drawNoteEdges(byId) {
+    function drawNoteEdges(byId, starById, basis, radius, fovRad) {
       normaliseNoteEdges();
       ctx.save();
       ctx.strokeStyle = '#111';
@@ -2854,8 +2870,11 @@
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       state.noteEdges.forEach(edge => {
-        const a = byId.get(edge.a);
-        const b = byId.get(edge.b);
+        const aStar = starById.get(edge.a);
+        const bStar = starById.get(edge.b);
+        if (!aStar || !bStar) return;
+        const a = byId.get(edge.a) || projectNoteLineEndpoint(aStar.v, basis, radius, fovRad);
+        const b = byId.get(edge.b) || projectNoteLineEndpoint(bStar.v, basis, radius, fovRad);
         if (!a || !b) return;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
@@ -2888,7 +2907,8 @@
         .filter(hit => hit.d <= hit.target.snap)
         .sort((a, b) => a.d - b.d);
       if (!hits.length) return null;
-      if (hits[1] && hits[0].d > hits[1].d * 0.75) return null;
+      if (hits[0].d <= 8) return hits[0].target;
+      if (hits[1] && hits[1].d - hits[0].d < 4) return null;
       return hits[0].target;
     }
 
@@ -2992,7 +3012,7 @@
         .sort((a, b) => b.mag - a.mag);
 
       const noteTargets = state.noteMode ? noteVisibleTargets(visibleStars, basis, radius, fovRad) : null;
-      if (noteTargets) drawNoteEdges(noteTargets.byId);
+      if (noteTargets) drawNoteEdges(noteTargets.byId, noteTargets.starById, basis, radius, fovRad);
 
       ctx.fillStyle = 'black';
       for (const star of visibleStars) {
@@ -3032,7 +3052,6 @@
           ctx.beginPath();
           ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
           ctx.stroke();
-          registerPickCircle(pick, p.x, p.y, 14, state.searchMarker.payload);
         }
       }
 
@@ -3331,6 +3350,11 @@
     }, { passive: false });
 
     canvas.addEventListener('keydown', e => {
+      if (state.noteMode && (e.ctrlKey || e.metaKey) && String(e.key || '').toLowerCase() === 'z') {
+        e.preventDefault();
+        undoMapNote();
+        return;
+      }
       const step = e.shiftKey ? 28 : 12;
       if (['ArrowLeft', 'a', 'A'].includes(e.key)) { e.preventDefault(); move(-step, 0); }
       if (['ArrowRight', 'd', 'D'].includes(e.key)) { e.preventDefault(); move(step, 0); }
