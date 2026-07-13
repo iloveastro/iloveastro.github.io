@@ -545,20 +545,13 @@
         } else if (e.key === 'Enter') e.preventDefault();
       });
       aside.append(input);
-      aside.append(el('div', { class: 'message small', html: 'Shift+Enter reveals. Next skips without changing accuracy.' }));
+      aside.append(el('div', { class: 'message' }));
       aside.append(el('div', { class: 'controls' }, [
         el('button', { type: 'button', onclick: reveal }, [document.createTextNode('reveal')]),
         el('button', { type: 'button', onclick: skipQuestion }, [document.createTextNode('next')])
       ]));
       aside.append(el('div', { class: 'stats', html: formatScore(gameId) }));
-      if (state.last) {
-        const isMobile = window.matchMedia && window.matchMedia('(max-width: 850px)').matches;
-        const details = el('details', { class: 'last-card answer-details', ...(isMobile ? {} : { open: 'open' }) });
-        details.append(el('summary', {}, [document.createTextNode('answer info')]));
-        details.append(el('div', { class: 'answer-details-body', html: state.last }));
-        aside.append(details);
-      }
-      const main = el('section', { class: `panel ${q.study ? 'study-panel' : ''}`, html: q.visual || q.study || '' });
+      const main = el('section', { class: `panel ${state.last ? 'study-panel' : ''}`, html: state.last || q.visual || '' });
       app.append(el('div', { class: 'layout' }, [aside, main]));
       enableAnswerImageZoom(app);
     }
@@ -2685,6 +2678,10 @@
       magLimit: defaultMag(),
       showLines: false,
       showDso: false,
+      noteMode: false,
+      noteEdges: [],
+      noteSelected: null,
+      noteHistory: [],
       dsoDefaultVersion: 116,
       message: '',
       orient: null
@@ -2693,8 +2690,12 @@
       state.showDso = false;
       state.dsoDefaultVersion = 116;
     }
+    if (!Array.isArray(state.noteEdges)) state.noteEdges = [];
+    if (!Array.isArray(state.noteHistory)) state.noteHistory = [];
+    if (typeof state.noteMode !== 'boolean') state.noteMode = false;
+    if (!('noteSelected' in state)) state.noteSelected = null;
 
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines === true ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso === true ? "checked" : ""}><span>DSOs</span></label><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines === true ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso === true ? "checked" : ""}><span>DSOs</span></label><label class="checkline"><input id="mapNotes" type="checkbox" ${state.noteMode === true ? "checked" : ""}><span>make notes</span></label><div class="controls map-note-controls"><button type="button" id="mapUndoNotes">undo</button><button type="button" id="mapClearNotes">clear notes</button></div><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomIn">zoom in</button><button type="button" id="mapZoomOut">zoom out</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
 
     initRangeVisuals(app);
     setupSphereFullscreen();
@@ -2801,6 +2802,156 @@
       };
     }
 
+    function noteStarId(star) {
+      if (Number.isFinite(star.hip)) return `hip:${star.hip}`;
+      const name = compact(star.name || starDisplayName(star) || star.bayer || star.bf);
+      return `pos:${Number(star.ra).toFixed(6)}:${Number(star.dec).toFixed(6)}:${name}`;
+    }
+
+    function noteEdgeKeyFromIds(a, b) {
+      return [String(a), String(b)].sort().join('|');
+    }
+
+    function normaliseNoteEdges() {
+      const seen = new Set();
+      state.noteEdges = (state.noteEdges || []).filter(edge => {
+        if (!edge || !edge.a || !edge.b || edge.a === edge.b) return false;
+        const key = noteEdgeKeyFromIds(edge.a, edge.b);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function noteEdgeIndex(a, b) {
+      const key = noteEdgeKeyFromIds(a, b);
+      return state.noteEdges.findIndex(edge => noteEdgeKeyFromIds(edge.a, edge.b) === key);
+    }
+
+    function noteVisibleTargets(visibleStars, basis, radius, fovRad) {
+      const targets = [];
+      const byId = new Map();
+      for (const star of visibleStars) {
+        const p = project(star.v, basis, radius, fovRad);
+        if (!p) continue;
+        const id = noteStarId(star);
+        const r = Math.max(0.8, Math.min(4.6, 4.1 - star.mag * 0.54));
+        const target = { id, star, x: p.x, y: p.y, r, snap: Math.max(14, r + 10) };
+        targets.push(target);
+        if (!byId.has(id)) byId.set(id, target);
+      }
+      canvas._noteTargets = targets;
+      canvas._noteTargetIds = new Set(targets.map(t => t.id));
+      return { targets, byId };
+    }
+
+    function drawNoteEdges(byId) {
+      normaliseNoteEdges();
+      ctx.save();
+      ctx.strokeStyle = '#111';
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      state.noteEdges.forEach(edge => {
+        const a = byId.get(edge.a);
+        const b = byId.get(edge.b);
+        if (!a || !b) return;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    function drawNoteSelection(byId) {
+      if (!state.noteSelected) return;
+      const selected = byId.get(state.noteSelected);
+      if (!selected) return;
+      ctx.save();
+      ctx.strokeStyle = '#111';
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(selected.x, selected.y, Math.max(8, selected.r + 5), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function nearestNoteTarget(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * canvas.width / rect.width;
+      const y = (clientY - rect.top) * canvas.height / rect.height;
+      const hits = (canvas._noteTargets || [])
+        .map(t => ({ target: t, d: Math.hypot(t.x - x, t.y - y) }))
+        .filter(hit => hit.d <= hit.target.snap)
+        .sort((a, b) => a.d - b.d);
+      if (!hits.length) return null;
+      if (hits[1] && hits[0].d > hits[1].d * 0.75) return null;
+      return hits[0].target;
+    }
+
+    function handleNoteClick(clientX, clientY) {
+      const hit = nearestNoteTarget(clientX, clientY);
+      if (!hit) {
+        state.noteSelected = null;
+        draw();
+        return;
+      }
+
+      if (state.noteSelected && !(canvas._noteTargetIds || new Set()).has(state.noteSelected)) {
+        state.noteSelected = null;
+      }
+
+      if (state.noteSelected === hit.id) {
+        state.noteSelected = null;
+        draw();
+        return;
+      }
+
+      if (!state.noteSelected) {
+        state.noteSelected = hit.id;
+        draw();
+        return;
+      }
+
+      const edge = { a: state.noteSelected, b: hit.id };
+      const existing = noteEdgeIndex(edge.a, edge.b);
+      if (existing >= 0) {
+        const removed = state.noteEdges.splice(existing, 1)[0];
+        state.noteHistory.push({ type: 'remove', edge: removed });
+      } else {
+        state.noteEdges.push(edge);
+        state.noteHistory.push({ type: 'add', edge });
+      }
+      state.noteSelected = hit.id;
+      draw();
+    }
+
+    function undoMapNote() {
+      const action = state.noteHistory.pop();
+      if (!action) return;
+      if (action.type === 'add' && action.edge) {
+        const index = noteEdgeIndex(action.edge.a, action.edge.b);
+        if (index >= 0) state.noteEdges.splice(index, 1);
+      } else if (action.type === 'remove' && action.edge) {
+        if (noteEdgeIndex(action.edge.a, action.edge.b) < 0) state.noteEdges.push(action.edge);
+      } else if (action.type === 'clear' && Array.isArray(action.edges)) {
+        state.noteEdges = action.edges.slice();
+      }
+      draw();
+      focusCanvas();
+    }
+
+    function clearMapNotes() {
+      if (state.noteEdges.length) state.noteHistory.push({ type: 'clear', edges: state.noteEdges.slice() });
+      state.noteEdges = [];
+      state.noteSelected = null;
+      draw();
+      focusCanvas();
+    }
+
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = 'white';
@@ -2815,6 +2966,8 @@
 
       const pick = buildPickLookup(canvas);
       canvas._pickLayer = pick;
+      canvas._noteTargets = [];
+      canvas._noteTargetIds = new Set();
 
       if (!state.loaded) {
         ctx.fillStyle = 'black';
@@ -2837,6 +2990,9 @@
       const visibleStars = skyStars
         .filter(star => star.mag <= state.magLimit)
         .sort((a, b) => b.mag - a.mag);
+
+      const noteTargets = state.noteMode ? noteVisibleTargets(visibleStars, basis, radius, fovRad) : null;
+      if (noteTargets) drawNoteEdges(noteTargets.byId);
 
       ctx.fillStyle = 'black';
       for (const star of visibleStars) {
@@ -2879,6 +3035,8 @@
           registerPickCircle(pick, p.x, p.y, 14, state.searchMarker.payload);
         }
       }
+
+      if (noteTargets) drawNoteSelection(noteTargets.byId);
 
       ctx.restore();
 
@@ -3062,6 +3220,15 @@
       focusCanvas();
     });
 
+    $('#mapNotes').addEventListener('change', e => {
+      state.noteMode = e.target.checked;
+      if (!state.noteMode) state.noteSelected = null;
+      draw();
+      focusCanvas();
+    });
+    $('#mapUndoNotes').addEventListener('click', undoMapNote);
+    $('#mapClearNotes').addEventListener('click', clearMapNotes);
+
     $('#mapCentre').addEventListener('click', () => {
       state.searchMarker = null;
       state.orient = localBasisFromForward(vecFromRaDec(0, 0));
@@ -3140,7 +3307,10 @@
       const last = active.get(e.pointerId) || pointerPosition(e);
       active.delete(e.pointerId);
 
-      if (drag && drag.start && drag.moved < 6) selectAt(last.x, last.y);
+      if (drag && drag.start && drag.moved < 6) {
+        if (state.noteMode) handleNoteClick(last.x, last.y);
+        else selectAt(last.x, last.y);
+      }
 
       drag = active.size === 1 ? { start: [...active.values()][0], last: [...active.values()][0], moved: 0 } : null;
       pinch = active.size >= 2 ? pointerDistance() : null;

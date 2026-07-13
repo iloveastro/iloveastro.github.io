@@ -742,3 +742,21 @@ input[type='range']::-moz-range-thumb {
   .study-facts { grid-template-columns: 1fr; gap: 2px; }
   .study-facts dd { margin-bottom: 6px; }
 }
+
+
+.table-wrap .wiki-link {
+  color: black;
+  text-decoration: none;
+  font-weight: inherit;
+}
+.table-wrap .wiki-link:hover,
+.table-wrap .wiki-link:focus {
+  color: black;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+
+.map-note-controls {
+  margin-top: 4px;
+}
