@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=130';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=132';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2269,13 +2269,13 @@
         const up = normVec(cross(right, f));
         return { f, right: normVec(cross(f, up)), up };
       };
-      const centreVectors = targetConstellationNames.map(n => skyConstCentres.get(n)).filter(Boolean);
-      const centreSource = centreVectors.length ? centreVectors : vectors;
-      const sum = centreSource.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
+      const sum = vectors.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
       const centre = normVec(sum);
       const basis = cleanBasis(options.viewBasis) || localBasisFromForward(centre);
       const radius = Math.min(canvas.width, canvas.height) * 0.48;
-      const fovDeg = clampNumber(options.fovDeg, 20, 190, 50);
+      const baseFovDeg = clampNumber(options.fovDeg, 12, 190, 45);
+      const viewZoom = clampNumber(options.zoom, 0.55, 4.5, 1);
+      const fovDeg = clampNumber(baseFovDeg / viewZoom, 8, 190, baseFovDeg);
       const fovRad = fovDeg * Math.PI / 180;
       const projectSphere = v => {
         const z = dot(v, basis.f);
@@ -3671,7 +3671,7 @@
     const scoreId = () => state.mode === '1' ? 'guessconst' : `guessconst${state.mode}`;
     const savedValue = i => esc(state.inputs[i] || '');
 
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="guessConstLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="guessConstLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="guessConstZoomOut">− zoom</button><button type="button" id="guessConstZoomIn">zoom +</button><button type="button" id="guessConstResetView">reset view</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
     setupSphereFullscreen();
 
@@ -3833,23 +3833,51 @@
       return out.length ? out : state.stars.map(s => s.v);
     }
 
+    function guessProjectedFitCoordinates(basis, vectors) {
+      return vectors.map(v => {
+        const z = dot(v, basis.f);
+        const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+        const sin = Math.sin(ang) || 1e-9;
+        return {
+          x: ang * dot(v, basis.right) / sin,
+          y: ang * dot(v, basis.up) / sin
+        };
+      });
+    }
+
+    function guessBestFitMetrics() {
+      const vectors = guessViewVectors();
+      const sum = vectors.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
+      let basis = localBasisFromForward(normVec(sum));
+      for (let i = 0; i < 6; i++) {
+        const pts = guessProjectedFitCoordinates(basis, vectors);
+        const minX = Math.min(...pts.map(p => p.x));
+        const maxX = Math.max(...pts.map(p => p.x));
+        const minY = Math.min(...pts.map(p => p.y));
+        const maxY = Math.max(...pts.map(p => p.y));
+        const midX = (minX + maxX) / 2;
+        const midY = (minY + maxY) / 2;
+        if (Math.hypot(midX, midY) < 0.0005) break;
+        let f = rotateGuessVector(basis.f, basis.up, -midX);
+        f = rotateGuessVector(f, basis.right, midY);
+        basis = localBasisFromForward(f);
+      }
+      const pts = guessProjectedFitCoordinates(basis, vectors);
+      const radius = Math.max(...pts.map(p => Math.hypot(p.x, p.y)), 4 * Math.PI / 180);
+      return { basis, radius };
+    }
+
     function guessViewCentre() {
-      const centres = state.targets.map(n => skyConstCentres.get(n)).filter(Boolean);
-      const source = centres.length ? centres : guessViewVectors();
-      const sum = source.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
-      return normVec(sum);
+      return guessBestFitMetrics().basis.f;
     }
 
     function guessAngularRadius() {
-      const centre = guessViewCentre();
-      const vectors = guessViewVectors();
-      const radius = Math.max(...vectors.map(v => Math.acos(Math.max(-1, Math.min(1, dot(centre, v))))), 5 * Math.PI / 180);
-      return radius;
+      return guessBestFitMetrics().radius;
     }
 
     function guessFovDeg() {
-      const radiusDeg = guessAngularRadius() * 180 / Math.PI;
-      return Math.max(20, Math.min(150, radiusDeg * 4));
+      const radiusDeg = guessBestFitMetrics().radius * 180 / Math.PI;
+      return Math.max(10, Math.min(170, radiusDeg * 2.08 + 0.8));
     }
 
     function rotateGuessVector(v, axis, angle) {
@@ -3872,9 +3900,10 @@
     }
 
     function clampGuessView() {
-      const centre = guessViewCentre();
-      const limit = guessAngularRadius();
-      const b = cleanGuessBasis(state.viewOrient || localBasisFromForward(centre));
+      const fit = guessBestFitMetrics();
+      const centre = fit.basis.f;
+      const limit = fit.radius;
+      const b = cleanGuessBasis(state.viewOrient || fit.basis);
       const angle = Math.acos(Math.max(-1, Math.min(1, dot(centre, b.f))));
       if (angle <= limit + 1e-6) {
         state.viewOrient = b;
@@ -3882,7 +3911,7 @@
       }
       const axis = normVec(cross(centre, b.f));
       if (!Number.isFinite(axis.x)) {
-        state.viewOrient = localBasisFromForward(centre);
+        state.viewOrient = fit.basis;
         return;
       }
       const f = rotateGuessVector(centre, axis, limit);
@@ -3891,7 +3920,7 @@
 
     function ensureGuessViewOrient() {
       if (!state.viewOrient || !state.viewOrient.f || !state.viewOrient.right || !state.viewOrient.up) {
-        state.viewOrient = localBasisFromForward(guessViewCentre());
+        state.viewOrient = guessBestFitMetrics().basis;
       }
       state.viewOrient = cleanGuessBasis(state.viewOrient);
       clampGuessView();
@@ -3977,7 +4006,7 @@
     });
     function rotateGuessViewByPixels(dx, dy, multiplier = 1) {
       const b = ensureGuessViewOrient();
-      const anglePerPx = (guessFovDeg() * Math.PI / 180) / Math.max(1, Math.min(canvas.width, canvas.height)) / Math.max(0.75, state.viewZoom) * multiplier;
+      const anglePerPx = (guessFovDeg() * Math.PI / 180) / Math.max(1, Math.min(canvas.width, canvas.height)) / Math.max(0.6, state.viewZoom) * multiplier;
       rotateGuessView(b.up, -dx * anglePerPx);
       rotateGuessView(ensureGuessViewOrient().right, -dy * anglePerPx);
       draw();
@@ -4003,7 +4032,7 @@
       e.preventDefault();
       if (e.ctrlKey || e.metaKey || e.altKey) {
         const factor = Math.exp(-e.deltaY * 0.0032);
-        state.viewZoom = clampNumber(state.viewZoom * factor, 0.75, 3.5, 1);
+        state.viewZoom = clampNumber(state.viewZoom * factor, 0.55, 4.5, 1);
         draw();
         return;
       }
@@ -4083,6 +4112,17 @@
       draw();
     }
 
+    function setGuessZoom(factor) {
+      state.viewZoom = clampNumber(state.viewZoom * factor, 0.55, 4.5, 1);
+      draw();
+    }
+
+    function resetGuessView() {
+      state.viewZoom = 1;
+      state.viewOrient = guessBestFitMetrics().basis;
+      draw();
+    }
+
     $('#guessConstMode').addEventListener('change', e => {
       state.mode = normaliseMode(e.target.value);
       state.magLimit = defaultMag();
@@ -4103,6 +4143,9 @@
     });
     $('#guessConstRollCCW').addEventListener('click', () => rotateGuess(-1));
     $('#guessConstRollCW').addEventListener('click', () => rotateGuess(1));
+    $('#guessConstZoomOut').addEventListener('click', () => setGuessZoom(1 / 1.28));
+    $('#guessConstZoomIn').addEventListener('click', () => setGuessZoom(1.28));
+    $('#guessConstResetView').addEventListener('click', resetGuessView);
     if ($('#guessConstAuto')) $('#guessConstAuto').addEventListener('change', e => {
       state.autoCheck = e.target.checked;
       if (state.autoCheck) checkAnswers();
