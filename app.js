@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=126';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=127';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2236,7 +2236,8 @@
     const stars = options.stars || constellationStarSubset(name, magLimit);
     const showDso = options.showDso === true;
     const showLines = options.showLines === true && !!skyConstellationLineDb && !!skyHipByNumber.size;
-    const lineNames = (Array.isArray(options.constellations) && options.constellations.length ? options.constellations : [name]).map(compact);
+    const targetConstellationNames = (Array.isArray(options.constellations) && options.constellations.length ? options.constellations : [name]).filter(Boolean);
+    const lineNames = targetConstellationNames.map(compact);
     const lineNameSet = new Set(lineNames);
     const lineEdges = showLines ? skyLineEdgesFromDatabase().filter(edge => lineNameSet.has(compact(edge.constellation))) : [];
     const dsos = showDso ? buildSkyDsoObjects().filter(o => o.v && o.hasReliablePosition && o.constellation === name && String(o.commonName || '').trim()) : [];
@@ -2257,7 +2258,9 @@
       return [];
     }
 
-    const sum = vectors.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
+    const centreVectors = targetConstellationNames.map(n => skyConstCentres.get(n)).filter(Boolean);
+    const centreSource = centreVectors.length ? centreVectors : vectors;
+    const sum = centreSource.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
     const centre = normVec(sum);
     const b = localBasisFromForward(centre);
     const c = Math.cos(rotation), sr = Math.sin(rotation);
@@ -2281,9 +2284,13 @@
     const spanY = Math.max(0.0001, maxY - minY);
     const centreX = (minX + maxX) / 2;
     const centreY = (minY + maxY) / 2;
-    const scale = Math.min(canvas.width * 0.88 / spanX, canvas.height * 0.88 / spanY);
-    const mapX = p => canvas.width / 2 + (p.x - centreX) * scale;
-    const mapY = p => canvas.height / 2 - (p.y - centreY) * scale;
+    const viewZoom = clampNumber(options.zoom, 0.75, 3.5, 1);
+    const viewPan = options.pan && typeof options.pan === 'object' ? options.pan : {};
+    const panX = clampNumber(viewPan.x, -canvas.width, canvas.width, 0);
+    const panY = clampNumber(viewPan.y, -canvas.height, canvas.height, 0);
+    const scale = Math.min(canvas.width * 0.88 / spanX, canvas.height * 0.88 / spanY) * viewZoom;
+    const mapX = p => canvas.width / 2 + panX + (p.x - centreX) * scale;
+    const mapY = p => canvas.height / 2 + panY - (p.y - centreY) * scale;
     const drawn = [];
     const drawnDsos = [];
 
@@ -3526,7 +3533,10 @@
       showLines: false,
       inputs: [],
       found: [],
-      roundPools: {}
+      roundPools: {},
+      viewZoom: 1,
+      viewPanX: 0,
+      viewPanY: 0
     });
 
     function normaliseMode(value) {
@@ -3540,6 +3550,9 @@
     if (!Array.isArray(state.found)) state.found = [];
     if (!state.roundPools || typeof state.roundPools !== 'object') state.roundPools = {};
     if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
+    if (!Number.isFinite(state.viewZoom)) state.viewZoom = 1;
+    if (!Number.isFinite(state.viewPanX)) state.viewPanX = 0;
+    if (!Number.isFinite(state.viewPanY)) state.viewPanY = 0;
 
     const modeCount = Number(state.mode);
     const scoreId = () => state.mode === '1' ? 'guessconst' : `guessconst${state.mode}`;
@@ -3703,6 +3716,9 @@
       state.message = '';
       state.answered = false;
       if (Number(state.mode) > 1) state.showLines = false;
+      state.viewZoom = 1;
+      state.viewPanX = 0;
+      state.viewPanY = 0;
       state.found = [];
       state.inputs = Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
     }
@@ -3731,7 +3747,9 @@
         rotation: state.rotation,
         stars: state.stars,
         showLines: state.showLines === true && !!skyConstellationLineDb,
-        constellations: state.targets
+        constellations: state.targets,
+        zoom: state.viewZoom,
+        pan: { x: state.viewPanX, y: state.viewPanY }
       });
     }
 
@@ -3744,7 +3762,45 @@
       if (!hit) return;
       msg.innerHTML = `${state.targets.join(', ')}<br>${starInfoHtml(hit.star)}`;
     }
-    canvas.addEventListener('click', e => selectGuessStar(e.clientX, e.clientY));
+    let guessDrag = null;
+    function canvasDelta(e, previous) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        dx: (e.clientX - previous.x) * canvas.width / rect.width,
+        dy: (e.clientY - previous.y) * canvas.height / rect.height
+      };
+    }
+    canvas.addEventListener('pointerdown', e => {
+      canvas.setPointerCapture(e.pointerId);
+      guessDrag = { id: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: 0 };
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!guessDrag || guessDrag.id !== e.pointerId) return;
+      const delta = canvasDelta(e, { x: guessDrag.lastX, y: guessDrag.lastY });
+      guessDrag.moved += Math.hypot(e.clientX - guessDrag.lastX, e.clientY - guessDrag.lastY);
+      guessDrag.lastX = e.clientX;
+      guessDrag.lastY = e.clientY;
+      if (guessDrag.moved >= 3) {
+        state.viewPanX = clampNumber(state.viewPanX + delta.dx, -canvas.width, canvas.width, 0);
+        state.viewPanY = clampNumber(state.viewPanY + delta.dy, -canvas.height, canvas.height, 0);
+        draw();
+      }
+    });
+    function finishGuessPointer(e) {
+      if (!guessDrag || guessDrag.id !== e.pointerId) return;
+      const moved = guessDrag.moved;
+      guessDrag = null;
+      if (moved < 6) selectGuessStar(e.clientX, e.clientY);
+    }
+    canvas.addEventListener('pointerup', finishGuessPointer);
+    canvas.addEventListener('pointercancel', () => { guessDrag = null; });
+    canvas.addEventListener('lostpointercapture', () => { guessDrag = null; });
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const factor = Math.exp(-e.deltaY * 0.0015);
+      state.viewZoom = clampNumber(state.viewZoom * factor, 0.75, 3.5, 1);
+      draw();
+    }, { passive: false });
 
     function targetMatches(value, target) {
       return answerMatches(value, [target]);

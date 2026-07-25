@@ -778,11 +778,7 @@ input[type='range']::-moz-range-thumb {
 }
 
 
-/* v126 Guess Constellation visibility */
-#guessConstCanvas {
-  width: min(100%, 82vh, 880px);
-}
-
+/* v127 Guess Constellation fullscreen uses the same sizing rule as the other sky canvases. */
 .sky-layout.sphere-fullscreen #guessConstCanvas {
   width: min(calc(100vw - 380px), calc(100vh - 24px));
   max-width: none;
