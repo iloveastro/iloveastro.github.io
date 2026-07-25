@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=128';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=129';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2263,15 +2263,18 @@
     const sum = centreSource.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
     const centre = normVec(sum);
     const baseBasis = localBasisFromForward(centre);
-    const c = Math.cos(rotation), sr = Math.sin(rotation);
-    const rotateVector = (v, axis, angle) => {
-      const ca = Math.cos(angle), sa = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
-      return normVec({
-        x: v.x * ca + cr.x * sa + axis.x * d * (1 - ca),
-        y: v.y * ca + cr.y * sa + axis.y * d * (1 - ca),
-        z: v.z * ca + cr.z * sa + axis.z * d * (1 - ca)
-      });
+    const cleanBasis = basis => {
+      if (!basis || !basis.f || !basis.right || !basis.up) return null;
+      const f = normVec(basis.f);
+      let right = basis.right;
+      const proj = dot(right, f);
+      right = normVec({ x: right.x - proj * f.x, y: right.y - proj * f.y, z: right.z - proj * f.z });
+      if (!Number.isFinite(right.x)) return null;
+      const up = normVec(cross(right, f));
+      return { f, right: normVec(cross(f, up)), up };
     };
+    const viewBasis = cleanBasis(options.viewBasis) || baseBasis;
+    const c = Math.cos(rotation), sr = Math.sin(rotation);
     const toMapPointWithBasis = (basis, v, item) => {
       const x0 = dot(v, basis.right), y0 = dot(v, basis.up);
       return { ...item, x: x0 * c - y0 * sr, y: x0 * sr + y0 * c };
@@ -2298,16 +2301,7 @@
     const centreX = (minX + maxX) / 2;
     const centreY = (minY + maxY) / 2;
 
-    const sphereOffset = options.sphereOffset && typeof options.sphereOffset === 'object' ? options.sphereOffset : {};
-    const offsetX = clampNumber(sphereOffset.x, -1.15, 1.15, 0);
-    const offsetY = clampNumber(sphereOffset.y, -1.15, 1.15, 0);
-    let viewBasis = baseBasis;
-    if (Math.abs(offsetX) > 1e-6 || Math.abs(offsetY) > 1e-6) {
-      let viewCentre = rotateVector(centre, baseBasis.up, -offsetX);
-      viewCentre = rotateVector(viewCentre, baseBasis.right, offsetY);
-      viewBasis = localBasisFromForward(viewCentre);
-    }
-    const activeRaw = viewBasis === baseBasis ? baseRaw : makeRaw(viewBasis);
+    const activeRaw = makeRaw(viewBasis);
     const rawStars = activeRaw.rawStars;
     const rawDsos = activeRaw.rawDsos;
     const rawLineEdges = activeRaw.rawLineEdges;
@@ -3560,8 +3554,7 @@
       found: [],
       roundPools: {},
       viewZoom: 1,
-      viewPanX: 0,
-      viewPanY: 0
+      viewOrient: null
     });
 
     function normaliseMode(value) {
@@ -3576,8 +3569,7 @@
     if (!state.roundPools || typeof state.roundPools !== 'object') state.roundPools = {};
     if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
     if (!Number.isFinite(state.viewZoom)) state.viewZoom = 1;
-    if (!Number.isFinite(state.viewPanX)) state.viewPanX = 0;
-    if (!Number.isFinite(state.viewPanY)) state.viewPanY = 0;
+    if (!state.viewOrient || typeof state.viewOrient !== 'object') state.viewOrient = null;
 
     const modeCount = Number(state.mode);
     const scoreId = () => state.mode === '1' ? 'guessconst' : `guessconst${state.mode}`;
@@ -3733,6 +3725,49 @@
       return uniqueSkyStars(names.flatMap(name => guessStarsForConstellation(name, state.magLimit)));
     }
 
+    function guessViewCentre() {
+      const centres = state.targets.map(n => skyConstCentres.get(n)).filter(Boolean);
+      const source = centres.length ? centres : state.stars.map(s => s.v);
+      const sum = source.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
+      return normVec(sum);
+    }
+
+    function rotateGuessVector(v, axis, angle) {
+      const c = Math.cos(angle), s = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
+      return normVec({
+        x: v.x * c + cr.x * s + axis.x * d * (1 - c),
+        y: v.y * c + cr.y * s + axis.y * d * (1 - c),
+        z: v.z * c + cr.z * s + axis.z * d * (1 - c)
+      });
+    }
+
+    function cleanGuessBasis(basis) {
+      const f = normVec(basis.f);
+      let right = basis.right;
+      const proj = dot(right, f);
+      right = normVec({ x: right.x - proj * f.x, y: right.y - proj * f.y, z: right.z - proj * f.z });
+      if (!Number.isFinite(right.x)) return localBasisFromForward(f);
+      const up = normVec(cross(right, f));
+      return { f, right: normVec(cross(f, up)), up };
+    }
+
+    function ensureGuessViewOrient() {
+      if (!state.viewOrient || !state.viewOrient.f || !state.viewOrient.right || !state.viewOrient.up) {
+        state.viewOrient = localBasisFromForward(guessViewCentre());
+      }
+      state.viewOrient = cleanGuessBasis(state.viewOrient);
+      return state.viewOrient;
+    }
+
+    function rotateGuessView(axis, angle) {
+      const b = ensureGuessViewOrient();
+      state.viewOrient = cleanGuessBasis({
+        f: rotateGuessVector(b.f, axis, angle),
+        right: rotateGuessVector(b.right, axis, angle),
+        up: rotateGuessVector(b.up, axis, angle)
+      });
+    }
+
     function applyRound(round) {
       state.targets = round?.targets || [];
       state.target = state.targets[0] || '';
@@ -3742,8 +3777,7 @@
       state.answered = false;
       if (Number(state.mode) > 1) state.showLines = false;
       state.viewZoom = 1;
-      state.viewPanX = 0;
-      state.viewPanY = 0;
+      state.viewOrient = null;
       state.found = [];
       state.inputs = Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
     }
@@ -3774,7 +3808,7 @@
         showLines: state.showLines === true && !!skyConstellationLineDb,
         constellations: state.targets,
         zoom: state.viewZoom,
-        sphereOffset: { x: state.viewPanX, y: state.viewPanY }
+        viewBasis: ensureGuessViewOrient()
       });
     }
 
@@ -3799,10 +3833,11 @@
       canvas.setPointerCapture(e.pointerId);
       guessDrag = { id: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: 0 };
     });
-    function rotateGuessViewByPixels(dx, dy) {
-      const unit = 1.35 / Math.max(1, Math.min(canvas.width, canvas.height)) / Math.max(0.75, state.viewZoom);
-      state.viewPanX = clampNumber(state.viewPanX + dx * unit, -1.15, 1.15, 0);
-      state.viewPanY = clampNumber(state.viewPanY + dy * unit, -1.15, 1.15, 0);
+    function rotateGuessViewByPixels(dx, dy, multiplier = 1) {
+      const b = ensureGuessViewOrient();
+      const anglePerPx = 1.45 / Math.max(1, Math.min(canvas.width, canvas.height)) / Math.max(0.75, state.viewZoom) * multiplier;
+      rotateGuessView(b.up, -dx * anglePerPx);
+      rotateGuessView(ensureGuessViewOrient().right, -dy * anglePerPx);
       draw();
     }
     canvas.addEventListener('pointermove', e => {
@@ -3811,7 +3846,7 @@
       guessDrag.moved += Math.hypot(e.clientX - guessDrag.lastX, e.clientY - guessDrag.lastY);
       guessDrag.lastX = e.clientX;
       guessDrag.lastY = e.clientY;
-      if (guessDrag.moved >= 3) rotateGuessViewByPixels(delta.dx, delta.dy);
+      if (guessDrag.moved >= 3) rotateGuessViewByPixels(delta.dx, delta.dy, 1);
     });
     function finishGuessPointer(e) {
       if (!guessDrag || guessDrag.id !== e.pointerId) return;
@@ -3825,13 +3860,15 @@
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
       if (e.ctrlKey || e.metaKey || e.altKey) {
-        const factor = Math.exp(-e.deltaY * 0.0022);
+        const factor = Math.exp(-e.deltaY * 0.003);
         state.viewZoom = clampNumber(state.viewZoom * factor, 0.75, 3.5, 1);
         draw();
         return;
       }
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? canvas.height : 1;
-      rotateGuessViewByPixels(-(e.deltaX || 0) * unit, -(e.deltaY || 0) * unit);
+      const dx = (e.deltaX || (e.shiftKey ? e.deltaY : 0)) * unit;
+      const dy = (e.shiftKey ? 0 : e.deltaY) * unit;
+      rotateGuessViewByPixels(dx, dy, 0.45);
     }, { passive: false });
 
     function targetMatches(value, target) {
