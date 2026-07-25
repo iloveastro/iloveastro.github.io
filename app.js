@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=127';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=128';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2262,35 +2262,60 @@
     const centreSource = centreVectors.length ? centreVectors : vectors;
     const sum = centreSource.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
     const centre = normVec(sum);
-    const b = localBasisFromForward(centre);
+    const baseBasis = localBasisFromForward(centre);
     const c = Math.cos(rotation), sr = Math.sin(rotation);
-    const toMapPoint = (v, item) => {
-      const x0 = dot(v, b.right), y0 = dot(v, b.up);
+    const rotateVector = (v, axis, angle) => {
+      const ca = Math.cos(angle), sa = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
+      return normVec({
+        x: v.x * ca + cr.x * sa + axis.x * d * (1 - ca),
+        y: v.y * ca + cr.y * sa + axis.y * d * (1 - ca),
+        z: v.z * ca + cr.z * sa + axis.z * d * (1 - ca)
+      });
+    };
+    const toMapPointWithBasis = (basis, v, item) => {
+      const x0 = dot(v, basis.right), y0 = dot(v, basis.up);
       return { ...item, x: x0 * c - y0 * sr, y: x0 * sr + y0 * c };
     };
-    const rawStars = stars.map(star => toMapPoint(star.v, { star }));
-    const rawDsos = dsos.map(dso => toMapPoint(dso.v, { dso }));
-    const rawLineEdges = lineEdges.map(edge => ({
-      edge,
-      a: toMapPoint(edge.s1.v, {}),
-      b: toMapPoint(edge.s2.v, {})
-    }));
-    const rawPoints = [...rawStars, ...rawDsos, ...rawLineEdges.flatMap(edge => [edge.a, edge.b])];
-    const minX = Math.min(...rawPoints.map(p => p.x));
-    const maxX = Math.max(...rawPoints.map(p => p.x));
-    const minY = Math.min(...rawPoints.map(p => p.y));
-    const maxY = Math.max(...rawPoints.map(p => p.y));
+    const makeRaw = basis => {
+      const rawStars = stars.map(star => toMapPointWithBasis(basis, star.v, { star }));
+      const rawDsos = dsos.map(dso => toMapPointWithBasis(basis, dso.v, { dso }));
+      const rawLineEdges = lineEdges.map(edge => ({
+        edge,
+        a: toMapPointWithBasis(basis, edge.s1.v, {}),
+        b: toMapPointWithBasis(basis, edge.s2.v, {})
+      }));
+      return { rawStars, rawDsos, rawLineEdges };
+    };
+
+    const baseRaw = makeRaw(baseBasis);
+    const basePoints = [...baseRaw.rawStars, ...baseRaw.rawDsos, ...baseRaw.rawLineEdges.flatMap(edge => [edge.a, edge.b])];
+    const minX = Math.min(...basePoints.map(p => p.x));
+    const maxX = Math.max(...basePoints.map(p => p.x));
+    const minY = Math.min(...basePoints.map(p => p.y));
+    const maxY = Math.max(...basePoints.map(p => p.y));
     const spanX = Math.max(0.0001, maxX - minX);
     const spanY = Math.max(0.0001, maxY - minY);
     const centreX = (minX + maxX) / 2;
     const centreY = (minY + maxY) / 2;
+
+    const sphereOffset = options.sphereOffset && typeof options.sphereOffset === 'object' ? options.sphereOffset : {};
+    const offsetX = clampNumber(sphereOffset.x, -1.15, 1.15, 0);
+    const offsetY = clampNumber(sphereOffset.y, -1.15, 1.15, 0);
+    let viewBasis = baseBasis;
+    if (Math.abs(offsetX) > 1e-6 || Math.abs(offsetY) > 1e-6) {
+      let viewCentre = rotateVector(centre, baseBasis.up, -offsetX);
+      viewCentre = rotateVector(viewCentre, baseBasis.right, offsetY);
+      viewBasis = localBasisFromForward(viewCentre);
+    }
+    const activeRaw = viewBasis === baseBasis ? baseRaw : makeRaw(viewBasis);
+    const rawStars = activeRaw.rawStars;
+    const rawDsos = activeRaw.rawDsos;
+    const rawLineEdges = activeRaw.rawLineEdges;
+
     const viewZoom = clampNumber(options.zoom, 0.75, 3.5, 1);
-    const viewPan = options.pan && typeof options.pan === 'object' ? options.pan : {};
-    const panX = clampNumber(viewPan.x, -canvas.width, canvas.width, 0);
-    const panY = clampNumber(viewPan.y, -canvas.height, canvas.height, 0);
     const scale = Math.min(canvas.width * 0.88 / spanX, canvas.height * 0.88 / spanY) * viewZoom;
-    const mapX = p => canvas.width / 2 + panX + (p.x - centreX) * scale;
-    const mapY = p => canvas.height / 2 + panY - (p.y - centreY) * scale;
+    const mapX = p => canvas.width / 2 + (p.x - centreX) * scale;
+    const mapY = p => canvas.height / 2 - (p.y - centreY) * scale;
     const drawn = [];
     const drawnDsos = [];
 
@@ -3749,7 +3774,7 @@
         showLines: state.showLines === true && !!skyConstellationLineDb,
         constellations: state.targets,
         zoom: state.viewZoom,
-        pan: { x: state.viewPanX, y: state.viewPanY }
+        sphereOffset: { x: state.viewPanX, y: state.viewPanY }
       });
     }
 
@@ -3774,17 +3799,19 @@
       canvas.setPointerCapture(e.pointerId);
       guessDrag = { id: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: 0 };
     });
+    function rotateGuessViewByPixels(dx, dy) {
+      const unit = 1.35 / Math.max(1, Math.min(canvas.width, canvas.height)) / Math.max(0.75, state.viewZoom);
+      state.viewPanX = clampNumber(state.viewPanX + dx * unit, -1.15, 1.15, 0);
+      state.viewPanY = clampNumber(state.viewPanY + dy * unit, -1.15, 1.15, 0);
+      draw();
+    }
     canvas.addEventListener('pointermove', e => {
       if (!guessDrag || guessDrag.id !== e.pointerId) return;
       const delta = canvasDelta(e, { x: guessDrag.lastX, y: guessDrag.lastY });
       guessDrag.moved += Math.hypot(e.clientX - guessDrag.lastX, e.clientY - guessDrag.lastY);
       guessDrag.lastX = e.clientX;
       guessDrag.lastY = e.clientY;
-      if (guessDrag.moved >= 3) {
-        state.viewPanX = clampNumber(state.viewPanX + delta.dx, -canvas.width, canvas.width, 0);
-        state.viewPanY = clampNumber(state.viewPanY + delta.dy, -canvas.height, canvas.height, 0);
-        draw();
-      }
+      if (guessDrag.moved >= 3) rotateGuessViewByPixels(delta.dx, delta.dy);
     });
     function finishGuessPointer(e) {
       if (!guessDrag || guessDrag.id !== e.pointerId) return;
@@ -3797,9 +3824,14 @@
     canvas.addEventListener('lostpointercapture', () => { guessDrag = null; });
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
-      const factor = Math.exp(-e.deltaY * 0.0015);
-      state.viewZoom = clampNumber(state.viewZoom * factor, 0.75, 3.5, 1);
-      draw();
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        const factor = Math.exp(-e.deltaY * 0.0022);
+        state.viewZoom = clampNumber(state.viewZoom * factor, 0.75, 3.5, 1);
+        draw();
+        return;
+      }
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? canvas.height : 1;
+      rotateGuessViewByPixels(-(e.deltaX || 0) * unit, -(e.deltaY || 0) * unit);
     }, { passive: false });
 
     function targetMatches(value, target) {
