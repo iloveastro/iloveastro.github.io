@@ -623,17 +623,6 @@
     const dsos = info.dsos.length ? info.dsos.slice(0, 10).map(o => `${esc(o.code)}${o.commonName ? ` ${esc(o.commonName)}` : ''}`).join(', ') : 'none in Messier/Caldwell list';
     return `<h3>${esc(name)}</h3><p>${esc(info.myth)}</p><p><strong>asterisms:</strong> ${info.asterisms.length ? info.asterisms.map(esc).join(', ') : 'none listed yet'}</p><p><strong>stars:</strong> ${stars}</p><p><strong>DSOs:</strong> ${dsos}</p>`;
   }
-  function chartQuestion() {
-    const c = rand(DATA.charts);
-    return { prompt: 'Name the constellation chart.', answers: c.accepted, visual: chartPanelImg(c, false, 'blanked constellation chart'), card: () => `<h3>${esc(c.displayName)}</h3>${infoCard(c.name)}${chartImg(c, true, 'chart-img', 'labelled chart')}` };
-  }
-  function neighbourQuestion() {
-    const pool = DATA.charts.filter(c => c.neighbourClues && c.neighbourClues.length);
-    const c = rand(pool);
-    const target = rand(c.neighbourClues);
-    return { prompt: `On the <strong>${esc(c.displayName)}</strong> chart, name ${esc(target.clue)}.`, answers: [target.answer], visual: chartPanelImg(c, false, 'blanked constellation chart'), card: () => `<h3>${esc(target.answer)}</h3><p>Target neighbour on the ${esc(c.displayName)} chart.</p>${chartImg(c, true, 'chart-img', 'labelled chart')}` };
-  }
-
   const starModes = [
     { id: 'starToConstellation', label: 'star -> constellation' },
     { id: 'designationToStar', label: 'designation -> star' },
@@ -694,17 +683,6 @@
     };
   }
 
-  const asterismModes = [
-    { id: 'clueToName', label: 'clue -> asterism' },
-    { id: 'starsToAsterism', label: 'stars -> asterism' },
-    { id: 'asterismToConstellation', label: 'asterism -> constellation' }
-  ];
-  function asterismQuestion(mode) {
-    const a = rand(DATA.asterisms);
-    if (mode === 'starsToAsterism' && a.members.length) return { prompt: `Which asterism uses these stars?<br><strong>${a.members.map(esc).join(', ')}</strong>`, answers: [a.name], card: () => `<h3>${esc(a.name)}</h3><p>${esc(a.clue)}</p><p>${a.constellations.map(esc).join(', ')}</p>` };
-    if (mode === 'asterismToConstellation') return { prompt: `Name any constellation involved in <strong>${esc(a.name)}</strong>.`, answers: a.constellations, card: () => `<h3>${esc(a.name)}</h3><p>${esc(a.clue)}</p><p>${a.constellations.map(esc).join(', ')}</p>` };
-    return { prompt: `What asterism / sky pattern is this?<br><strong>${esc(a.clue)}</strong>`, answers: [a.name], card: () => `<h3>${esc(a.name)}</h3><p>${esc(a.clue)}</p><p>${a.constellations.map(esc).join(', ')}</p>` };
-  }
   const dsoModes = [
     { id: 'codeToName', label: 'number -> common name' },
     { id: 'nameToCode', label: 'common name -> number' },
@@ -774,11 +752,6 @@
       card: () => `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>${arr.map(dsoLabel).join(', ')}</p>${infoCard(constellation)}</div>`
     };
   }
-  function mixedQuestion() {
-    const makers = [chartQuestion, neighbourQuestion, () => starQuestion(rand(starModes).id), starGroupQuestion, () => asterismQuestion(rand(asterismModes).id), () => dsoQuestion(rand(dsoModes).id), dsoGroupQuestion];
-    const q = rand(makers)(); q.prompt = `<span class="small">mixed</span><br>${q.prompt}`; return q;
-  }
-
   let timerState = states.timer || (states.timer = { running: false, seconds: 0, interval: null, found: new Set(), next: () => {}, hintName: null, hintLength: 0, disqualified: false });
   if (!timerState.found) timerState.found = new Set();
   if (!('hintName' in timerState)) timerState.hintName = null;
@@ -1123,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=124';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=126';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1525,12 +1498,7 @@
     }
     return (h >>> 0) / 4294967296;
   }
-  function seededUnitVec(seed, attempt = 0) {
-    const z = hashUnit(seed, `z${attempt}`) * 2 - 1;
-    const a = hashUnit(seed, `a${attempt}`) * Math.PI * 2;
-    const r = Math.sqrt(Math.max(0, 1 - z * z));
-    return { x: r * Math.cos(a), y: r * Math.sin(a), z };
-  }
+
   function dsoCategory(o) {
     const t = compact(o.type || '');
     if (t.includes('nebula')) return 'nebula';
@@ -2304,8 +2272,18 @@
       a: toMapPoint(edge.s1.v, {}),
       b: toMapPoint(edge.s2.v, {})
     }));
-    const maxAbs = Math.max(0.0001, ...[...rawStars, ...rawDsos, ...rawLineEdges.flatMap(edge => [edge.a, edge.b])].map(p => Math.max(Math.abs(p.x), Math.abs(p.y))));
-    const scale = Math.min(canvas.width, canvas.height) * 0.39 / maxAbs;
+    const rawPoints = [...rawStars, ...rawDsos, ...rawLineEdges.flatMap(edge => [edge.a, edge.b])];
+    const minX = Math.min(...rawPoints.map(p => p.x));
+    const maxX = Math.max(...rawPoints.map(p => p.x));
+    const minY = Math.min(...rawPoints.map(p => p.y));
+    const maxY = Math.max(...rawPoints.map(p => p.y));
+    const spanX = Math.max(0.0001, maxX - minX);
+    const spanY = Math.max(0.0001, maxY - minY);
+    const centreX = (minX + maxX) / 2;
+    const centreY = (minY + maxY) / 2;
+    const scale = Math.min(canvas.width * 0.88 / spanX, canvas.height * 0.88 / spanY);
+    const mapX = p => canvas.width / 2 + (p.x - centreX) * scale;
+    const mapY = p => canvas.height / 2 - (p.y - centreY) * scale;
     const drawn = [];
     const drawnDsos = [];
 
@@ -2318,10 +2296,10 @@
       ctx.lineJoin = 'round';
       rawLineEdges.forEach(({ edge, a, b }) => {
         if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
-        const x1 = canvas.width / 2 + a.x * scale;
-        const y1 = canvas.height / 2 - a.y * scale;
-        const x2 = canvas.width / 2 + b.x * scale;
-        const y2 = canvas.height / 2 - b.y * scale;
+        const x1 = mapX(a);
+        const y1 = mapY(a);
+        const x2 = mapX(b);
+        const y2 = mapY(b);
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
@@ -2332,8 +2310,8 @@
 
     ctx.fillStyle = 'black';
     rawStars.sort((a, b) => b.star.mag - a.star.mag).forEach(p => {
-      const x = canvas.width / 2 + p.x * scale;
-      const y = canvas.height / 2 - p.y * scale;
+      const x = mapX(p);
+      const y = mapY(p);
       const r = Math.max(1.2, Math.min(6, 5.2 - p.star.mag * 0.62));
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -2345,8 +2323,8 @@
 
     if (showDso) {
       rawDsos.forEach(p => {
-        const x = canvas.width / 2 + p.x * scale;
-        const y = canvas.height / 2 - p.y * scale;
+        const x = mapX(p);
+        const y = mapY(p);
         ctx.fillStyle = p.dso.colour;
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 1;
@@ -3569,6 +3547,7 @@
 
     app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="guessConstLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">new constellation</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
+    setupSphereFullscreen();
 
     const canvas = $('#guessConstCanvas'), ctx = canvas.getContext('2d');
     const msg = $('#guessConstMsg');
@@ -3723,7 +3702,7 @@
       state.stars = starsInConstellations(state.targets);
       state.message = '';
       state.answered = false;
-      state.autoCheck = false;
+      if (Number(state.mode) > 1) state.showLines = false;
       state.found = [];
       state.inputs = Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
     }
@@ -3840,7 +3819,6 @@
     $('#guessConstMode').addEventListener('change', e => {
       state.mode = normaliseMode(e.target.value);
       state.magLimit = defaultMag();
-      state.autoCheck = false;
       state.targets = [];
       state.target = '';
       state.message = '';
