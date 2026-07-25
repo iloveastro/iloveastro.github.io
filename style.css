@@ -760,3 +760,16 @@ input[type='range']::-moz-range-thumb {
 .map-note-controls {
   margin-top: 4px;
 }
+
+
+.score-backup-panel {
+  margin-top: 14px;
+}
+#scoreBackupText {
+  width: 100%;
+  max-width: none;
+  min-height: 78px;
+  font-family: monospace;
+  font-size: 12px;
+  box-sizing: border-box;
+}

@@ -308,6 +308,39 @@
   }
   let progress = loadProgress(activeSave);
   function saveProgress() { localStorage.setItem(saveSlotKey(activeSave), JSON.stringify(progress)); }
+  function encodeUtf8Base64(text) {
+    return btoa(unescape(encodeURIComponent(text)));
+  }
+  function decodeUtf8Base64(text) {
+    return decodeURIComponent(escape(atob(text)));
+  }
+  function progressExportText() {
+    const payload = {
+      version: 1,
+      activeSave,
+      slots: Object.fromEntries(SAVE_SLOTS.map(slot => [slot, loadProgress(slot)]))
+    };
+    return `iloveastro-progress-v1:${encodeUtf8Base64(JSON.stringify(payload))}`;
+  }
+  function progressImportText(raw) {
+    const text = String(raw || '').trim();
+    if (!text) throw new Error('empty import');
+    let payload = null;
+    if (text.startsWith('iloveastro-progress-v1:')) {
+      payload = JSON.parse(decodeUtf8Base64(text.slice('iloveastro-progress-v1:'.length)));
+    } else {
+      payload = JSON.parse(text);
+    }
+    if (!payload || typeof payload !== 'object' || !payload.slots || typeof payload.slots !== 'object') throw new Error('invalid import');
+    SAVE_SLOTS.forEach(slot => {
+      const value = payload.slots[slot];
+      localStorage.setItem(saveSlotKey(slot), JSON.stringify(value && typeof value === 'object' ? value : {}));
+    });
+    activeSave = SAVE_SLOTS.includes(payload.activeSave) ? payload.activeSave : '1';
+    localStorage.setItem(ACTIVE_SAVE_KEY, activeSave);
+    progress = loadProgress(activeSave);
+    return true;
+  }
   function scoreKey(game) { if (!progress[game]) progress[game] = { seen: 0, correct: 0 }; return progress[game]; }
   function record(game, ok) { const p = scoreKey(game); p.seen++; if (ok) p.correct++; saveProgress(); }
   function formatScore(game) { const p = scoreKey(game); const acc = p.seen ? Math.round(100 * p.correct / p.seen) : 0; return `<div class="stat"><strong>${p.seen}</strong>seen</div><div class="stat"><strong>${p.correct}</strong>correct</div><div class="stat"><strong>${acc}%</strong>accuracy</div>`; }
@@ -360,14 +393,12 @@
   }
 
   const games = [
-    { id: 'charts', title: 'Charts' },
     { id: 'skyguessr', title: 'SkyGuessr' },
     { id: 'skyrace', title: 'SkyRace' },
     { id: 'skymap', title: 'Sky Map' },
     { id: 'skyregions', title: 'Constellation Map' },
     { id: 'alphapin', title: 'Find Constellation' },
     { id: 'guessconst', title: 'Guess Constellation' },
-    { id: 'neighbours', title: 'Neighbours' },
     { id: 'stars', title: 'Stars' },
     { id: 'dso', title: 'DSOs' },
     { id: 'timer', title: '88 Timer' },
@@ -375,7 +406,7 @@
     { id: 'tables', title: 'Tables' }
   ];
 
-  let activeGame = 'charts';
+  let activeGame = 'skyguessr';
   const launchState = { active: !!document.querySelector('#loadingOverlay[data-launch]') };
   const app = $('#app');
   const tabs = $('#tabs');
@@ -723,10 +754,11 @@
     const q = rand(makers)(); q.prompt = `<span class="small">mixed</span><br>${q.prompt}`; return q;
   }
 
-  let timerState = states.timer || (states.timer = { running: false, seconds: 0, interval: null, found: new Set(), next: () => {}, hintName: null, hintLength: 0 });
+  let timerState = states.timer || (states.timer = { running: false, seconds: 0, interval: null, found: new Set(), next: () => {}, hintName: null, hintLength: 0, disqualified: false });
   if (!timerState.found) timerState.found = new Set();
   if (!('hintName' in timerState)) timerState.hintName = null;
   if (!('hintLength' in timerState)) timerState.hintLength = 0;
+  if (!('disqualified' in timerState)) timerState.disqualified = false;
   function timerTimeText(seconds) {
     const s = Math.max(0, Number(seconds) || 0);
     const mm = String(Math.floor(s / 60)).padStart(2, '0');
@@ -746,7 +778,7 @@
     try { input.focus({ preventScroll: true }); } catch { input.focus(); }
   }
   function timerAutoStart(raw) {
-    if (timerState.running || timerState.found.size || !norm(raw)) return;
+    if (timerState.running || timerState.found.size || timerState.disqualified || !norm(raw)) return;
     clearInterval(timerState.interval);
     timerState.running = true;
     timerState.seconds = 0;
@@ -757,12 +789,17 @@
     if (!input) return;
     const missing = timerMissingNames();
     if (!missing.length) return;
+    clearInterval(timerState.interval);
+    timerState.running = false;
+    timerState.disqualified = true;
     if (!timerState.hintName || timerState.found.has(timerState.hintName)) {
       timerState.hintName = rand(missing);
       timerState.hintLength = 0;
     }
     timerState.hintLength = Math.min(timerState.hintName.length, (timerState.hintLength || 0) + 1);
     input.value = timerState.hintName.slice(0, timerState.hintLength);
+    const msg = $('#timerMsg');
+    if (msg) msg.textContent = 'invalid';
     focusTimerInput();
   }
   function timerGiveUp() {
@@ -770,6 +807,7 @@
     timerState.running = false;
     timerState.hintName = null;
     timerState.hintLength = 0;
+    timerState.disqualified = true;
     const missing = timerMissingNames();
     const msg = $('#timerMsg');
     const list = $('#missingList');
@@ -784,6 +822,7 @@
     timerState.found = new Set();
     timerState.hintName = null;
     timerState.hintLength = 0;
+    timerState.disqualified = false;
     const input = $('#timerInput');
     const clock = $('#timerClock');
     const progress = $('#timerProgress');
@@ -817,7 +856,7 @@
     const keepFocus = e => e.preventDefault();
     app.append(el('section', { class: 'panel' }, [
       el('h2', {}, [document.createTextNode('88 Timer')]),
-      el('p', { html: `<strong id="timerClock">${timeText}</strong> <span id="timerProgress">${found.length}/88</span> · best: <strong id="timerBest">${timerBestText()}</strong>` }),
+      el('p', { html: `<strong id="timerClock">${timeText}</strong> <span id="timerProgress">${found.length}/88</span> · best: <strong id="timerBest">${timerBestText()}</strong>${timerState.disqualified ? ' · invalid' : ''}` }),
       el('div', { class: 'controls' }, [
         el('button', { type: 'button', onclick: timerClear }, [document.createTextNode('clear')]),
         el('button', { type: 'button', onpointerdown: keepFocus, onclick: timerHint }, [document.createTextNode('hint')]),
@@ -868,13 +907,13 @@
       clearInterval(timerState.interval);
       timerState.running = false;
       const p = scoreKey('timer');
-      if (!p.bestTime || timerState.seconds < p.bestTime) p.bestTime = timerState.seconds;
+      if (!timerState.disqualified && (!p.bestTime || timerState.seconds < p.bestTime)) p.bestTime = timerState.seconds;
       record('timer', true);
       saveProgress();
       const best = $('#timerBest');
       if (best) best.textContent = timerBestText();
       const msg = $('#timerMsg');
-      if (msg) msg.textContent = 'complete';
+      if (msg) msg.textContent = timerState.disqualified ? 'complete invalid' : 'complete';
     }
   }
 
@@ -1059,7 +1098,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=121';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=123';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2330,8 +2369,8 @@
   }
 
   function renderSkyGuessr() {
-    const state = states.skyguessr || (states.skyguessr = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), autoMag: false, target: null, answered: false, message: '', score: scoreKey('skyguessr'), orient: null });
-    app.innerHTML = `<h2>SkyGuessr</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyCanvas" width="900" height="900" tabindex="0" aria-label="celestial sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="skyFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="skyFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="skyAutoMag" type="checkbox" ${state.autoMag !== false ? "checked" : ""}><span>adaptive star density</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="skyMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="skyMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="sky movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="skyCentre">X</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="skyRollCCW">↺ rotate</button><button type="button" id="skyRollCW">rotate ↻</button></div><input id="skyAnswer" autocomplete="off" placeholder="constellation at the X"><div class="controls"><button type="button" id="skyReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="skyNew" class="new-round-button">new location</button></div><div id="skyMsg" class="message">${esc(state.message || '')}</div><div class="stats">${formatScore('skyguessr')}</div></aside></div>`;
+    const state = states.skyguessr || (states.skyguessr = { loaded: false, loading: false, error: '', fov: defaultFov(), magLimit: defaultMag(), showLines: false, target: null, answered: false, message: '', score: scoreKey('skyguessr'), orient: null });
+    app.innerHTML = `<h2>SkyGuessr</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyCanvas" width="900" height="900" tabindex="0" aria-label="celestial sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="skyFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="skyFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label class="checkline"><input id="skyLines" type="checkbox" ${state.showLines === true ? "checked" : ""}><span>constellation lines</span></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="skyMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="skyMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><div class="sky-nav-grid" aria-label="sky movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="skyCentre">X</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="skyRollCCW">↺ rotate</button><button type="button" id="skyRollCW">rotate ↻</button></div><input id="skyAnswer" autocomplete="off" placeholder="constellation at the X"><div class="controls"><button type="button" id="skyReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="skyNew" class="new-round-button">new location</button></div><div id="skyMsg" class="message">${esc(state.message || '')}</div><div class="stats">${formatScore('skyguessr')}</div></aside></div>`;
     initRangeVisuals(app);
     setupSphereFullscreen();
     const canvas = $('#skyCanvas'), ctx = canvas.getContext('2d');
@@ -2340,20 +2379,16 @@
     const fovInput = $('#skyFov');
     const fovSlider = $('#skyFovSlider');
 
-    function adaptiveMag() {
-      if (state.fov >= 130) return 4.6;
-      if (state.fov <= 80) return 5.2;
-      return 5.2 - (state.fov - 80) * (0.4 / 50);
-    }
-    function effectiveMag() {
-      return state.autoMag !== false ? adaptiveMag() : state.magLimit;
-    }
-    function syncMagInput() {
-      const value = effectiveMag().toFixed(1);
-      const mag = $('#skyMag');
-      const slider = $('#skyMagSlider');
-      if (mag && state.autoMag !== false) mag.value = value;
-      if (slider && state.autoMag !== false) { slider.value = value; updateRangeVisual(slider); }
+    function ensureSkyGuessrLinesLoadedThenDraw() {
+      if (!state.loaded || state.showLines !== true) return;
+      if (skyConstellationLineDb) {
+        draw();
+        return;
+      }
+      loadSkyConstellationLines().then(draw).catch(err => {
+        console.warn('iloveastro: SkyGuessr constellation lines could not be loaded.', err);
+        draw();
+      });
     }
     function randomUnitVec() {
       const z = Math.random() * 2 - 1;
@@ -2449,8 +2484,8 @@
       const b = ensureOrientation();
       ctx.save();
       ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2); ctx.clip();
-      syncMagInput();
-      const visible = skyStars.filter(s => s.mag <= effectiveMag()).sort((a, b) => b.mag - a.mag);
+      if (state.showLines === true && skyConstellationLineDb) drawSkyAsterismLines(ctx, project, b, radius, fovRad);
+      const visible = skyStars.filter(s => s.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
       ctx.fillStyle = 'black';
       for (const s of visible) {
         const p = project(s.v, b, radius, fovRad);
@@ -2575,14 +2610,7 @@
     setShiftEnterAction(newTarget);
     fovInput.addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
     fovSlider.addEventListener('input', e => setFov(parseFloat(e.target.value) || defaultFov()));
-    function turnOffAutoMag() {
-      if (state.autoMag !== false) {
-        state.autoMag = false;
-        $('#skyAutoMag').checked = false;
-      }
-    }
     function setSkyMag(v) {
-      turnOffAutoMag();
       state.magLimit = Math.max(4, Math.min(6, parseFloat(v) || defaultMag()));
       const value = Number(state.magLimit.toFixed(1));
       $('#skyMag').value = value;
@@ -2590,9 +2618,12 @@
       updateRangeVisual($('#skyMagSlider'));
       draw();
     }
-    $('#skyAutoMag').addEventListener('change', e => { state.autoMag = e.target.checked; syncMagInput(); draw(); });
-    $('#skyMag').addEventListener('focus', () => turnOffAutoMag());
-    $('#skyMagSlider').addEventListener('focus', () => turnOffAutoMag());
+    $('#skyLines').addEventListener('change', e => {
+      state.showLines = e.target.checked;
+      if (state.showLines === true) ensureSkyGuessrLinesLoadedThenDraw();
+      else draw();
+      focusCanvas();
+    });
     $('#skyMag').addEventListener('input', e => setSkyMag(e.target.value));
     $('#skyMagSlider').addEventListener('input', e => setSkyMag(e.target.value));
     $('#skyNew').addEventListener('click', newTarget);
@@ -2664,10 +2695,13 @@
         hideLoadingOverlay(); state.loading = false;
         ensureTarget();
         draw();
+        if (state.showLines === true) ensureSkyGuessrLinesLoadedThenDraw();
         answer.focus();
       }).catch(err => { state.error = 'sky data unavailable'; hideLoadingOverlay(); state.loading = false; draw(); });
     }
-    ensureTarget(); draw(); setTimeout(() => answer.focus(), 0);
+    ensureTarget(); draw();
+    if (state.loaded && state.showLines === true && !skyConstellationLineDb) ensureSkyGuessrLinesLoadedThenDraw();
+    setTimeout(() => answer.focus(), 0);
   }
 
 
@@ -2685,6 +2719,7 @@
       noteEdges: [],
       noteSelected: null,
       noteHistory: [],
+      noteRedo: [],
       dsoDefaultVersion: 116,
       message: '',
       orient: null
@@ -2695,6 +2730,7 @@
     }
     if (!Array.isArray(state.noteEdges)) state.noteEdges = [];
     if (!Array.isArray(state.noteHistory)) state.noteHistory = [];
+    if (!Array.isArray(state.noteRedo)) state.noteRedo = [];
     if (typeof state.noteMode !== 'boolean') state.noteMode = false;
     if (!('noteSelected' in state)) state.noteSelected = null;
 
@@ -2803,6 +2839,39 @@
         y: canvas.height / 2 - rr * y / sin,
         z
       };
+    }
+
+    function vectorFromCanvasPoint(x, y, basis, radius, fovRad) {
+      const sx = x - canvas.width / 2;
+      const sy = canvas.height / 2 - y;
+      const rho = Math.hypot(sx, sy);
+      if (rho > radius) return null;
+      if (rho < 1e-9) return basis.f;
+      const ang = (rho / radius) * (fovRad / 2);
+      const tx = sx / rho, ty = sy / rho;
+      return normVec({
+        x: basis.f.x * Math.cos(ang) + (basis.right.x * tx + basis.up.x * ty) * Math.sin(ang),
+        y: basis.f.y * Math.cos(ang) + (basis.right.y * tx + basis.up.y * ty) * Math.sin(ang),
+        z: basis.f.z * Math.cos(ang) + (basis.right.z * tx + basis.up.z * ty) * Math.sin(ang)
+      });
+    }
+
+    function formatRaDec(v) {
+      const { ra, dec } = raDecFromVec(v);
+      const totalSeconds = ra / 15 * 3600;
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds - h * 3600) / 60);
+      const s = totalSeconds - h * 3600 - m * 60;
+      const sign = dec < 0 ? '−' : '+';
+      const absDec = Math.abs(dec);
+      const d = Math.floor(absDec);
+      const dm = Math.floor((absDec - d) * 60);
+      const ds = (absDec - d - dm / 60) * 3600;
+      return `RA ${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${s.toFixed(1).padStart(4, '0')}s<br>Dec ${sign}${String(d).padStart(2, '0')}° ${String(dm).padStart(2, '0')}′ ${ds.toFixed(0).padStart(2, '0')}″`;
+    }
+
+    function raDecInfoHtml(v) {
+      return `<strong>RA/Dec</strong><br>${formatRaDec(v)}`;
     }
 
     function noteStarId(star) {
@@ -2941,16 +3010,30 @@
       if (existing >= 0) {
         const removed = state.noteEdges.splice(existing, 1)[0];
         state.noteHistory.push({ type: 'remove', edge: removed });
+        state.noteRedo = [];
       } else {
         state.noteEdges.push(edge);
         state.noteHistory.push({ type: 'add', edge });
+        state.noteRedo = [];
       }
       state.noteSelected = hit.id;
       draw();
     }
 
-    function undoMapNote() {
-      const action = state.noteHistory.pop();
+    function applyNoteAction(action) {
+      if (!action) return;
+      if (action.type === 'add' && action.edge) {
+        if (noteEdgeIndex(action.edge.a, action.edge.b) < 0) state.noteEdges.push(action.edge);
+      } else if (action.type === 'remove' && action.edge) {
+        const index = noteEdgeIndex(action.edge.a, action.edge.b);
+        if (index >= 0) state.noteEdges.splice(index, 1);
+      } else if (action.type === 'clear') {
+        state.noteEdges = [];
+        state.noteSelected = null;
+      }
+    }
+
+    function undoNoteAction(action) {
       if (!action) return;
       if (action.type === 'add' && action.edge) {
         const index = noteEdgeIndex(action.edge.a, action.edge.b);
@@ -2960,12 +3043,31 @@
       } else if (action.type === 'clear' && Array.isArray(action.edges)) {
         state.noteEdges = action.edges.slice();
       }
+    }
+
+    function undoMapNote() {
+      const action = state.noteHistory.pop();
+      if (!action) return;
+      undoNoteAction(action);
+      state.noteRedo.push(action);
+      draw();
+      focusCanvas();
+    }
+
+    function redoMapNote() {
+      const action = state.noteRedo.pop();
+      if (!action) return;
+      applyNoteAction(action);
+      state.noteHistory.push(action);
       draw();
       focusCanvas();
     }
 
     function clearMapNotes() {
-      if (state.noteEdges.length) state.noteHistory.push({ type: 'clear', edges: state.noteEdges.slice() });
+      if (state.noteEdges.length) {
+        state.noteHistory.push({ type: 'clear', edges: state.noteEdges.slice() });
+        state.noteRedo = [];
+      }
       state.noteEdges = [];
       state.noteSelected = null;
       draw();
@@ -3011,7 +3113,7 @@
         .filter(star => star.mag <= state.magLimit)
         .sort((a, b) => b.mag - a.mag);
 
-      const noteTargets = state.noteMode ? noteVisibleTargets(visibleStars, basis, radius, fovRad) : null;
+      const noteTargets = (state.noteMode || state.noteEdges.length) ? noteVisibleTargets(visibleStars, basis, radius, fovRad) : null;
       if (noteTargets) drawNoteEdges(noteTargets.byId, noteTargets.starById, basis, radius, fovRad);
 
       ctx.fillStyle = 'black';
@@ -3055,7 +3157,7 @@
         }
       }
 
-      if (noteTargets) drawNoteSelection(noteTargets.byId);
+      if (state.noteMode && noteTargets) drawNoteSelection(noteTargets.byId);
 
       ctx.restore();
 
@@ -3070,18 +3172,31 @@
       const rect = canvas.getBoundingClientRect();
       const x = (clientX - rect.left) * canvas.width / rect.width;
       const y = (clientY - rect.top) * canvas.height / rect.height;
+      const radius = Math.min(canvas.width, canvas.height) * 0.48;
+      const fovRad = state.fov * Math.PI / 180;
+      const basis = ensureOrientation();
+      const clickedVec = vectorFromCanvasPoint(x, y, basis, radius, fovRad);
       const hit = pickFromLayer(canvas._pickLayer, x, y);
+
       if (!hit) {
-        state.message = '';
-        state.searchMarker = null;
-        msg.textContent = '';
+        if (!clickedVec) {
+          state.message = '';
+          state.searchMarker = null;
+          msg.textContent = '';
+          draw();
+          return;
+        }
+        state.searchMarker = { v: clickedVec, payload: { type: 'position', v: clickedVec } };
+        state.message = raDecInfoHtml(clickedVec);
+        msg.innerHTML = state.message;
         draw();
         return;
       }
 
       const v = hit.type === 'dso' ? hit.dso.v : hit.star.v;
       state.searchMarker = { v, payload: hit };
-      state.message = hit.type === 'dso' ? dsoInfoHtml(hit.dso) : starInfoHtml(hit.star);
+      const info = hit.type === 'dso' ? dsoInfoHtml(hit.dso) : starInfoHtml(hit.star);
+      state.message = `${info}<br>${raDecInfoHtml(v)}`;
       msg.innerHTML = state.message;
       draw();
     }
@@ -3353,6 +3468,11 @@
       if (state.noteMode && (e.ctrlKey || e.metaKey) && String(e.key || '').toLowerCase() === 'z') {
         e.preventDefault();
         undoMapNote();
+        return;
+      }
+      if (state.noteMode && (e.ctrlKey || e.metaKey) && String(e.key || '').toLowerCase() === 'y') {
+        e.preventDefault();
+        redoMapNote();
         return;
       }
       const step = e.shiftKey ? 28 : 12;
@@ -4623,7 +4743,7 @@
       { id: 'dso', label: 'DSOs' },
       { id: 'asterisms', label: 'asterisms' }
     ];
-    app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableOptions" class="table-options"></div><div id="tableWrap" class="table-wrap"></div>`;
+    app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableOptions" class="table-options"></div><div id="tableWrap" class="table-wrap"></div><section class="panel score-backup-panel"><h3>score backup</h3><textarea id="scoreBackupText" spellcheck="false"></textarea><div class="controls"><button type="button" id="scoreExport">export</button><button type="button" id="scoreImport">import</button></div><div id="scoreBackupMsg" class="message"></div></section>`;
     const search = $('#tableSearch'), options = $('#tableOptions'), wrap = $('#tableWrap');
 
     function alphaSortGroup(value) {
@@ -4745,20 +4865,34 @@
       redraw();
     }));
     search.addEventListener('input', redraw);
+    const backupText = $('#scoreBackupText');
+    const backupMsg = $('#scoreBackupMsg');
+    $('#scoreExport').addEventListener('click', () => {
+      backupText.value = progressExportText();
+      backupText.select();
+      if (backupMsg) backupMsg.textContent = 'exported';
+    });
+    $('#scoreImport').addEventListener('click', () => {
+      try {
+        progressImportText(backupText.value);
+        if (backupMsg) backupMsg.textContent = 'imported';
+        redraw();
+      } catch (err) {
+        if (backupMsg) backupMsg.textContent = 'import failed';
+      }
+    });
     redraw();
     search.focus();
   }
 
   function render() {
     setShiftEnterAction(null);
-    if (activeGame === 'charts') makeQuestionGame('charts', 'Charts', { make: chartQuestion });
-    else if (activeGame === 'skyguessr') renderSkyGuessr();
+    if (activeGame === 'skyguessr') renderSkyGuessr();
     else if (activeGame === 'skymap') renderSkyMap();
     else if (activeGame === 'skyregions') renderSkyRegions();
     else if (activeGame === 'skyrace') renderSkyRace();
     else if (activeGame === 'alphapin') renderAlphaPin();
     else if (activeGame === 'guessconst') renderGuessConstellation();
-    else if (activeGame === 'neighbours') makeQuestionGame('neighbours', 'Neighbours', { make: neighbourQuestion });
     else if (activeGame === 'stars') {
       if (!namedStarCatalogueReady) deferForNamedStars('Stars', () => { if (activeGame === 'stars') render(); });
       else makeQuestionGame('stars', 'Stars', { modes: starModes, defaultMode: 'starToConstellation', make: starQuestion });
