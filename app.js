@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=129';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=130';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2256,6 +2256,102 @@
     if (!vectors.length) {
       canvas._pickLayer = pick;
       return [];
+    }
+
+    if (options.projection === 'sphere') {
+      const cleanBasis = basis => {
+        if (!basis || !basis.f || !basis.right || !basis.up) return null;
+        const f = normVec(basis.f);
+        let right = basis.right;
+        const proj = dot(right, f);
+        right = normVec({ x: right.x - proj * f.x, y: right.y - proj * f.y, z: right.z - proj * f.z });
+        if (!Number.isFinite(right.x)) return null;
+        const up = normVec(cross(right, f));
+        return { f, right: normVec(cross(f, up)), up };
+      };
+      const centreVectors = targetConstellationNames.map(n => skyConstCentres.get(n)).filter(Boolean);
+      const centreSource = centreVectors.length ? centreVectors : vectors;
+      const sum = centreSource.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
+      const centre = normVec(sum);
+      const basis = cleanBasis(options.viewBasis) || localBasisFromForward(centre);
+      const radius = Math.min(canvas.width, canvas.height) * 0.48;
+      const fovDeg = clampNumber(options.fovDeg, 20, 190, 50);
+      const fovRad = fovDeg * Math.PI / 180;
+      const projectSphere = v => {
+        const z = dot(v, basis.f);
+        const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+        if (ang > fovRad / 2) return null;
+        const x = dot(v, basis.right), y = dot(v, basis.up);
+        const sin = Math.sin(ang) || 1e-9;
+        const rr = (ang / (fovRad / 2)) * radius;
+        return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
+      };
+      const drawn = [];
+      const drawnDsos = [];
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      if (showLines && lineEdges.length) {
+        ctx.save();
+        ctx.strokeStyle = '#777';
+        ctx.globalAlpha = 0.72;
+        ctx.lineWidth = 1.25;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        lineEdges.forEach(edge => {
+          if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
+          const p1 = projectSphere(edge.s1.v);
+          const p2 = projectSphere(edge.s2.v);
+          if (!p1 || !p2) return;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      ctx.fillStyle = 'black';
+      stars.slice().sort((a, b) => b.mag - a.mag).forEach(star => {
+        const p = projectSphere(star.v);
+        if (!p) return;
+        const r = Math.max(1.2, Math.min(6, 5.2 - star.mag * 0.62));
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        const hitR = Math.max(10, r + 7);
+        registerPickCircle(pick, p.x, p.y, hitR, { type: 'star', star });
+        drawn.push({ x: p.x, y: p.y, r: hitR, star });
+      });
+
+      if (showDso) {
+        dsos.forEach(dso => {
+          const p = projectSphere(dso.v);
+          if (!p) return;
+          ctx.fillStyle = dso.colour;
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 5.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          registerPickCircle(pick, p.x, p.y, 11, { type: 'dso', dso });
+          drawnDsos.push({ x: p.x, y: p.y, r: 11, dso });
+        });
+      }
+
+      ctx.restore();
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      canvas._pickLayer = pick;
+      drawn.dsos = drawnDsos;
+      return drawn;
     }
 
     const centreVectors = targetConstellationNames.map(n => skyConstCentres.get(n)).filter(Boolean);
@@ -3725,11 +3821,35 @@
       return uniqueSkyStars(names.flatMap(name => guessStarsForConstellation(name, state.magLimit)));
     }
 
+    function guessViewVectors() {
+      const out = state.stars.map(s => s.v);
+      if (state.showLines === true && skyConstellationLineDb && skyHipByNumber.size) {
+        const wanted = new Set(state.targets.map(compact));
+        skyLineEdgesFromDatabase().forEach(edge => {
+          if (!wanted.has(compact(edge.constellation))) return;
+          out.push(edge.s1.v, edge.s2.v);
+        });
+      }
+      return out.length ? out : state.stars.map(s => s.v);
+    }
+
     function guessViewCentre() {
       const centres = state.targets.map(n => skyConstCentres.get(n)).filter(Boolean);
-      const source = centres.length ? centres : state.stars.map(s => s.v);
+      const source = centres.length ? centres : guessViewVectors();
       const sum = source.reduce((v, p) => ({ x: v.x + p.x, y: v.y + p.y, z: v.z + p.z }), { x: 0, y: 0, z: 0 });
       return normVec(sum);
+    }
+
+    function guessAngularRadius() {
+      const centre = guessViewCentre();
+      const vectors = guessViewVectors();
+      const radius = Math.max(...vectors.map(v => Math.acos(Math.max(-1, Math.min(1, dot(centre, v))))), 5 * Math.PI / 180);
+      return radius;
+    }
+
+    function guessFovDeg() {
+      const radiusDeg = guessAngularRadius() * 180 / Math.PI;
+      return Math.max(20, Math.min(150, radiusDeg * 4));
     }
 
     function rotateGuessVector(v, axis, angle) {
@@ -3751,11 +3871,30 @@
       return { f, right: normVec(cross(f, up)), up };
     }
 
+    function clampGuessView() {
+      const centre = guessViewCentre();
+      const limit = guessAngularRadius();
+      const b = cleanGuessBasis(state.viewOrient || localBasisFromForward(centre));
+      const angle = Math.acos(Math.max(-1, Math.min(1, dot(centre, b.f))));
+      if (angle <= limit + 1e-6) {
+        state.viewOrient = b;
+        return;
+      }
+      const axis = normVec(cross(centre, b.f));
+      if (!Number.isFinite(axis.x)) {
+        state.viewOrient = localBasisFromForward(centre);
+        return;
+      }
+      const f = rotateGuessVector(centre, axis, limit);
+      state.viewOrient = localBasisFromForward(f);
+    }
+
     function ensureGuessViewOrient() {
       if (!state.viewOrient || !state.viewOrient.f || !state.viewOrient.right || !state.viewOrient.up) {
         state.viewOrient = localBasisFromForward(guessViewCentre());
       }
       state.viewOrient = cleanGuessBasis(state.viewOrient);
+      clampGuessView();
       return state.viewOrient;
     }
 
@@ -3766,6 +3905,7 @@
         right: rotateGuessVector(b.right, axis, angle),
         up: rotateGuessVector(b.up, axis, angle)
       });
+      clampGuessView();
     }
 
     function applyRound(round) {
@@ -3807,6 +3947,8 @@
         stars: state.stars,
         showLines: state.showLines === true && !!skyConstellationLineDb,
         constellations: state.targets,
+        projection: 'sphere',
+        fovDeg: guessFovDeg(),
         zoom: state.viewZoom,
         viewBasis: ensureGuessViewOrient()
       });
@@ -3835,7 +3977,7 @@
     });
     function rotateGuessViewByPixels(dx, dy, multiplier = 1) {
       const b = ensureGuessViewOrient();
-      const anglePerPx = 1.45 / Math.max(1, Math.min(canvas.width, canvas.height)) / Math.max(0.75, state.viewZoom) * multiplier;
+      const anglePerPx = (guessFovDeg() * Math.PI / 180) / Math.max(1, Math.min(canvas.width, canvas.height)) / Math.max(0.75, state.viewZoom) * multiplier;
       rotateGuessView(b.up, -dx * anglePerPx);
       rotateGuessView(ensureGuessViewOrient().right, -dy * anglePerPx);
       draw();
@@ -3860,7 +4002,7 @@
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
       if (e.ctrlKey || e.metaKey || e.altKey) {
-        const factor = Math.exp(-e.deltaY * 0.003);
+        const factor = Math.exp(-e.deltaY * 0.0032);
         state.viewZoom = clampNumber(state.viewZoom * factor, 0.75, 3.5, 1);
         draw();
         return;
