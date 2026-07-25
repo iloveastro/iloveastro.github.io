@@ -316,29 +316,33 @@
   }
   function progressExportText() {
     const payload = {
-      version: 1,
-      activeSave,
-      slots: Object.fromEntries(SAVE_SLOTS.map(slot => [slot, loadProgress(slot)]))
+      version: 2,
+      slot: activeSave,
+      progress: loadProgress(activeSave)
     };
-    return `iloveastro-progress-v1:${encodeUtf8Base64(JSON.stringify(payload))}`;
+    return `iloveastro-save-v2:${encodeUtf8Base64(JSON.stringify(payload))}`;
   }
   function progressImportText(raw) {
     const text = String(raw || '').trim();
     if (!text) throw new Error('empty import');
     let payload = null;
-    if (text.startsWith('iloveastro-progress-v1:')) {
+    if (text.startsWith('iloveastro-save-v2:')) {
+      payload = JSON.parse(decodeUtf8Base64(text.slice('iloveastro-save-v2:'.length)));
+      if (!payload || typeof payload !== 'object' || !payload.progress || typeof payload.progress !== 'object') throw new Error('invalid import');
+      progress = payload.progress;
+    } else if (text.startsWith('iloveastro-progress-v1:')) {
       payload = JSON.parse(decodeUtf8Base64(text.slice('iloveastro-progress-v1:'.length)));
+      if (!payload || typeof payload !== 'object' || !payload.slots || typeof payload.slots !== 'object') throw new Error('invalid import');
+      const importedSlot = SAVE_SLOTS.includes(payload.activeSave) ? payload.activeSave : activeSave;
+      const value = payload.slots[importedSlot];
+      progress = value && typeof value === 'object' ? value : {};
     } else {
       payload = JSON.parse(text);
+      if (payload && typeof payload === 'object' && payload.progress && typeof payload.progress === 'object') progress = payload.progress;
+      else if (payload && typeof payload === 'object') progress = payload;
+      else throw new Error('invalid import');
     }
-    if (!payload || typeof payload !== 'object' || !payload.slots || typeof payload.slots !== 'object') throw new Error('invalid import');
-    SAVE_SLOTS.forEach(slot => {
-      const value = payload.slots[slot];
-      localStorage.setItem(saveSlotKey(slot), JSON.stringify(value && typeof value === 'object' ? value : {}));
-    });
-    activeSave = SAVE_SLOTS.includes(payload.activeSave) ? payload.activeSave : '1';
-    localStorage.setItem(ACTIVE_SAVE_KEY, activeSave);
-    progress = loadProgress(activeSave);
+    saveProgress();
     return true;
   }
   function scoreKey(game) { if (!progress[game]) progress[game] = { seen: 0, correct: 0 }; return progress[game]; }
@@ -517,6 +521,27 @@
     if (magSlider) magSlider.addEventListener('input', e => setDefaultMag(e.target.value));
     if (magInput) magInput.addEventListener('input', e => setDefaultMag(e.target.value));
     syncDefaultControls();
+
+    const backupText = $('#scoreBackupText');
+    const backupMsg = $('#scoreBackupMsg');
+    const exportButton = $('#scoreExport');
+    const importButton = $('#scoreImport');
+    if (exportButton && backupText) exportButton.addEventListener('click', () => {
+      backupText.value = progressExportText();
+      backupText.select();
+      if (backupMsg) backupMsg.textContent = `exported save ${activeSave}`;
+    });
+    if (importButton && backupText) importButton.addEventListener('click', () => {
+      if (!confirm(`Are you sure you want to import into save ${activeSave}? This overrides the current save.`)) return;
+      try {
+        progressImportText(backupText.value);
+        if (backupMsg) backupMsg.textContent = `imported into save ${activeSave}`;
+        setupSaveMenu();
+        render();
+      } catch (err) {
+        if (backupMsg) backupMsg.textContent = 'import failed';
+      }
+    });
 
     $('#resetProgress').addEventListener('click', clearCurrentSave);
     $('#clearAllSaves').addEventListener('click', clearAllSaves);
@@ -1098,7 +1123,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=123';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=124';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -4743,7 +4768,7 @@
       { id: 'dso', label: 'DSOs' },
       { id: 'asterisms', label: 'asterisms' }
     ];
-    app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableOptions" class="table-options"></div><div id="tableWrap" class="table-wrap"></div><section class="panel score-backup-panel"><h3>score backup</h3><textarea id="scoreBackupText" spellcheck="false"></textarea><div class="controls"><button type="button" id="scoreExport">export</button><button type="button" id="scoreImport">import</button></div><div id="scoreBackupMsg" class="message"></div></section>`;
+    app.innerHTML = `<h2>Tables</h2><div class="table-tabs">${tableModes.map(m => `<button type="button" class="${m.id === state.mode ? 'active' : ''}" data-table-mode="${m.id}">${m.label}</button>`).join('')}</div><input id="tableSearch" placeholder="search"><div id="tableOptions" class="table-options"></div><div id="tableWrap" class="table-wrap"></div>`;
     const search = $('#tableSearch'), options = $('#tableOptions'), wrap = $('#tableWrap');
 
     function alphaSortGroup(value) {
@@ -4865,22 +4890,6 @@
       redraw();
     }));
     search.addEventListener('input', redraw);
-    const backupText = $('#scoreBackupText');
-    const backupMsg = $('#scoreBackupMsg');
-    $('#scoreExport').addEventListener('click', () => {
-      backupText.value = progressExportText();
-      backupText.select();
-      if (backupMsg) backupMsg.textContent = 'exported';
-    });
-    $('#scoreImport').addEventListener('click', () => {
-      try {
-        progressImportText(backupText.value);
-        if (backupMsg) backupMsg.textContent = 'imported';
-        redraw();
-      } catch (err) {
-        if (backupMsg) backupMsg.textContent = 'import failed';
-      }
-    });
     redraw();
     search.focus();
   }

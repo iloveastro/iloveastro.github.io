@@ -61,12 +61,20 @@
           </div>
         </label>
         <hr>
+        <div class="small">score backup</div>
+        <textarea id="scoreBackupText" spellcheck="false"></textarea>
+        <div class="controls save-backup-controls">
+          <button id="scoreExport" type="button">export current save</button>
+          <button id="scoreImport" type="button">import to current save</button>
+        </div>
+        <div id="scoreBackupMsg" class="message"></div>
+        <hr>
         <button id="resetProgress" type="button">clear current save</button>
         <button id="clearAllSaves" type="button">clear all saves</button>
       </div>
     </div>
   </header>
-  <nav id="tabs" aria-label="games"><button type="button" class="active">Charts</button><button type="button">SkyGuessr</button><button type="button">SkyRace</button><button type="button">Sky Map</button><button type="button">Constellation Map</button><button type="button">Find Constellation</button><button type="button">Guess Constellation</button><button type="button">Neighbours</button><button type="button">Stars</button><button type="button">DSOs</button><button type="button">88 Timer</button><button type="button">Atlas</button><button type="button">Tables</button></nav>
+  <nav id="tabs" aria-label="games"><button type="button" class="active">SkyGuessr</button><button type="button">SkyRace</button><button type="button">Sky Map</button><button type="button">Constellation Map</button><button type="button">Find Constellation</button><button type="button">Guess Constellation</button><button type="button">Stars</button><button type="button">DSOs</button><button type="button">88 Timer</button><button type="button">Atlas</button><button type="button">Tables</button></nav>
   <main id="app">
     <section id="loadingOverlay" class="loading-overlay" data-launch="1">
       <div class="loading-card">
