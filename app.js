@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=134';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=135';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -3668,7 +3668,12 @@
       found: [],
       roundPools: {},
       viewZoom: 1,
-      viewOrient: null
+      viewOrient: null,
+      noteMode: false,
+      noteEdges: [],
+      noteSelected: null,
+      noteHistory: [],
+      noteRedo: []
     });
 
     function normaliseMode(value) {
@@ -3684,12 +3689,17 @@
     if (typeof state.autoCheck !== 'boolean') state.autoCheck = false;
     if (!Number.isFinite(state.viewZoom)) state.viewZoom = 1;
     if (!state.viewOrient || typeof state.viewOrient !== 'object') state.viewOrient = null;
+    if (typeof state.noteMode !== 'boolean') state.noteMode = false;
+    if (!Array.isArray(state.noteEdges)) state.noteEdges = [];
+    if (!Array.isArray(state.noteHistory)) state.noteHistory = [];
+    if (!Array.isArray(state.noteRedo)) state.noteRedo = [];
+    if (state.noteSelected !== null && typeof state.noteSelected !== 'string') state.noteSelected = null;
 
     const modeCount = Number(state.mode);
     const scoreId = () => state.mode === '1' ? 'guessconst' : `guessconst${state.mode}`;
     const savedValue = i => esc(state.inputs[i] || '');
 
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="guessConstLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="guessConstZoomOut">− zoom</button><button type="button" id="guessConstZoomIn">zoom +</button><button type="button" id="guessConstResetView">reset view</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">${modeCount > 1 ? 'new constellations' : 'new constellation'}</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="guessConstLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><label class="checkline"><input id="guessConstNotes" type="checkbox" ${state.noteMode === true ? 'checked' : ''}><span>make notes</span></label><div class="controls map-note-controls"><button type="button" id="guessConstUndoNotes">undo</button><button type="button" id="guessConstClearNotes">clear notes</button></div><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="guessConstZoomOut">− zoom</button><button type="button" id="guessConstZoomIn">zoom +</button><button type="button" id="guessConstResetView">reset view</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">${modeCount > 1 ? 'new constellations' : 'new constellation'}</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
     setupSphereFullscreen();
 
@@ -3962,11 +3972,15 @@
       state.stars = starsInConstellations(state.targets);
       state.message = '';
       state.answered = false;
-      if (Number(state.mode) > 1) state.showLines = false;
+      state.showLines = false;
       state.viewZoom = 1;
       state.viewOrient = null;
       state.found = [];
       state.inputs = Array.from({ length: modeCount }, (_, i) => state.inputs[i] || '');
+      state.noteEdges = [];
+      state.noteSelected = null;
+      state.noteHistory = [];
+      state.noteRedo = [];
     }
 
     function chooseQuestion() {
@@ -4000,6 +4014,7 @@
         viewBasis: ensureGuessViewOrient(),
         rollCentre: guessBestFitMetrics().basis.f
       });
+      drawGuessNotes();
     }
 
     function selectGuessStar(clientX, clientY) {
@@ -4010,6 +4025,165 @@
       const hit = drawnGuessStars.map(p => ({ p, d: Math.hypot(p.x - x, p.y - y) })).filter(x => x.d <= x.p.r).sort((a, b) => a.d - b.d)[0]?.p;
       if (!hit) return;
       msg.innerHTML = `${state.targets.join(', ')}<br>${starInfoHtml(hit.star)}`;
+    }
+
+    function guessNoteStarId(star) {
+      if (star?.hip) return `hip:${star.hip}`;
+      const label = compact(star?.name || star?.designation || '');
+      const ra = Math.round((star?.ra || 0) * 1000);
+      const dec = Math.round((star?.dec || 0) * 1000);
+      return `star:${label}:${ra}:${dec}`;
+    }
+
+    function guessNoteEdgeKey(a, b) {
+      return [a, b].sort().join('|');
+    }
+
+    function normaliseGuessNoteEdges() {
+      const seen = new Set();
+      state.noteEdges = state.noteEdges.filter(edge => {
+        if (!edge || typeof edge.a !== 'string' || typeof edge.b !== 'string' || edge.a === edge.b) return false;
+        const key = guessNoteEdgeKey(edge.a, edge.b);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function guessNoteTargets() {
+      const byId = new Map();
+      drawnGuessStars.forEach(p => {
+        const id = guessNoteStarId(p.star);
+        if (!byId.has(id)) byId.set(id, { ...p, id });
+      });
+      return byId;
+    }
+
+    function drawGuessNotes() {
+      normaliseGuessNoteEdges();
+      if (!state.noteMode && !state.noteEdges.length) return;
+      const byId = guessNoteTargets();
+      if (state.noteEdges.length) {
+        ctx.save();
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        state.noteEdges.forEach(edge => {
+          const a = byId.get(edge.a);
+          const b = byId.get(edge.b);
+          if (!a || !b) return;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+      if (state.noteMode && state.noteSelected) {
+        const selected = byId.get(state.noteSelected);
+        if (selected) {
+          ctx.save();
+          ctx.strokeStyle = '#111';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(selected.x, selected.y, Math.max(9, selected.r + 2), 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+
+    function nearestGuessNoteTarget(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * canvas.width / rect.width;
+      const y = (clientY - rect.top) * canvas.height / rect.height;
+      const hits = [...guessNoteTargets().values()]
+        .map(target => ({ target, d: Math.hypot(target.x - x, target.y - y) }))
+        .filter(hit => hit.d <= Math.max(12, hit.target.r + 8))
+        .sort((a, b) => a.d - b.d);
+      if (!hits.length) return null;
+      if (hits[0].d <= 8) return hits[0].target;
+      if (hits[1] && hits[1].d - hits[0].d < 4) return null;
+      return hits[0].target;
+    }
+
+    function applyGuessNoteAction(action) {
+      if (!action) return;
+      if (action.type === 'add') {
+        state.noteEdges.push({ a: action.a, b: action.b });
+      } else if (action.type === 'remove') {
+        const key = guessNoteEdgeKey(action.a, action.b);
+        state.noteEdges = state.noteEdges.filter(edge => guessNoteEdgeKey(edge.a, edge.b) !== key);
+      } else if (action.type === 'clear') {
+        state.noteEdges = [];
+        state.noteSelected = null;
+      }
+      normaliseGuessNoteEdges();
+    }
+
+    function undoGuessNoteAction(action) {
+      if (!action) return;
+      if (action.type === 'add') applyGuessNoteAction({ type: 'remove', a: action.a, b: action.b });
+      else if (action.type === 'remove') applyGuessNoteAction({ type: 'add', a: action.a, b: action.b });
+      else if (action.type === 'clear') {
+        state.noteEdges = action.edges.map(edge => ({ ...edge }));
+        normaliseGuessNoteEdges();
+      }
+    }
+
+    function handleGuessNoteClick(clientX, clientY) {
+      const target = nearestGuessNoteTarget(clientX, clientY);
+      if (!target) {
+        state.noteSelected = null;
+        draw();
+        return;
+      }
+      if (!state.noteSelected) {
+        state.noteSelected = target.id;
+        draw();
+        return;
+      }
+      if (state.noteSelected === target.id) {
+        state.noteSelected = null;
+        draw();
+        return;
+      }
+      const a = state.noteSelected;
+      const b = target.id;
+      const key = guessNoteEdgeKey(a, b);
+      const exists = state.noteEdges.some(edge => guessNoteEdgeKey(edge.a, edge.b) === key);
+      const action = exists ? { type: 'remove', a, b } : { type: 'add', a, b };
+      applyGuessNoteAction(action);
+      state.noteHistory.push(action);
+      state.noteRedo = [];
+      state.noteSelected = target.id;
+      draw();
+    }
+
+    function undoGuessNotes() {
+      const action = state.noteHistory.pop();
+      if (!action) return;
+      undoGuessNoteAction(action);
+      state.noteRedo.push(action);
+      draw();
+    }
+
+    function redoGuessNotes() {
+      const action = state.noteRedo.pop();
+      if (!action) return;
+      applyGuessNoteAction(action);
+      state.noteHistory.push(action);
+      draw();
+    }
+
+    function clearGuessNotes() {
+      if (!state.noteEdges.length && !state.noteSelected) return;
+      const edges = state.noteEdges.map(edge => ({ ...edge }));
+      state.noteHistory.push({ type: 'clear', edges });
+      state.noteRedo = [];
+      state.noteEdges = [];
+      state.noteSelected = null;
+      draw();
     }
     let guessDrag = null;
     function canvasDelta(e, previous) {
@@ -4042,7 +4216,10 @@
       if (!guessDrag || guessDrag.id !== e.pointerId) return;
       const moved = guessDrag.moved;
       guessDrag = null;
-      if (moved < 6) selectGuessStar(e.clientX, e.clientY);
+      if (moved < 6) {
+        if (state.noteMode) handleGuessNoteClick(e.clientX, e.clientY);
+        else selectGuessStar(e.clientX, e.clientY);
+      }
     }
     canvas.addEventListener('pointerup', finishGuessPointer);
     canvas.addEventListener('pointercancel', () => { guessDrag = null; });
@@ -4160,6 +4337,13 @@
       if (state.showLines === true) ensureGuessConstellationLinesLoadedThenDraw();
       else draw();
     });
+    $('#guessConstNotes').addEventListener('change', e => {
+      state.noteMode = e.target.checked;
+      if (!state.noteMode) state.noteSelected = null;
+      draw();
+    });
+    $('#guessConstUndoNotes').addEventListener('click', undoGuessNotes);
+    $('#guessConstClearNotes').addEventListener('click', clearGuessNotes);
     $('#guessConstRollCCW').addEventListener('click', () => rotateGuess(-1));
     $('#guessConstRollCW').addEventListener('click', () => rotateGuess(1));
     $('#guessConstZoomOut').addEventListener('click', () => setGuessZoom(1 / 1.28));
@@ -4191,6 +4375,17 @@
     });
     $('#guessConstReveal').addEventListener('click', reveal);
     $('#guessConstNew').addEventListener('click', newQuestion);
+    app.addEventListener('keydown', e => {
+      if (!state.noteMode || !(e.ctrlKey || e.metaKey)) return;
+      const key = String(e.key || '').toLowerCase();
+      if (key === 'z') {
+        e.preventDefault();
+        undoGuessNotes();
+      } else if (key === 'y') {
+        e.preventDefault();
+        redoGuessNotes();
+      }
+    });
     setShiftEnterAction(newQuestion);
 
     if (!state.loaded && !state.loading) {
