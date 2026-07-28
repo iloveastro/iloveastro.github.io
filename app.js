@@ -235,11 +235,27 @@
   function namedStarDesignationFromSky(star) {
     return starDesignation(star) || String(star.bf || star.bayer || '').trim();
   }
+  function attachSkyStarIdentity(entry, star) {
+    if (!entry || !star) return;
+    entry.skyHip = Number.isFinite(star.hip) ? star.hip : null;
+    entry.skyRa = Number.isFinite(star.ra) ? star.ra : null;
+    entry.skyDec = Number.isFinite(star.dec) ? star.dec : null;
+    entry.skyMag = Number.isFinite(star.mag) ? star.mag : null;
+    entry.skySpect = String(star.spect || '').trim();
+    entry.skyAbsMag = Number.isFinite(star.absmag) ? star.absmag : null;
+    entry.skyDist = Number.isFinite(star.dist) ? star.dist : null;
+    entry.skyCi = Number.isFinite(star.ci) ? star.ci : null;
+    entry.skyHd = String(star.hd || '').trim();
+    entry.skyHr = String(star.hr || '').trim();
+    entry.skyBayer = String(star.bayer || '').trim();
+    entry.skyBf = String(star.bf || '').trim();
+  }
   function addNamedStarCatalogueEntry(star) {
     const name = String(star.name || '').trim();
     if (!name || !star.constellation) return false;
     const existing = DATA.stars.find(s => compact(s.constellation) === compact(star.constellation) && compact(s.name) === compact(name));
     if (existing) {
+      attachSkyStarIdentity(existing, star);
       if (!Number.isFinite(existing.mag) && Number.isFinite(star.mag)) existing.mag = star.mag;
       if (!existing.designation) existing.designation = namedStarDesignationFromSky(star);
       addStrict(existing.name);
@@ -256,6 +272,7 @@
       mag: Number.isFinite(star.mag) ? star.mag : undefined,
       generated: true
     };
+    attachSkyStarIdentity(entry, star);
     DATA.stars.push(entry);
     addStrict(entry.name);
     addStrict(entry.designation);
@@ -1096,7 +1113,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=140';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=141';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -5481,15 +5498,33 @@
   }
 
   function starChallengeRecord(entry) {
-    const keys = [entry.name, entry.designation].map(compact).filter(Boolean);
-    let sky = skyStars.find(s => s.constellation === entry.constellation && (
-      keys.includes(compact(s.name)) ||
-      keys.includes(compact(starDisplayName(s))) ||
-      keys.includes(compact(starDesignation(s))) ||
-      keys.includes(compact(s.bf)) ||
-      keys.includes(compact(s.bayer))
-    ));
-    if (!sky) sky = findSkyStarByAnyName([entry.name, entry.designation].filter(Boolean), 6.5);
+    const nameKey = compact(entry.name);
+    const constKey = compact(entry.constellation);
+    let sky = null;
+
+    if (Number.isFinite(entry.skyHip)) {
+      sky = skyHipByNumber.get(entry.skyHip) || null;
+    }
+
+    if (!sky && Number.isFinite(entry.skyRa) && Number.isFinite(entry.skyDec)) {
+      sky = skyStars.find(s => Math.abs(s.ra - entry.skyRa) < 1e-6 && Math.abs(s.dec - entry.skyDec) < 1e-6) || null;
+    }
+
+    if (!sky && nameKey) {
+      sky = skyStars.find(s => compact(s.name) === nameKey && compact(s.constellation) === constKey) ||
+            skyStars.find(s => compact(s.name) === nameKey) ||
+            null;
+    }
+
+    if (!sky) {
+      const designationKey = compact(entry.designation);
+      sky = skyStars.find(s => compact(s.constellation) === constKey && designationKey && (
+        compact(starDesignation(s)) === designationKey ||
+        compact(s.bf) === designationKey ||
+        compact(s.bayer) === designationKey
+      )) || null;
+    }
+
     if (!sky || !sky.v) return null;
     return {
       ...entry,
@@ -5499,7 +5534,7 @@
       dec: sky.dec,
       mag: Number.isFinite(sky.mag) ? sky.mag : entry.mag,
       designation: greekDesignationText(starDesignation(sky) || entry.designation || sky.bf || sky.bayer || ''),
-      spect: sky.spect || '',
+      spect: sky.spect || entry.skySpect || '',
       absmag: Number.isFinite(sky.absmag) ? sky.absmag : null,
       dist: Number.isFinite(sky.dist) ? sky.dist : null,
       ci: Number.isFinite(sky.ci) ? sky.ci : null,
@@ -5662,6 +5697,15 @@
         state.identifyTargetKey = state.targetKey;
       }
       state.orient = objectGameCleanBasis(state.identifyBasis) || localBasisFromForward(target?.v || vecFromRaDec(0, 0));
+      if (target?.v) {
+        const targetAngle = Math.acos(Math.max(-1, Math.min(1, dot(target.v, state.orient.f))));
+        const safeLimit = (105 * Math.PI / 180) * 0.43;
+        if (targetAngle > safeLimit) {
+          state.identifyBasis = localBasisFromForward(target.v);
+          state.identifyTargetKey = state.targetKey;
+          state.orient = state.identifyBasis;
+        }
+      }
       return state.orient;
     }
     if (!state.orient) state.orient = localBasisFromForward(vecFromRaDec(0, 0));
@@ -5692,20 +5736,6 @@
       extra.push(item.sky);
     });
     return uniqueSkyStars([...visible, ...extra]);
-  }
-
-  function objectGameDrawIdentifyCross(ctx, x, y, r) {
-    ctx.save();
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x - r, y - r);
-    ctx.lineTo(x + r, y + r);
-    ctx.moveTo(x + r, y - r);
-    ctx.lineTo(x - r, y + r);
-    ctx.stroke();
-    ctx.restore();
   }
 
   function objectGameDrawMap(canvas, kind, items, state, target = null) {
@@ -5750,11 +5780,19 @@
       const interest = kind === 'stars' ? itemBySkyKey.get(objectSkyKey(s)) : null;
       const key = interest ? compactObjectKey(kind, interest) : '';
       const r = objectGameStarRadius(s);
-      if (interest && state.mode === 'identify' && key === targetKey) objectGameDrawIdentifyCross(ctx, p.x, p.y, Math.max(9, r + 5));
       ctx.fillStyle = interest ? objectGameInterestStarColour(kind, interest, state, targetKey, wrongKey, found) : 'black';
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
+      if (interest && key === selectedKey && (state.mode === 'find' || state.mode === 'marathon')) {
+        ctx.save();
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(7, r + 5), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
       if (interest) targets.push({ key, item: interest, x: p.x, y: p.y, r: Math.max(13, r + 8) });
     }
 
@@ -5776,7 +5814,6 @@
           else if (state.answered && key === selectedKey) fill = isTarget ? '#d6a900' : '#777';
         }
         const r = objectGameObjectRadius(kind, item);
-        if (state.mode === 'identify' && isTarget) objectGameDrawIdentifyCross(ctx, p.x, p.y, Math.max(12, r + 6));
         ctx.fillStyle = fill;
         ctx.strokeStyle = '#111';
         ctx.lineWidth = key === selectedKey ? 2.4 : 1.4;
@@ -5784,6 +5821,15 @@
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+        if (key === selectedKey && (state.mode === 'find' || state.mode === 'marathon')) {
+          ctx.save();
+          ctx.strokeStyle = '#111';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r + 6, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
         targets.push({ key, item, x: p.x, y: p.y, r: Math.max(13, r + 7) });
       });
     }
