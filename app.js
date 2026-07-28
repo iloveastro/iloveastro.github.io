@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=139';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=140';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2879,7 +2879,7 @@
       loading: false,
       error: '',
       fov: defaultFov(),
-      magLimit: defaultMag(),
+      magLimit: mode === 'identify' ? 6 : defaultMag(),
       showLines: false,
       showDso: false,
       noteMode: false,
@@ -5475,10 +5475,9 @@
     return m ? m[0] : '';
   }
 
-  function spectralStripHtml(spect) {
-    const cls = spectralClassLetter(spect);
-    const letters = ['O', 'B', 'A', 'F', 'G', 'K', 'M'];
-    return `<div class="spectral-strip" aria-label="spectral class">${letters.map(l => `<span class="${l === cls ? 'active' : ''}">${l}</span>`).join('')}</div>`;
+  function spectralTypeLabel(spect) {
+    const letter = spectralClassLetter(spect);
+    return letter ? `${letter} type` : 'not listed';
   }
 
   function starChallengeRecord(entry) {
@@ -5560,7 +5559,7 @@
       const fields = [
         ['designation', esc(item.designation || 'not listed')],
         ['constellation', constellationWikiLink(item.constellation)],
-        ['spectral type', item.spect ? `${esc(item.spect)}${spectralStripHtml(item.spect)}` : 'not in current catalogue'],
+        ['spectral type', esc(spectralTypeLabel(item.spect))],
         ['RA/Dec', challengeRaDecHtml(item.v)]
       ];
       return `<div class="study-card object-info-card ${result ? 'answered-card' : ''}"><h3>${starWikiLink(item)}</h3>${result ? `<p class="object-result">${esc(result)}</p>` : ''}
@@ -5676,8 +5675,8 @@
     if (state.mode === 'identify') return key === targetKey ? '#e60012' : 'black';
     if (state.mode === 'marathon') return found.has(key) ? '#d6a900' : '#8b42ff';
     if (state.mode === 'find') {
-      if (state.answered && key === targetKey) return '#d6a900';
-      if (key === wrongKey) return '#777';
+      if (!state.answered && key === state.selectedKey) return '#1f6feb';
+      if (state.answered && key === state.selectedKey) return key === targetKey ? '#d6a900' : '#777';
       return '#8b42ff';
     }
     return 'black';
@@ -5693,6 +5692,20 @@
       extra.push(item.sky);
     });
     return uniqueSkyStars([...visible, ...extra]);
+  }
+
+  function objectGameDrawIdentifyCross(ctx, x, y, r) {
+    ctx.save();
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - r, y - r);
+    ctx.lineTo(x + r, y + r);
+    ctx.moveTo(x + r, y - r);
+    ctx.lineTo(x - r, y + r);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function objectGameDrawMap(canvas, kind, items, state, target = null) {
@@ -5737,6 +5750,7 @@
       const interest = kind === 'stars' ? itemBySkyKey.get(objectSkyKey(s)) : null;
       const key = interest ? compactObjectKey(kind, interest) : '';
       const r = objectGameStarRadius(s);
+      if (interest && state.mode === 'identify' && key === targetKey) objectGameDrawIdentifyCross(ctx, p.x, p.y, Math.max(9, r + 5));
       ctx.fillStyle = interest ? objectGameInterestStarColour(kind, interest, state, targetKey, wrongKey, found) : 'black';
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
@@ -5758,10 +5772,11 @@
         } else if (state.mode === 'marathon') {
           fill = found.has(key) ? '#d6a900' : '#8b42ff';
         } else if (state.mode === 'find') {
-          if (state.answered && isTarget) fill = '#d6a900';
-          else if (isWrong) fill = '#777';
+          if (!state.answered && key === selectedKey) fill = '#1f6feb';
+          else if (state.answered && key === selectedKey) fill = isTarget ? '#d6a900' : '#777';
         }
         const r = objectGameObjectRadius(kind, item);
+        if (state.mode === 'identify' && isTarget) objectGameDrawIdentifyCross(ctx, p.x, p.y, Math.max(12, r + 6));
         ctx.fillStyle = fill;
         ctx.strokeStyle = '#111';
         ctx.lineWidth = key === selectedKey ? 2.4 : 1.4;
@@ -5861,15 +5876,20 @@
       if (!Number.isFinite(state.modeMaps[mode].fov)) state.modeMaps[mode].fov = d.fov;
       if (!Number.isFinite(state.modeMaps[mode].magLimit)) state.modeMaps[mode].magLimit = d.magLimit;
       if (typeof state.modeMaps[mode].showLines !== 'boolean') state.modeMaps[mode].showLines = false;
+      if (mode === 'identify') {
+        state.modeMaps[mode].fov = 105;
+        state.modeMaps[mode].magLimit = 6;
+        state.modeMaps[mode].showLines = false;
+      }
     });
   }
 
   function objectSaveModeMap(state) {
     if (!state.modeMaps || !state.modeMaps[state.mode]) return;
     const m = state.modeMaps[state.mode];
-    m.fov = state.fov;
-    m.magLimit = state.magLimit;
-    m.showLines = state.showLines === true;
+    m.fov = state.mode === 'identify' ? 105 : state.fov;
+    m.magLimit = state.mode === 'identify' ? 6 : state.magLimit;
+    m.showLines = state.mode === 'identify' ? false : state.showLines === true;
     m.orient = state.orient || m.orient || null;
     m.identifyBasis = state.identifyBasis || m.identifyBasis || null;
     m.identifyTargetKey = state.identifyTargetKey || m.identifyTargetKey || '';
@@ -5879,9 +5899,9 @@
     objectEnsureModeMaps(kind, state);
     if (state.activeModeMap === state.mode) return;
     const m = state.modeMaps[state.mode] || objectDefaultModeMap(kind, state.mode);
-    state.fov = m.fov;
-    state.magLimit = m.magLimit;
-    state.showLines = m.showLines === true;
+    state.fov = state.mode === 'identify' ? 105 : m.fov;
+    state.magLimit = state.mode === 'identify' ? 6 : m.magLimit;
+    state.showLines = state.mode === 'identify' ? false : m.showLines === true;
     state.orient = m.orient || null;
     state.identifyBasis = m.identifyBasis || null;
     state.identifyTargetKey = m.identifyTargetKey || '';
@@ -5961,24 +5981,20 @@
     const canShowSelectedCard = state.mode === 'marathon' && selected && selectedAlreadyFound;
 
     app.innerHTML = `<h2>${cfg.title}</h2><div class="sky-layout object-game-layout"><section class="panel sky-panel object-game-map-panel"><canvas id="objectGameCanvas" width="900" height="900" tabindex="0" aria-label="${esc(cfg.title)} sky map"></canvas></section><aside class="panel object-game-side">
-      <div class="object-mode-tabs">
-        <button type="button" data-object-mode="find" class="${state.mode === 'find' ? 'active' : ''}">${esc(cfg.find)}</button>
-        <button type="button" data-object-mode="identify" class="${state.mode === 'identify' ? 'active' : ''}">${esc(cfg.identify)}</button>
-        <button type="button" data-object-mode="marathon" class="${state.mode === 'marathon' ? 'active' : ''}">${esc(cfg.marathon)}</button>
-      </div>
+      <label>Gamemode<select id="objectGameMode"><option value="find" ${state.mode === 'find' ? 'selected' : ''}>${esc(cfg.find)}</option><option value="identify" ${state.mode === 'identify' ? 'selected' : ''}>${esc(cfg.identify)}</option><option value="marathon" ${state.mode === 'marathon' ? 'selected' : ''}>${esc(cfg.marathon)}</option></select></label>
       <h3>${esc(modeTitle)}</h3>
       ${state.mode === 'find' ? `<div class="object-target-box">Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></div>` : ''}
       ${state.mode === 'identify' ? `<div class="object-target-box">Name the <strong>red ${esc(cfg.singular)}</strong>.</div>` : ''}
       ${state.mode === 'marathon' ? `<div class="object-target-box"><strong>${esc(counter)}</strong> named</div>` : ''}
       ${state.mode !== 'identify' ? `<label>FOV degrees<div class="slider-text-row"><input id="objectGameFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="objectGameFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label>` : ''}
-      <label>Star density / faintest magnitude<div class="slider-text-row"><input id="objectGameMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="objectGameMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label>
+      ${state.mode !== 'identify' ? `<label>Star density / faintest magnitude<div class="slider-text-row"><input id="objectGameMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="objectGameMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label>` : ''}
       ${state.mode !== 'identify' ? `<label class="checkline"><input id="objectGameLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label>` : ''}
       ${state.mode !== 'identify' ? `<div class="sky-nav-grid" aria-label="${esc(cfg.title)} map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="objectGameCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div>
-      <div class="controls"><button type="button" id="objectGameZoomOut">− zoom</button><button type="button" id="objectGameZoomIn">zoom +</button></div>
-      <div class="controls"><button type="button" id="objectGameRollCCW">↺ rotate</button><button type="button" id="objectGameRollCW">rotate ↻</button></div>` : ''}
+      <div class="controls"><button type="button" id="objectGameZoomOut">− zoom</button><button type="button" id="objectGameZoomIn">zoom +</button></div>` : ''}
+      <div class="controls"><button type="button" id="objectGameRollCCW">↺ rotate</button><button type="button" id="objectGameRollCW">rotate ↻</button></div>
       ${state.mode !== 'find' ? `<input id="objectGameAnswer" autocomplete="off" placeholder="${state.mode === 'marathon' ? selected && !selectedAlreadyFound ? `name this ${cfg.singular}` : `click a purple ${cfg.singular} first` : `type ${cfg.singular} name`}">` : ''}
       <div class="controls">
-        ${state.mode === 'identify' || state.mode === 'marathon' ? `<button type="button" id="objectGameSubmit">submit</button>` : ''}
+        ${state.mode === 'find' || state.mode === 'identify' || state.mode === 'marathon' ? `<button type="button" id="objectGameSubmit">submit</button>` : ''}
         ${state.mode !== 'marathon' ? `<button type="button" id="objectGameNext">new question</button>` : `<button type="button" id="objectGameReset">reset marathon</button>`}
       </div>
       <div id="objectGameMsg" class="message">${esc(state.message || '')}</div>
@@ -6012,11 +6028,15 @@
     }
 
     function setMag(value) {
+      if (state.mode === 'identify') return;
       state.magLimit = Math.max(4, Math.min(6, parseFloat(value) || defaultMag()));
       const v = Number(state.magLimit.toFixed(1));
-      magInput.value = v;
-      magSlider.value = v;
-      updateRangeVisual(magSlider);
+      if (magInput) magInput.value = v;
+      if (magSlider) {
+        magSlider.value = v;
+        updateRangeVisual(magSlider);
+      }
+      objectSaveModeMap(state);
       draw();
     }
 
@@ -6026,13 +6046,13 @@
     }
 
     function rotateBasis(axis, angle) {
-      if (state.mode === 'identify') return;
       const b = objectGameEnsureOrientation(state, ensureObjectGameTarget(kind, state, items));
       state.orient = objectGameCleanBasis({
         f: objectGameRotateVector(b.f, axis, angle),
         right: objectGameRotateVector(b.right, axis, angle),
         up: objectGameRotateVector(b.up, axis, angle)
       });
+      if (state.mode === 'identify') state.identifyBasis = state.orient;
       objectSaveModeMap(state);
     }
 
@@ -6066,8 +6086,8 @@
       focusCanvas();
     }
 
-    document.querySelectorAll('[data-object-mode]').forEach(btn => btn.addEventListener('click', () => {
-      const nextMode = btn.dataset.objectMode;
+    $('#objectGameMode').addEventListener('change', e => {
+      const nextMode = e.target.value;
       if (!nextMode || nextMode === state.mode) return;
       objectSaveModeMap(state);
       state.mode = nextMode;
@@ -6080,7 +6100,7 @@
       state.wrongKey = '';
       if (state.mode !== 'marathon') nextObjectGameQuestion(kind, state, items);
       renderObjectChallengeGame(kind);
-    }));
+    });
 
     if ($('#objectGameNext')) $('#objectGameNext').addEventListener('click', () => {
       nextObjectGameQuestion(kind, state, items);
@@ -6113,6 +6133,24 @@
     if ($('#objectGameRollCW')) $('#objectGameRollCW').addEventListener('click', () => rollFrame(1));
 
     function submitTypedAnswer() {
+      if (state.mode === 'find') {
+        const t = ensureObjectGameTarget(kind, state, items);
+        const sel = items.find(item => compactObjectKey(kind, item) === state.selectedKey);
+        if (!t || !sel) {
+          state.message = `click a ${cfg.singular} first`;
+          if (msg) msg.textContent = state.message;
+          return;
+        }
+        const hit = compactObjectKey(kind, sel) === compactObjectKey(kind, t);
+        record(gameId, hit);
+        state.answered = true;
+        state.wrongKey = hit ? '' : compactObjectKey(kind, sel);
+        state.message = hit ? 'correct' : 'wrong';
+        state.answerCard = objectGameCard(kind, t, hit ? 'correct' : 'answer');
+        renderObjectChallengeGame(kind);
+        return;
+      }
+
       if (!answer) return;
       const value = answer.value;
       if (state.mode === 'identify') {
@@ -6156,9 +6194,20 @@
       }
     }
 
+    function shiftEnterNext(e) {
+      if (e.key === 'Enter' && e.shiftKey && state.mode !== 'marathon') {
+        e.preventDefault();
+        nextObjectGameQuestion(kind, state, items);
+        renderObjectChallengeGame(kind);
+        return true;
+      }
+      return false;
+    }
+
     if ($('#objectGameSubmit')) $('#objectGameSubmit').addEventListener('click', submitTypedAnswer);
     if (answer) {
       answer.addEventListener('keydown', e => {
+        if (shiftEnterNext(e)) return;
         if (e.key === 'Enter') {
           e.preventDefault();
           submitTypedAnswer();
@@ -6167,6 +6216,14 @@
       setTimeout(() => answer.focus(), 0);
     }
 
+    canvas.addEventListener('keydown', e => {
+      if (shiftEnterNext(e)) return;
+      if (e.key === 'Enter' && state.mode === 'find') {
+        e.preventDefault();
+        submitTypedAnswer();
+      }
+    });
+
     canvas.addEventListener('click', e => {
       const rect = canvas.getBoundingClientRect();
       const x = (e.clientX - rect.left) * canvas.width / rect.width;
@@ -6174,21 +6231,14 @@
       const near = objectGameNearest(canvas, x, y, state.mode !== 'find');
 
       if (state.mode === 'find') {
-        const t = ensureObjectGameTarget(kind, state, items);
-        if (!t) return;
-        if (!near) {
-          state.message = `click a coloured ${cfg.singular}`;
-          if (msg) msg.textContent = state.message;
-          return;
-        }
-        const hit = near.key === compactObjectKey(kind, t);
-        record(gameId, hit);
-        state.answered = true;
-        state.selectedKey = compactObjectKey(kind, t);
-        state.wrongKey = hit ? '' : near.key;
-        state.message = hit ? 'correct' : 'wrong';
-        state.answerCard = objectGameCard(kind, t, hit ? 'correct' : 'target');
-        renderObjectChallengeGame(kind);
+        if (!near) return;
+        state.selectedKey = near.key;
+        state.wrongKey = '';
+        state.answered = false;
+        state.answerCard = '';
+        state.message = `${cfg.singular} selected`;
+        draw();
+        focusCanvas();
         return;
       }
 
@@ -6248,6 +6298,7 @@
     canvas.addEventListener('pointercancel', () => { dragging = false; last = null; });
 
     draw();
+    if (!answer) setTimeout(() => focusCanvas(), 0);
   }
 
 

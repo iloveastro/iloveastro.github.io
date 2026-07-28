@@ -956,3 +956,14 @@ input[type='range']::-moz-range-thumb {
   }
 }
 
+
+
+/* v140 Stars/DSOs dropdown selector cleanup. */
+.object-game-side select {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+}
+.object-game-side .object-mode-tabs {
+  display: none;
+}
