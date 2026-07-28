@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=137';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=138';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -5424,6 +5424,7 @@
   }
 
 
+
   const OBJECT_GAME_LABELS = {
     stars: { title: 'Stars', singular: 'star', plural: 'stars', find: 'Find Star', identify: 'Identify Star', marathon: 'Star Marathon' },
     dso: { title: 'DSOs', singular: 'DSO', plural: 'DSOs', find: 'Find DSO', identify: 'Identify DSO', marathon: 'DSO Marathon' }
@@ -5535,8 +5536,9 @@
   function objectGameCard(kind, item, result = '') {
     if (!item) return '';
     if (kind === 'stars') {
+      const info = starStudyInfo(item);
       const fields = [
-        ['designation', item.designation || 'not listed'],
+        ['designation', esc(item.designation || 'not listed')],
         ['constellation', constellationWikiLink(item.constellation)],
         ['spectral type', item.spect ? `${esc(item.spect)}${spectralStripHtml(item.spect)}` : 'not in current catalogue'],
         ['apparent mag', Number.isFinite(item.mag) ? Number(item.mag).toFixed(2) : 'not listed'],
@@ -5547,10 +5549,12 @@
       ];
       return `<div class="study-card object-info-card ${result ? 'answered-card' : ''}"><h3>${starWikiLink(item)}</h3>${result ? `<p class="object-result">${esc(result)}</p>` : ''}
         <dl class="study-facts">${fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
-        ${starStudyHtml(item).replace(/^<div class="study-card star-study">|<\/div>$/g, '')}
+        <p><strong>memory cue:</strong> ${esc(info?.location || item.note || `A named star in ${item.constellation}.`)}</p>
+        ${info?.facts?.length ? `<ul>${info.facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
       </div>`;
     }
 
+    const info = DSO_STUDY_INFO[item.code] || {};
     const aliases = [item.code, item.commonName, ...(item.aliases || [])].filter(Boolean);
     const fields = [
       ['catalogue', esc(item.code)],
@@ -5563,25 +5567,32 @@
     ];
     return `<div class="study-card object-info-card ${result ? 'answered-card' : ''}"><h3>${dsoWikiLink(item, dsoLabelPlain(item))}</h3>${result ? `<p class="object-result">${esc(result)}</p>` : ''}
       <dl class="study-facts">${fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
-      ${dsoStudyHtml(item).replace(/^<div class="study-card dso-study">|<\/div>$/g, '')}
+      <p><strong>memory cue:</strong> ${esc(info.memory || `${item.code}${item.commonName ? ` is ${item.commonName}` : ''}: ${item.type} in ${item.constellation}.`)}</p>
+      ${info.facts?.length ? `<ul>${info.facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
     </div>`;
   }
 
-  function objectGameProjectAllSky(v, canvas) {
-    const { ra, dec } = raDecFromVec(v);
-    return {
-      x: ((360 - ra) / 360) * canvas.width,
-      y: ((90 - dec) / 180) * canvas.height
-    };
+  function objectGameStarRadius(s) {
+    return Math.max(0.9, Math.min(4.8, 4.2 - Number(s.mag || 6) * 0.55));
   }
 
-  function objectGameVecFromAllSky(x, y, canvas) {
-    const ra = (360 - x / canvas.width * 360 + 360) % 360;
-    const dec = 90 - y / canvas.height * 180;
-    return vecFromRaDec(ra, dec);
+  function objectGameObjectRadius(kind, item) {
+    if (kind === 'stars') return Math.max(5.2, Math.min(9.2, 9.2 - Number(item.mag || 4) * 0.78));
+    return 6.7;
   }
 
-  function objectGameProjectLocal(v, basis, radius, fovRad, canvas) {
+  function objectGameCleanBasis(b) {
+    if (!b || !b.f || !b.right || !b.up) return null;
+    const f = normVec(b.f);
+    let right = b.right;
+    const proj = dot(right, f);
+    right = normVec({ x: right.x - proj * f.x, y: right.y - proj * f.y, z: right.z - proj * f.z });
+    if (!Number.isFinite(right.x)) return null;
+    const up = normVec(cross(right, f));
+    return { f, right: normVec(cross(f, up)), up };
+  }
+
+  function objectGameProject(v, basis, radius, fovRad, canvas) {
     const z = dot(v, basis.f);
     const ang = Math.acos(Math.max(-1, Math.min(1, z)));
     if (ang > fovRad / 2) return null;
@@ -5592,133 +5603,146 @@
     return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
   }
 
-  function objectGameDrawWrappedLine(ctx, p1, p2, colour, width) {
-    const w = ctx.canvas.width;
-    const dx = p2.x - p1.x;
-    ctx.strokeStyle = colour;
-    ctx.lineWidth = width;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    if (Math.abs(dx) <= w / 2) {
-      ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-    } else if (dx > 0) {
-      ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x - w, p2.y); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(p1.x + w, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-    } else {
-      ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x + w, p2.y); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(p1.x - w, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-    }
+  function objectGameVecFromCanvasPoint(x, y, basis, radius, fovRad, canvas) {
+    const sx = x - canvas.width / 2;
+    const sy = canvas.height / 2 - y;
+    const rho = Math.hypot(sx, sy);
+    if (rho > radius) return null;
+    if (rho < 1e-9) return basis.f;
+    const ang = (rho / radius) * (fovRad / 2);
+    const tx = sx / rho, ty = sy / rho;
+    return normVec({
+      x: basis.f.x * Math.cos(ang) + (basis.right.x * tx + basis.up.x * ty) * Math.sin(ang),
+      y: basis.f.y * Math.cos(ang) + (basis.right.y * tx + basis.up.y * ty) * Math.sin(ang),
+      z: basis.f.z * Math.cos(ang) + (basis.right.z * tx + basis.up.z * ty) * Math.sin(ang)
+    });
   }
 
-  function objectGameDrawMap(canvas, kind, items, state, options = {}) {
+  function objectGameRotateVector(v, axis, angle) {
+    const c = Math.cos(angle), s = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
+    return normVec({
+      x: v.x * c + cr.x * s + axis.x * d * (1 - c),
+      y: v.y * c + cr.y * s + axis.y * d * (1 - c),
+      z: v.z * c + cr.z * s + axis.z * d * (1 - c)
+    });
+  }
+
+  function objectGameRandomBasisForTarget(v, fovDeg = 75) {
+    const b = localBasisFromForward(v);
+    const maxOffset = (fovDeg * Math.PI / 180) * 0.25;
+    const offset = Math.sqrt(Math.random()) * maxOffset;
+    const angle = Math.random() * Math.PI * 2;
+    const f = normVec({
+      x: v.x * Math.cos(offset) + (b.right.x * Math.cos(angle) + b.up.x * Math.sin(angle)) * Math.sin(offset),
+      y: v.y * Math.cos(offset) + (b.right.y * Math.cos(angle) + b.up.y * Math.sin(angle)) * Math.sin(offset),
+      z: v.z * Math.cos(offset) + (b.right.z * Math.cos(angle) + b.up.z * Math.sin(angle)) * Math.sin(offset)
+    });
+    const out = localBasisFromForward(f);
+    const roll = Math.random() * Math.PI * 2;
+    return objectGameCleanBasis({
+      f: out.f,
+      right: objectGameRotateVector(out.right, out.f, roll),
+      up: objectGameRotateVector(out.up, out.f, roll)
+    }) || out;
+  }
+
+  function objectGameEnsureOrientation(state, target = null) {
+    if (state.mode === 'identify') {
+      if (!state.identifyBasis || !target || state.identifyTargetKey !== state.targetKey) {
+        state.identifyBasis = objectGameRandomBasisForTarget(target?.v || vecFromRaDec(0, 0), 75);
+        state.identifyTargetKey = state.targetKey;
+      }
+      state.orient = objectGameCleanBasis(state.identifyBasis) || localBasisFromForward(target?.v || vecFromRaDec(0, 0));
+      return state.orient;
+    }
+    if (!state.orient) state.orient = localBasisFromForward(vecFromRaDec(0, 0));
+    state.orient = objectGameCleanBasis(state.orient) || localBasisFromForward(vecFromRaDec(0, 0));
+    return state.orient;
+  }
+
+  function objectGameDrawMap(canvas, kind, items, state, target = null) {
     const ctx = canvas.getContext('2d');
-    const projection = options.projection || 'allsky';
-    const target = options.target || null;
-    const selectedKey = state.selectedKey || '';
-    const found = new Set(state.found || []);
-    const targets = [];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#030306';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const fovDeg = kind === 'stars' ? 65 : 85;
+    const radius = Math.min(canvas.width, canvas.height) * 0.48;
+    const fovDeg = state.mode === 'identify' ? 75 : clampNumber(state.fov, 20, 190, 140);
     const fovRad = fovDeg * Math.PI / 180;
-    const radius = Math.min(canvas.width, canvas.height) * 0.47;
-    const basis = projection === 'local'
-      ? (state.identifyBasis || localBasisFromForward(target?.v || vecFromRaDec(0, 0)))
-      : null;
+    const basis = objectGameEnsureOrientation(state, target);
+    const found = new Set(state.found || []);
+    const selectedKey = state.selectedKey || '';
+    const wrongKey = state.wrongKey || '';
+    const targetKey = target ? compactObjectKey(kind, target) : '';
+    const targets = [];
 
-    function project(v) {
-      return projection === 'local' ? objectGameProjectLocal(v, basis, radius, fovRad, canvas) : objectGameProjectAllSky(v, canvas);
+    const project = v => objectGameProject(v, basis, radius, fovRad, canvas);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (state.showLines !== false && skyConstellationLineDb) {
+      drawSkyAsterismLines(ctx, project, basis, radius, fovRad);
     }
 
-    if (projection === 'local') {
-      ctx.save();
-      ctx.strokeStyle = '#222';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    if (skyConstellationLineDb && skyHipByNumber.size) {
-      ctx.save();
-      ctx.globalAlpha = projection === 'local' ? 0.48 : 0.42;
-      skyLineEdgesFromDatabase().forEach(edge => {
-        if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
-        const p1 = project(edge.s1.v);
-        const p2 = project(edge.s2.v);
-        if (!p1 || !p2) return;
-        if (projection === 'allsky') objectGameDrawWrappedLine(ctx, p1, p2, '#545a68', 1.15);
-        else {
-          ctx.strokeStyle = '#545a68';
-          ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-        }
-      });
-      ctx.restore();
-    }
-
-    const starPool = skyStars.filter(s => s.mag <= (projection === 'local' ? 6 : 5.6));
-    starPool.forEach(s => {
+    const visible = skyStars.filter(s => s.mag <= clampNumber(state.magLimit, 4, 6, defaultMag())).sort((a, b) => b.mag - a.mag);
+    ctx.fillStyle = 'black';
+    ctx.globalAlpha = 1;
+    for (const s of visible) {
       const p = project(s.v);
-      if (!p) return;
-      const r = Math.max(0.65, Math.min(3.2, 3.4 - s.mag * 0.38));
-      ctx.fillStyle = s.mag <= 2 ? '#f4f4f0' : s.mag <= 4 ? '#cfd5df' : '#8c94a4';
-      ctx.globalAlpha = s.mag <= 2 ? 0.95 : s.mag <= 4 ? 0.72 : 0.52;
+      if (!p) continue;
+      const r = objectGameStarRadius(s);
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
-    });
-    ctx.globalAlpha = 1;
+    }
 
     items.forEach(item => {
       const p = project(item.v);
       if (!p) return;
       const key = compactObjectKey(kind, item);
       const isFound = found.has(key);
-      const isSelected = key === selectedKey;
-      const isTarget = target && compactObjectKey(kind, target) === key;
-      const inMarathon = state.mode === 'marathon';
-      const inIdentify = state.mode === 'identify';
-      const showObjectMarker = kind === 'dso' || inMarathon || inIdentify || state.mode === 'find';
-
-      if (!showObjectMarker) return;
-
-      let colour = '#a56bff';
-      let stroke = '#ffffff';
-      let size = kind === 'stars' ? Math.max(4.2, Math.min(8.8, 8.8 - (Number(item.mag) || 4) * 0.8)) : 6.8;
-      if (isFound) colour = '#ffd84d';
-      if (isSelected) { colour = '#ffffff'; stroke = '#ffd84d'; size += 2; }
-      if (isTarget && inIdentify) { colour = '#ff3030'; stroke = '#ffffff'; size += 2.2; }
+      const isSelected = selectedKey === key;
+      const isWrong = wrongKey === key;
+      const isTarget = targetKey === key;
+      const highlightTarget = state.mode === 'identify' || (state.mode === 'find' && state.answered && isTarget);
+      const r = objectGameObjectRadius(kind, item);
+      let fill = '#9b5cff';
+      let stroke = '#111';
+      let lineWidth = 1.6;
+      if (isFound) fill = '#ffd43b';
+      if (highlightTarget) fill = state.mode === 'identify' ? '#e60012' : '#ffd43b';
+      if (isWrong) fill = '#888';
+      if (isSelected) { stroke = '#000'; lineWidth = 3; }
 
       ctx.save();
-      if (kind === 'stars') {
-        ctx.fillStyle = colour;
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = isTarget || isSelected ? 2.2 : 1.1;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = colour;
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = isTarget || isSelected ? 2.2 : 1.1;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-      }
+      ctx.fillStyle = fill;
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
       ctx.restore();
 
-      targets.push({ key, item, x: p.x, y: p.y, r: Math.max(12, size + 7) });
+      targets.push({ key, item, x: p.x, y: p.y, r: Math.max(13, r + 7) });
     });
 
+    ctx.restore();
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
     canvas._objectGameTargets = targets;
-    canvas._objectGameProjection = projection;
     canvas._objectGameBasis = basis;
+    canvas._objectGameRadius = radius;
     canvas._objectGameFovRad = fovRad;
   }
 
@@ -5727,37 +5751,23 @@
     let best = null;
     targets.forEach(t => {
       const d = Math.hypot(t.x - x, t.y - y);
-      if (d <= t.r && (!best || d < best.d)) best = { ...t, d };
+      if (!best || d < best.d) best = { ...t, d };
     });
+    if (!best || best.d > best.r) return null;
     return best;
   }
 
-  function objectGameScoreFromDistance(kind, degrees) {
-    const zero = kind === 'stars' ? 25 : 35;
-    return Math.max(0, Math.round(500 * (1 - degrees / zero)));
-  }
-
-  function randomOffsetBasisForTarget(v) {
-    const b = localBasisFromForward(v);
-    const dx = (Math.random() - 0.5) * 0.28;
-    const dy = (Math.random() - 0.5) * 0.20;
-    let f = normVec({
-      x: b.f.x + b.right.x * dx + b.up.x * dy,
-      y: b.f.y + b.right.y * dx + b.up.y * dy,
-      z: b.f.z + b.right.z * dx + b.up.z * dy
-    });
-    return localBasisFromForward(f);
-  }
-
   function ensureObjectGameTarget(kind, state, items) {
-    if (!items.length) return null;
-    if (state.mode === 'marathon') return null;
+    if (!items.length || state.mode === 'marathon') return null;
     if (!state.targetKey || !items.some(item => compactObjectKey(kind, item) === state.targetKey)) {
       const pick = rand(items);
       state.targetKey = compactObjectKey(kind, pick);
       state.answered = false;
       state.answerCard = '';
-      state.identifyBasis = randomOffsetBasisForTarget(pick.v);
+      state.message = '';
+      state.wrongKey = '';
+      state.identifyBasis = null;
+      state.identifyTargetKey = '';
     }
     return items.find(item => compactObjectKey(kind, item) === state.targetKey) || items[0];
   }
@@ -5768,7 +5778,7 @@
     let pick = rand(items);
     if (items.length > 1) {
       let guard = 0;
-      while (compactObjectKey(kind, pick) === oldKey && guard < 20) {
+      while (compactObjectKey(kind, pick) === oldKey && guard < 30) {
         pick = rand(items);
         guard++;
       }
@@ -5777,12 +5787,16 @@
     state.answered = false;
     state.answerCard = '';
     state.message = '';
-    state.identifyBasis = randomOffsetBasisForTarget(pick.v);
+    state.selectedKey = '';
+    state.wrongKey = '';
+    state.identifyBasis = null;
+    state.identifyTargetKey = '';
   }
 
-  function resetObjectGameMarathon(kind, state) {
+  function resetObjectGameMarathon(state) {
     state.found = [];
     state.selectedKey = '';
+    state.wrongKey = '';
     state.message = '';
     state.answerCard = '';
   }
@@ -5798,14 +5812,24 @@
       mode: 'find',
       targetKey: '',
       selectedKey: '',
+      wrongKey: '',
       found: [],
       message: '',
       answerCard: '',
-      answered: false
+      answered: false,
+      fov: kind === 'stars' ? 140 : 150,
+      magLimit: defaultMag(),
+      showLines: true,
+      orient: null,
+      identifyBasis: null,
+      identifyTargetKey: ''
     });
 
     if (!Array.isArray(state.found)) state.found = [];
     if (!['find', 'identify', 'marathon'].includes(state.mode)) state.mode = 'find';
+    if (typeof state.showLines !== 'boolean') state.showLines = true;
+    if (!Number.isFinite(state.fov)) state.fov = kind === 'stars' ? 140 : 150;
+    if (!Number.isFinite(state.magLimit)) state.magLimit = defaultMag();
 
     if (!state.loaded) {
       if (!state.loading) {
@@ -5842,42 +5866,120 @@
 
     const target = ensureObjectGameTarget(kind, state, items);
     const found = new Set(state.found || []);
+    const selected = items.find(item => compactObjectKey(kind, item) === state.selectedKey) || null;
+    const selectedAlreadyFound = selected && found.has(compactObjectKey(kind, selected));
     const targetName = target ? objectGameName(kind, target) : '';
     const modeTitle = state.mode === 'find' ? cfg.find : state.mode === 'identify' ? cfg.identify : cfg.marathon;
-    const projection = state.mode === 'identify' ? 'local' : 'allsky';
-    const selected = items.find(item => compactObjectKey(kind, item) === state.selectedKey) || null;
     const counter = `${found.size} / ${items.length}`;
+    const canShowSelectedCard = state.mode === 'marathon' && selected && selectedAlreadyFound;
 
-    app.innerHTML = `<h2>${cfg.title}</h2><div class="object-game-layout"><section class="panel object-game-map-panel"><canvas id="objectGameCanvas" class="object-game-canvas" width="1100" height="680" tabindex="0" aria-label="${esc(cfg.title)} sky game"></canvas></section><aside class="panel object-game-side">
+    app.innerHTML = `<h2>${cfg.title}</h2><div class="sky-layout object-game-layout"><section class="panel sky-panel object-game-map-panel"><canvas id="objectGameCanvas" width="900" height="900" tabindex="0" aria-label="${esc(cfg.title)} sky map"></canvas></section><aside class="panel object-game-side">
       <div class="object-mode-tabs">
         <button type="button" data-object-mode="find" class="${state.mode === 'find' ? 'active' : ''}">${esc(cfg.find)}</button>
         <button type="button" data-object-mode="identify" class="${state.mode === 'identify' ? 'active' : ''}">${esc(cfg.identify)}</button>
         <button type="button" data-object-mode="marathon" class="${state.mode === 'marathon' ? 'active' : ''}">${esc(cfg.marathon)}</button>
       </div>
       <h3>${esc(modeTitle)}</h3>
-      ${state.mode === 'find' ? `<div class="object-target-box">Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></div><div class="small">Click its position on the all-sky map.</div>` : ''}
-      ${state.mode === 'identify' ? `<div class="object-target-box">Name the <strong>red ${esc(cfg.singular)}</strong>.</div><div class="small">Medium FOV gives enough constellation context without making the answer too obvious.</div>` : ''}
-      ${state.mode === 'marathon' ? `<div class="object-target-box"><strong>${esc(counter)}</strong> named</div><div class="small">Click a purple ${esc(cfg.singular)}, type its name, and it turns yellow.</div>` : ''}
-      ${state.mode !== 'find' ? `<input id="objectGameAnswer" autocomplete="off" placeholder="${state.mode === 'marathon' ? selected ? `name this ${cfg.singular}` : `click a ${cfg.singular} first` : `type ${cfg.singular} name`}">` : ''}
+      ${state.mode === 'find' ? `<div class="object-target-box">Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></div>` : ''}
+      ${state.mode === 'identify' ? `<div class="object-target-box">Name the <strong>red ${esc(cfg.singular)}</strong>.</div>` : ''}
+      ${state.mode === 'marathon' ? `<div class="object-target-box"><strong>${esc(counter)}</strong> named</div>` : ''}
+      <label>FOV degrees<div class="slider-text-row"><input id="objectGameFovSlider" type="range" min="20" max="190" step="5" value="${state.mode === 'identify' ? 75 : state.fov}" ${state.mode === 'identify' ? 'disabled' : ''}><input id="objectGameFov" type="number" min="20" max="190" step="5" value="${state.mode === 'identify' ? 75 : state.fov}" ${state.mode === 'identify' ? 'disabled' : ''}></div></label>
+      <label>Star density / faintest magnitude<div class="slider-text-row"><input id="objectGameMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="objectGameMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label>
+      <label class="checkline"><input id="objectGameLines" type="checkbox" ${state.showLines !== false ? 'checked' : ''}><span>constellation lines</span></label>
+      <div class="sky-nav-grid" aria-label="${esc(cfg.title)} map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="objectGameCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div>
+      <div class="controls"><button type="button" id="objectGameZoomOut">− zoom</button><button type="button" id="objectGameZoomIn">zoom +</button></div>
+      <div class="controls"><button type="button" id="objectGameRollCCW">↺ rotate</button><button type="button" id="objectGameRollCW">rotate ↻</button></div>
+      ${state.mode !== 'find' ? `<input id="objectGameAnswer" autocomplete="off" placeholder="${state.mode === 'marathon' ? selected && !selectedAlreadyFound ? `name this ${cfg.singular}` : `click a purple ${cfg.singular} first` : `type ${cfg.singular} name`}">` : ''}
       <div class="controls">
-        ${state.mode === 'identify' ? `<button type="button" id="objectGameSubmit">submit</button>` : ''}
+        ${state.mode === 'identify' || state.mode === 'marathon' ? `<button type="button" id="objectGameSubmit">submit</button>` : ''}
         ${state.mode !== 'marathon' ? `<button type="button" id="objectGameNext">new question</button>` : `<button type="button" id="objectGameReset">reset marathon</button>`}
       </div>
       <div id="objectGameMsg" class="message">${esc(state.message || '')}</div>
-      <div id="objectGameCard">${state.answerCard || (state.mode === 'marathon' && selected ? objectGameCard(kind, selected, 'selected') : '')}</div>
+      <div id="objectGameCard">${state.answerCard || (canShowSelectedCard ? objectGameCard(kind, selected, 'already named') : '')}</div>
     </aside></div>`;
+
+    initRangeVisuals(app);
+    setupSphereFullscreen();
 
     const canvas = $('#objectGameCanvas');
     const msg = $('#objectGameMsg');
     const answer = $('#objectGameAnswer');
-    objectGameDrawMap(canvas, kind, items, state, { projection, target });
+    const fovInput = $('#objectGameFov');
+    const fovSlider = $('#objectGameFovSlider');
+    const magInput = $('#objectGameMag');
+    const magSlider = $('#objectGameMagSlider');
 
-    function redrawOnly() {
-      objectGameDrawMap(canvas, kind, items, state, { projection: state.mode === 'identify' ? 'local' : 'allsky', target: ensureObjectGameTarget(kind, state, items) });
-      const card = $('#objectGameCard');
-      const sel = items.find(item => compactObjectKey(kind, item) === state.selectedKey) || null;
-      if (card && state.mode === 'marathon') card.innerHTML = state.answerCard || (sel ? objectGameCard(kind, sel, 'selected') : '');
+    function draw() {
+      objectGameDrawMap(canvas, kind, items, state, ensureObjectGameTarget(kind, state, items));
       if (msg) msg.textContent = state.message || '';
+    }
+
+    function setFov(value) {
+      if (state.mode === 'identify') return;
+      state.fov = Math.max(20, Math.min(190, parseFloat(value) || 140));
+      const v = Number(state.fov.toFixed(1));
+      fovInput.value = v;
+      fovSlider.value = v;
+      updateRangeVisual(fovSlider);
+      draw();
+    }
+
+    function setMag(value) {
+      state.magLimit = Math.max(4, Math.min(6, parseFloat(value) || defaultMag()));
+      const v = Number(state.magLimit.toFixed(1));
+      magInput.value = v;
+      magSlider.value = v;
+      updateRangeVisual(magSlider);
+      draw();
+    }
+
+    function focusCanvas() {
+      try { canvas.focus({ preventScroll: true }); }
+      catch { canvas.focus(); }
+    }
+
+    function rotateBasis(axis, angle) {
+      const b = objectGameEnsureOrientation(state, ensureObjectGameTarget(kind, state, items));
+      state.orient = objectGameCleanBasis({
+        f: objectGameRotateVector(b.f, axis, angle),
+        right: objectGameRotateVector(b.right, axis, angle),
+        up: objectGameRotateVector(b.up, axis, angle)
+      });
+      if (state.mode === 'identify') state.identifyBasis = state.orient;
+    }
+
+    function move(dx, dy, multiplier = 1) {
+      const b = objectGameEnsureOrientation(state, ensureObjectGameTarget(kind, state, items));
+      const fovDeg = state.mode === 'identify' ? 75 : state.fov;
+      const anglePerPx = (fovDeg * Math.PI / 180) / Math.min(canvas.width, canvas.height) * multiplier;
+      rotateBasis(b.up, -dx * anglePerPx);
+      rotateBasis(objectGameEnsureOrientation(state, ensureObjectGameTarget(kind, state, items)).right, -dy * anglePerPx);
+      draw();
+    }
+
+    function moveButton(x, y) {
+      const px = Math.min(canvas.width, canvas.height) * 0.05;
+      move(x * px, y * px, 1);
+      focusCanvas();
+    }
+
+    function rollFrame(direction) {
+      const b = objectGameEnsureOrientation(state, ensureObjectGameTarget(kind, state, items));
+      rotateBasis(b.f, direction * 10 * Math.PI / 180);
+      draw();
+      focusCanvas();
+    }
+
+    function centreMap() {
+      if (state.mode === 'identify') {
+        state.identifyBasis = objectGameRandomBasisForTarget(ensureObjectGameTarget(kind, state, items)?.v || vecFromRaDec(0, 0), 75);
+        state.identifyTargetKey = state.targetKey;
+        state.orient = state.identifyBasis;
+      } else {
+        state.orient = localBasisFromForward(vecFromRaDec(0, 0));
+      }
+      draw();
+      focusCanvas();
     }
 
     document.querySelectorAll('[data-object-mode]').forEach(btn => btn.addEventListener('click', () => {
@@ -5888,6 +5990,7 @@
       state.answerCard = '';
       state.answered = false;
       state.selectedKey = '';
+      state.wrongKey = '';
       if (state.mode !== 'marathon') nextObjectGameQuestion(kind, state, items);
       renderObjectChallengeGame(kind);
     }));
@@ -5898,9 +6001,28 @@
     });
 
     if ($('#objectGameReset')) $('#objectGameReset').addEventListener('click', () => {
-      resetObjectGameMarathon(kind, state);
+      resetObjectGameMarathon(state);
       renderObjectChallengeGame(kind);
     });
+
+    if (fovInput) fovInput.addEventListener('input', e => setFov(e.target.value));
+    if (fovSlider) fovSlider.addEventListener('input', e => setFov(e.target.value));
+    if (magInput) magInput.addEventListener('input', e => setMag(e.target.value));
+    if (magSlider) magSlider.addEventListener('input', e => setMag(e.target.value));
+    $('#objectGameLines').addEventListener('change', e => {
+      state.showLines = e.target.checked;
+      draw();
+      focusCanvas();
+    });
+    document.querySelectorAll('[data-move]').forEach(btn => btn.addEventListener('click', () => {
+      const [x, y] = btn.dataset.move.split(',').map(Number);
+      moveButton(x, y);
+    }));
+    $('#objectGameCentre').addEventListener('click', centreMap);
+    $('#objectGameZoomOut').addEventListener('click', () => { if (state.mode !== 'identify') setFov(state.fov * 1.25); });
+    $('#objectGameZoomIn').addEventListener('click', () => { if (state.mode !== 'identify') setFov(state.fov * 0.8); });
+    $('#objectGameRollCCW').addEventListener('click', () => rollFrame(-1));
+    $('#objectGameRollCW').addEventListener('click', () => rollFrame(1));
 
     function submitTypedAnswer() {
       if (!answer) return;
@@ -5920,21 +6042,22 @@
       if (state.mode === 'marathon') {
         const sel = items.find(item => compactObjectKey(kind, item) === state.selectedKey);
         if (!sel) {
-          state.message = `click a ${cfg.singular} first`;
+          state.message = `click a purple ${cfg.singular} first`;
           if (msg) msg.textContent = state.message;
           return;
         }
         const key = compactObjectKey(kind, sel);
         if (found.has(key)) {
           state.message = 'already named';
-          if (msg) msg.textContent = state.message;
+          state.answerCard = objectGameCard(kind, sel, 'already named');
+          renderObjectChallengeGame(kind);
           return;
         }
         const ok = answerMatches(value, objectGameAnswers(kind, sel));
         record(gameId, ok);
         if (ok) {
           state.found.push(key);
-          state.message = `${objectGameName(kind, sel)} named`;
+          state.message = 'correct';
           state.answerCard = objectGameCard(kind, sel, 'named');
           answer.value = '';
           renderObjectChallengeGame(kind);
@@ -5965,15 +6088,18 @@
       if (state.mode === 'find') {
         const t = ensureObjectGameTarget(kind, state, items);
         if (!t) return;
-        const clickVec = objectGameVecFromAllSky(x, y, canvas);
-        const dist = angularDeg(clickVec, t.v);
-        const score = objectGameScoreFromDistance(kind, dist);
-        const hit = dist <= (kind === 'stars' ? 2.2 : 3.2);
+        if (!near) {
+          state.message = `click a coloured ${cfg.singular}`;
+          if (msg) msg.textContent = state.message;
+          return;
+        }
+        const hit = near.key === compactObjectKey(kind, t);
         record(gameId, hit);
         state.answered = true;
-        state.message = `${score} / 500 (${dist.toFixed(1)}° away)`;
-        state.answerCard = objectGameCard(kind, t, hit ? 'correct click' : 'target shown');
         state.selectedKey = compactObjectKey(kind, t);
+        state.wrongKey = hit ? '' : near.key;
+        state.message = hit ? 'correct' : 'wrong';
+        state.answerCard = objectGameCard(kind, t, hit ? 'correct' : 'target');
         renderObjectChallengeGame(kind);
         return;
       }
@@ -5987,11 +6113,52 @@
           return;
         }
         state.selectedKey = near.key;
-        state.message = `selected ${objectGameName(kind, near.item)}`;
-        state.answerCard = objectGameCard(kind, near.item, found.has(near.key) ? 'already named' : 'selected');
+        state.wrongKey = '';
+        if (found.has(near.key)) {
+          state.message = 'already named';
+          state.answerCard = objectGameCard(kind, near.item, 'already named');
+        } else {
+          state.message = `${cfg.singular} selected`;
+          state.answerCard = '';
+        }
         renderObjectChallengeGame(kind);
       }
     });
+
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      if (state.mode !== 'identify' && (e.ctrlKey || e.metaKey || e.altKey)) {
+        const factor = Math.exp(e.deltaY * 0.0016);
+        setFov(state.fov * factor);
+        return;
+      }
+      const unit = Math.min(canvas.width, canvas.height) * 0.0018;
+      move((e.deltaX || (e.shiftKey ? e.deltaY : 0)) * unit, (e.shiftKey ? 0 : e.deltaY) * unit, 1);
+    }, { passive: false });
+
+    let dragging = false;
+    let last = null;
+    canvas.addEventListener('pointerdown', e => {
+      dragging = true;
+      last = { x: e.clientX, y: e.clientY };
+      canvas.setPointerCapture(e.pointerId);
+      focusCanvas();
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!dragging || !last) return;
+      const dx = e.clientX - last.x;
+      const dy = e.clientY - last.y;
+      last = { x: e.clientX, y: e.clientY };
+      move(dx, dy, 1);
+    });
+    canvas.addEventListener('pointerup', e => {
+      dragging = false;
+      last = null;
+      try { canvas.releasePointerCapture(e.pointerId); } catch {}
+    });
+    canvas.addEventListener('pointercancel', () => { dragging = false; last = null; });
+
+    draw();
   }
 
 
