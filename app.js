@@ -1134,7 +1134,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=143';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=144';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2878,7 +2878,6 @@
     canvas.addEventListener('lostpointercapture', finishPointer);
 
     canvas.addEventListener('wheel', e => {
-      if (state.mode === 'identify') return;
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) { setFov(state.fov * Math.exp(e.deltaY * 0.002)); return; }
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? canvas.height : 1;
@@ -2917,7 +2916,7 @@
       loading: false,
       error: '',
       fov: defaultFov(),
-      magLimit: mode === 'identify' ? 6 : defaultMag(),
+      magLimit: defaultMag(),
       showLines: false,
       showDso: false,
       noteMode: false,
@@ -3016,24 +3015,18 @@
     function setFov(value) {
       state.fov = Math.max(20, Math.min(190, parseFloat(value) || defaultFov()));
       const v = Number(state.fov.toFixed(1));
-      if (fovInput) fovInput.value = v;
-      if (fovSlider) {
-        fovSlider.value = v;
-        updateRangeVisual(fovSlider);
-      }
-      objectSaveModeMap(state);
+      fovInput.value = v;
+      fovSlider.value = v;
+      updateRangeVisual(fovSlider);
       draw();
     }
 
     function setMag(value) {
       state.magLimit = Math.max(4, Math.min(6, parseFloat(value) || defaultMag()));
       const v = Number(state.magLimit.toFixed(1));
-      if (magInput) magInput.value = v;
-      if (magSlider) {
-        magSlider.value = v;
-        updateRangeVisual(magSlider);
-      }
-      objectSaveModeMap(state);
+      magInput.value = v;
+      magSlider.value = v;
+      updateRangeVisual(magSlider);
       draw();
     }
 
