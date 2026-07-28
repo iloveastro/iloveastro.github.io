@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=138';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=139';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -2840,6 +2840,7 @@
     canvas.addEventListener('lostpointercapture', finishPointer);
 
     canvas.addEventListener('wheel', e => {
+      if (state.mode === 'identify') return;
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) { setFov(state.fov * Math.exp(e.deltaY * 0.002)); return; }
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? canvas.height : 1;
@@ -2977,18 +2978,24 @@
     function setFov(value) {
       state.fov = Math.max(20, Math.min(190, parseFloat(value) || defaultFov()));
       const v = Number(state.fov.toFixed(1));
-      fovInput.value = v;
-      fovSlider.value = v;
-      updateRangeVisual(fovSlider);
+      if (fovInput) fovInput.value = v;
+      if (fovSlider) {
+        fovSlider.value = v;
+        updateRangeVisual(fovSlider);
+      }
+      objectSaveModeMap(state);
       draw();
     }
 
     function setMag(value) {
       state.magLimit = Math.max(4, Math.min(6, parseFloat(value) || defaultMag()));
       const v = Number(state.magLimit.toFixed(1));
-      magInput.value = v;
-      magSlider.value = v;
-      updateRangeVisual(magSlider);
+      if (magInput) magInput.value = v;
+      if (magSlider) {
+        magSlider.value = v;
+        updateRangeVisual(magSlider);
+      }
+      objectSaveModeMap(state);
       draw();
     }
 
@@ -5430,6 +5437,20 @@
     dso: { title: 'DSOs', singular: 'DSO', plural: 'DSOs', find: 'Find DSO', identify: 'Identify DSO', marathon: 'DSO Marathon' }
   };
 
+  const GREEK_DESIGNATION_WORDS = {
+    alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', zeta: 'ζ', eta: 'η', theta: 'θ',
+    iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', omicron: 'ο', pi: 'π',
+    rho: 'ρ', sigma: 'σ', tau: 'τ', upsilon: 'υ', phi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω'
+  };
+  function greekDesignationText(value) {
+    return String(value || '').trim().replace(/\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b/ig, m => GREEK_DESIGNATION_WORDS[m.toLowerCase()] || m);
+  }
+  function objectSkyKey(star) {
+    if (!star) return '';
+    if (Number.isFinite(star.hip)) return `hip:${star.hip}`;
+    return `pos:${Number(star.ra).toFixed(6)}:${Number(star.dec).toFixed(6)}:${compact(star.name || starDisplayName(star) || star.bayer || star.bf)}`;
+  }
+
   function compactObjectKey(kind, item) {
     return kind === 'stars'
       ? `star:${compact(item.name)}:${compact(item.constellation)}`
@@ -5478,7 +5499,7 @@
       ra: sky.ra,
       dec: sky.dec,
       mag: Number.isFinite(sky.mag) ? sky.mag : entry.mag,
-      designation: entry.designation || starDesignation(sky) || sky.bf || sky.bayer || '',
+      designation: greekDesignationText(starDesignation(sky) || entry.designation || sky.bf || sky.bayer || ''),
       spect: sky.spect || '',
       absmag: Number.isFinite(sky.absmag) ? sky.absmag : null,
       dist: Number.isFinite(sky.dist) ? sky.dist : null,
@@ -5536,25 +5557,17 @@
   function objectGameCard(kind, item, result = '') {
     if (!item) return '';
     if (kind === 'stars') {
-      const info = starStudyInfo(item);
       const fields = [
         ['designation', esc(item.designation || 'not listed')],
         ['constellation', constellationWikiLink(item.constellation)],
         ['spectral type', item.spect ? `${esc(item.spect)}${spectralStripHtml(item.spect)}` : 'not in current catalogue'],
-        ['apparent mag', Number.isFinite(item.mag) ? Number(item.mag).toFixed(2) : 'not listed'],
-        ['absolute mag', Number.isFinite(item.absmag) ? Number(item.absmag).toFixed(2) : 'not listed'],
-        ['RA/Dec', challengeRaDecHtml(item.v)],
-        ['distance', Number.isFinite(item.dist) ? `${Number(item.dist).toFixed(1)} ly` : 'not listed'],
-        ['catalogue', [Number.isFinite(item.hip) ? `HIP ${item.hip}` : '', item.hd ? `HD ${esc(item.hd)}` : '', item.hr ? `HR ${esc(item.hr)}` : ''].filter(Boolean).join(' · ') || 'not listed']
+        ['RA/Dec', challengeRaDecHtml(item.v)]
       ];
       return `<div class="study-card object-info-card ${result ? 'answered-card' : ''}"><h3>${starWikiLink(item)}</h3>${result ? `<p class="object-result">${esc(result)}</p>` : ''}
         <dl class="study-facts">${fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
-        <p><strong>memory cue:</strong> ${esc(info?.location || item.note || `A named star in ${item.constellation}.`)}</p>
-        ${info?.facts?.length ? `<ul>${info.facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
       </div>`;
     }
 
-    const info = DSO_STUDY_INFO[item.code] || {};
     const aliases = [item.code, item.commonName, ...(item.aliases || [])].filter(Boolean);
     const fields = [
       ['catalogue', esc(item.code)],
@@ -5562,13 +5575,10 @@
       ['type', esc(item.type || 'not listed')],
       ['constellation', constellationWikiLink(item.constellation)],
       ['RA/Dec', challengeRaDecHtml(item.v)],
-      ['aliases', aliases.length ? aliases.map(esc).join(' · ') : 'not listed'],
-      ['position source', esc(item.coordinateSource || 'catalogue')]
+      ['aliases', aliases.length ? aliases.map(esc).join(' · ') : 'not listed']
     ];
     return `<div class="study-card object-info-card ${result ? 'answered-card' : ''}"><h3>${dsoWikiLink(item, dsoLabelPlain(item))}</h3>${result ? `<p class="object-result">${esc(result)}</p>` : ''}
       <dl class="study-facts">${fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
-      <p><strong>memory cue:</strong> ${esc(info.memory || `${item.code}${item.commonName ? ` is ${item.commonName}` : ''}: ${item.type} in ${item.constellation}.`)}</p>
-      ${info.facts?.length ? `<ul>${info.facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
     </div>`;
   }
 
@@ -5649,7 +5659,7 @@
   function objectGameEnsureOrientation(state, target = null) {
     if (state.mode === 'identify') {
       if (!state.identifyBasis || !target || state.identifyTargetKey !== state.targetKey) {
-        state.identifyBasis = objectGameRandomBasisForTarget(target?.v || vecFromRaDec(0, 0), 75);
+        state.identifyBasis = objectGameRandomBasisForTarget(target?.v || vecFromRaDec(0, 0), 105);
         state.identifyTargetKey = state.targetKey;
       }
       state.orient = objectGameCleanBasis(state.identifyBasis) || localBasisFromForward(target?.v || vecFromRaDec(0, 0));
@@ -5660,10 +5670,35 @@
     return state.orient;
   }
 
+  function objectGameInterestStarColour(kind, item, state, targetKey, wrongKey, found) {
+    if (kind !== 'stars' || !item) return 'black';
+    const key = compactObjectKey(kind, item);
+    if (state.mode === 'identify') return key === targetKey ? '#e60012' : 'black';
+    if (state.mode === 'marathon') return found.has(key) ? '#d6a900' : '#8b42ff';
+    if (state.mode === 'find') {
+      if (state.answered && key === targetKey) return '#d6a900';
+      if (key === wrongKey) return '#777';
+      return '#8b42ff';
+    }
+    return 'black';
+  }
+
+  function objectGameVisibleBackgroundStars(kind, items, state) {
+    const visible = skyStars.filter(s => s.mag <= clampNumber(state.magLimit, 4, 6, defaultMag()));
+    if (kind !== 'stars') return visible;
+    const extra = [];
+    items.forEach(item => {
+      if (!item.sky) return;
+      if (state.mode === 'identify' && compactObjectKey(kind, item) !== state.targetKey) return;
+      extra.push(item.sky);
+    });
+    return uniqueSkyStars([...visible, ...extra]);
+  }
+
   function objectGameDrawMap(canvas, kind, items, state, target = null) {
     const ctx = canvas.getContext('2d');
     const radius = Math.min(canvas.width, canvas.height) * 0.48;
-    const fovDeg = state.mode === 'identify' ? 75 : clampNumber(state.fov, 20, 190, 140);
+    const fovDeg = state.mode === 'identify' ? 105 : clampNumber(state.fov, 20, 190, 140);
     const fovRad = fovDeg * Math.PI / 180;
     const basis = objectGameEnsureOrientation(state, target);
     const found = new Set(state.found || []);
@@ -5673,6 +5708,10 @@
     const targets = [];
 
     const project = v => objectGameProject(v, basis, radius, fovRad, canvas);
+    const itemBySkyKey = new Map();
+    if (kind === 'stars') {
+      items.forEach(item => { if (item.sky) itemBySkyKey.set(objectSkyKey(item.sky), item); });
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'white';
@@ -5686,52 +5725,53 @@
     ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
     ctx.clip();
 
-    if (state.showLines !== false && skyConstellationLineDb) {
+    if (state.mode !== 'identify' && state.showLines === true && skyConstellationLineDb) {
       drawSkyAsterismLines(ctx, project, basis, radius, fovRad);
     }
 
-    const visible = skyStars.filter(s => s.mag <= clampNumber(state.magLimit, 4, 6, defaultMag())).sort((a, b) => b.mag - a.mag);
-    ctx.fillStyle = 'black';
+    const visible = objectGameVisibleBackgroundStars(kind, items, state).sort((a, b) => b.mag - a.mag);
     ctx.globalAlpha = 1;
     for (const s of visible) {
       const p = project(s.v);
       if (!p) continue;
+      const interest = kind === 'stars' ? itemBySkyKey.get(objectSkyKey(s)) : null;
+      const key = interest ? compactObjectKey(kind, interest) : '';
       const r = objectGameStarRadius(s);
+      ctx.fillStyle = interest ? objectGameInterestStarColour(kind, interest, state, targetKey, wrongKey, found) : 'black';
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
+      if (interest) targets.push({ key, item: interest, x: p.x, y: p.y, r: Math.max(13, r + 8) });
     }
 
-    items.forEach(item => {
-      const p = project(item.v);
-      if (!p) return;
-      const key = compactObjectKey(kind, item);
-      const isFound = found.has(key);
-      const isSelected = selectedKey === key;
-      const isWrong = wrongKey === key;
-      const isTarget = targetKey === key;
-      const highlightTarget = state.mode === 'identify' || (state.mode === 'find' && state.answered && isTarget);
-      const r = objectGameObjectRadius(kind, item);
-      let fill = '#9b5cff';
-      let stroke = '#111';
-      let lineWidth = 1.6;
-      if (isFound) fill = '#ffd43b';
-      if (highlightTarget) fill = state.mode === 'identify' ? '#e60012' : '#ffd43b';
-      if (isWrong) fill = '#888';
-      if (isSelected) { stroke = '#000'; lineWidth = 3; }
-
-      ctx.save();
-      ctx.fillStyle = fill;
-      ctx.strokeStyle = stroke;
-      ctx.lineWidth = lineWidth;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-
-      targets.push({ key, item, x: p.x, y: p.y, r: Math.max(13, r + 7) });
-    });
+    if (kind === 'dso') {
+      items.forEach(item => {
+        const p = project(item.v);
+        if (!p) return;
+        const key = compactObjectKey(kind, item);
+        const isWrong = wrongKey === key;
+        const isTarget = targetKey === key;
+        let fill = '#8b42ff';
+        if (state.mode === 'identify') {
+          if (!isTarget) return;
+          fill = '#e60012';
+        } else if (state.mode === 'marathon') {
+          fill = found.has(key) ? '#d6a900' : '#8b42ff';
+        } else if (state.mode === 'find') {
+          if (state.answered && isTarget) fill = '#d6a900';
+          else if (isWrong) fill = '#777';
+        }
+        const r = objectGameObjectRadius(kind, item);
+        ctx.fillStyle = fill;
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = key === selectedKey ? 2.4 : 1.4;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        targets.push({ key, item, x: p.x, y: p.y, r: Math.max(13, r + 7) });
+      });
+    }
 
     ctx.restore();
     ctx.strokeStyle = 'black';
@@ -5746,14 +5786,15 @@
     canvas._objectGameFovRad = fovRad;
   }
 
-  function objectGameNearest(canvas, x, y) {
+  function objectGameNearest(canvas, x, y, requireInside = true) {
     const targets = canvas._objectGameTargets || [];
     let best = null;
     targets.forEach(t => {
       const d = Math.hypot(t.x - x, t.y - y);
       if (!best || d < best.d) best = { ...t, d };
     });
-    if (!best || best.d > best.r) return null;
+    if (!best) return null;
+    if (requireInside && best.d > best.r) return null;
     return best;
   }
 
@@ -5801,6 +5842,52 @@
     state.answerCard = '';
   }
 
+  function objectDefaultModeMap(kind, mode) {
+    return {
+      fov: mode === 'identify' ? 105 : kind === 'stars' ? 140 : 150,
+      magLimit: defaultMag(),
+      showLines: false,
+      orient: null,
+      identifyBasis: null,
+      identifyTargetKey: ''
+    };
+  }
+
+  function objectEnsureModeMaps(kind, state) {
+    if (!state.modeMaps || typeof state.modeMaps !== 'object') state.modeMaps = {};
+    ['find', 'identify', 'marathon'].forEach(mode => {
+      if (!state.modeMaps[mode] || typeof state.modeMaps[mode] !== 'object') state.modeMaps[mode] = objectDefaultModeMap(kind, mode);
+      const d = objectDefaultModeMap(kind, mode);
+      if (!Number.isFinite(state.modeMaps[mode].fov)) state.modeMaps[mode].fov = d.fov;
+      if (!Number.isFinite(state.modeMaps[mode].magLimit)) state.modeMaps[mode].magLimit = d.magLimit;
+      if (typeof state.modeMaps[mode].showLines !== 'boolean') state.modeMaps[mode].showLines = false;
+    });
+  }
+
+  function objectSaveModeMap(state) {
+    if (!state.modeMaps || !state.modeMaps[state.mode]) return;
+    const m = state.modeMaps[state.mode];
+    m.fov = state.fov;
+    m.magLimit = state.magLimit;
+    m.showLines = state.showLines === true;
+    m.orient = state.orient || m.orient || null;
+    m.identifyBasis = state.identifyBasis || m.identifyBasis || null;
+    m.identifyTargetKey = state.identifyTargetKey || m.identifyTargetKey || '';
+  }
+
+  function objectApplyModeMap(kind, state) {
+    objectEnsureModeMaps(kind, state);
+    if (state.activeModeMap === state.mode) return;
+    const m = state.modeMaps[state.mode] || objectDefaultModeMap(kind, state.mode);
+    state.fov = m.fov;
+    state.magLimit = m.magLimit;
+    state.showLines = m.showLines === true;
+    state.orient = m.orient || null;
+    state.identifyBasis = m.identifyBasis || null;
+    state.identifyTargetKey = m.identifyTargetKey || '';
+    state.activeModeMap = state.mode;
+  }
+
   function renderObjectChallengeGame(kind) {
     const cfg = OBJECT_GAME_LABELS[kind];
     const gameId = kind === 'stars' ? 'stars' : 'dso';
@@ -5819,17 +5906,17 @@
       answered: false,
       fov: kind === 'stars' ? 140 : 150,
       magLimit: defaultMag(),
-      showLines: true,
+      showLines: false,
       orient: null,
       identifyBasis: null,
-      identifyTargetKey: ''
+      identifyTargetKey: '',
+      modeMaps: null,
+      activeModeMap: ''
     });
 
     if (!Array.isArray(state.found)) state.found = [];
     if (!['find', 'identify', 'marathon'].includes(state.mode)) state.mode = 'find';
-    if (typeof state.showLines !== 'boolean') state.showLines = true;
-    if (!Number.isFinite(state.fov)) state.fov = kind === 'stars' ? 140 : 150;
-    if (!Number.isFinite(state.magLimit)) state.magLimit = defaultMag();
+    objectApplyModeMap(kind, state);
 
     if (!state.loaded) {
       if (!state.loading) {
@@ -5883,12 +5970,12 @@
       ${state.mode === 'find' ? `<div class="object-target-box">Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></div>` : ''}
       ${state.mode === 'identify' ? `<div class="object-target-box">Name the <strong>red ${esc(cfg.singular)}</strong>.</div>` : ''}
       ${state.mode === 'marathon' ? `<div class="object-target-box"><strong>${esc(counter)}</strong> named</div>` : ''}
-      <label>FOV degrees<div class="slider-text-row"><input id="objectGameFovSlider" type="range" min="20" max="190" step="5" value="${state.mode === 'identify' ? 75 : state.fov}" ${state.mode === 'identify' ? 'disabled' : ''}><input id="objectGameFov" type="number" min="20" max="190" step="5" value="${state.mode === 'identify' ? 75 : state.fov}" ${state.mode === 'identify' ? 'disabled' : ''}></div></label>
+      ${state.mode !== 'identify' ? `<label>FOV degrees<div class="slider-text-row"><input id="objectGameFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="objectGameFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label>` : ''}
       <label>Star density / faintest magnitude<div class="slider-text-row"><input id="objectGameMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="objectGameMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label>
-      <label class="checkline"><input id="objectGameLines" type="checkbox" ${state.showLines !== false ? 'checked' : ''}><span>constellation lines</span></label>
-      <div class="sky-nav-grid" aria-label="${esc(cfg.title)} map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="objectGameCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div>
+      ${state.mode !== 'identify' ? `<label class="checkline"><input id="objectGameLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label>` : ''}
+      ${state.mode !== 'identify' ? `<div class="sky-nav-grid" aria-label="${esc(cfg.title)} map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="objectGameCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div>
       <div class="controls"><button type="button" id="objectGameZoomOut">− zoom</button><button type="button" id="objectGameZoomIn">zoom +</button></div>
-      <div class="controls"><button type="button" id="objectGameRollCCW">↺ rotate</button><button type="button" id="objectGameRollCW">rotate ↻</button></div>
+      <div class="controls"><button type="button" id="objectGameRollCCW">↺ rotate</button><button type="button" id="objectGameRollCW">rotate ↻</button></div>` : ''}
       ${state.mode !== 'find' ? `<input id="objectGameAnswer" autocomplete="off" placeholder="${state.mode === 'marathon' ? selected && !selectedAlreadyFound ? `name this ${cfg.singular}` : `click a purple ${cfg.singular} first` : `type ${cfg.singular} name`}">` : ''}
       <div class="controls">
         ${state.mode === 'identify' || state.mode === 'marathon' ? `<button type="button" id="objectGameSubmit">submit</button>` : ''}
@@ -5939,19 +6026,20 @@
     }
 
     function rotateBasis(axis, angle) {
+      if (state.mode === 'identify') return;
       const b = objectGameEnsureOrientation(state, ensureObjectGameTarget(kind, state, items));
       state.orient = objectGameCleanBasis({
         f: objectGameRotateVector(b.f, axis, angle),
         right: objectGameRotateVector(b.right, axis, angle),
         up: objectGameRotateVector(b.up, axis, angle)
       });
-      if (state.mode === 'identify') state.identifyBasis = state.orient;
+      objectSaveModeMap(state);
     }
 
     function move(dx, dy, multiplier = 1) {
+      if (state.mode === 'identify') return;
       const b = objectGameEnsureOrientation(state, ensureObjectGameTarget(kind, state, items));
-      const fovDeg = state.mode === 'identify' ? 75 : state.fov;
-      const anglePerPx = (fovDeg * Math.PI / 180) / Math.min(canvas.width, canvas.height) * multiplier;
+      const anglePerPx = (state.fov * Math.PI / 180) / Math.min(canvas.width, canvas.height) * multiplier;
       rotateBasis(b.up, -dx * anglePerPx);
       rotateBasis(objectGameEnsureOrientation(state, ensureObjectGameTarget(kind, state, items)).right, -dy * anglePerPx);
       draw();
@@ -5971,13 +6059,9 @@
     }
 
     function centreMap() {
-      if (state.mode === 'identify') {
-        state.identifyBasis = objectGameRandomBasisForTarget(ensureObjectGameTarget(kind, state, items)?.v || vecFromRaDec(0, 0), 75);
-        state.identifyTargetKey = state.targetKey;
-        state.orient = state.identifyBasis;
-      } else {
-        state.orient = localBasisFromForward(vecFromRaDec(0, 0));
-      }
+      if (state.mode === 'identify') return;
+      state.orient = localBasisFromForward(vecFromRaDec(0, 0));
+      objectSaveModeMap(state);
       draw();
       focusCanvas();
     }
@@ -5985,7 +6069,10 @@
     document.querySelectorAll('[data-object-mode]').forEach(btn => btn.addEventListener('click', () => {
       const nextMode = btn.dataset.objectMode;
       if (!nextMode || nextMode === state.mode) return;
+      objectSaveModeMap(state);
       state.mode = nextMode;
+      state.activeModeMap = '';
+      objectApplyModeMap(kind, state);
       state.message = '';
       state.answerCard = '';
       state.answered = false;
@@ -6009,8 +6096,9 @@
     if (fovSlider) fovSlider.addEventListener('input', e => setFov(e.target.value));
     if (magInput) magInput.addEventListener('input', e => setMag(e.target.value));
     if (magSlider) magSlider.addEventListener('input', e => setMag(e.target.value));
-    $('#objectGameLines').addEventListener('change', e => {
+    if ($('#objectGameLines')) $('#objectGameLines').addEventListener('change', e => {
       state.showLines = e.target.checked;
+      objectSaveModeMap(state);
       draw();
       focusCanvas();
     });
@@ -6018,11 +6106,11 @@
       const [x, y] = btn.dataset.move.split(',').map(Number);
       moveButton(x, y);
     }));
-    $('#objectGameCentre').addEventListener('click', centreMap);
-    $('#objectGameZoomOut').addEventListener('click', () => { if (state.mode !== 'identify') setFov(state.fov * 1.25); });
-    $('#objectGameZoomIn').addEventListener('click', () => { if (state.mode !== 'identify') setFov(state.fov * 0.8); });
-    $('#objectGameRollCCW').addEventListener('click', () => rollFrame(-1));
-    $('#objectGameRollCW').addEventListener('click', () => rollFrame(1));
+    if ($('#objectGameCentre')) $('#objectGameCentre').addEventListener('click', centreMap);
+    if ($('#objectGameZoomOut')) $('#objectGameZoomOut').addEventListener('click', () => setFov(state.fov * 1.25));
+    if ($('#objectGameZoomIn')) $('#objectGameZoomIn').addEventListener('click', () => setFov(state.fov * 0.8));
+    if ($('#objectGameRollCCW')) $('#objectGameRollCCW').addEventListener('click', () => rollFrame(-1));
+    if ($('#objectGameRollCW')) $('#objectGameRollCW').addEventListener('click', () => rollFrame(1));
 
     function submitTypedAnswer() {
       if (!answer) return;
@@ -6056,7 +6144,7 @@
         const ok = answerMatches(value, objectGameAnswers(kind, sel));
         record(gameId, ok);
         if (ok) {
-          state.found.push(key);
+          if (!state.found.includes(key)) state.found.push(key);
           state.message = 'correct';
           state.answerCard = objectGameCard(kind, sel, 'named');
           answer.value = '';
@@ -6083,7 +6171,7 @@
       const rect = canvas.getBoundingClientRect();
       const x = (e.clientX - rect.left) * canvas.width / rect.width;
       const y = (e.clientY - rect.top) * canvas.height / rect.height;
-      const near = objectGameNearest(canvas, x, y);
+      const near = objectGameNearest(canvas, x, y, state.mode !== 'find');
 
       if (state.mode === 'find') {
         const t = ensureObjectGameTarget(kind, state, items);
@@ -6139,6 +6227,7 @@
     let dragging = false;
     let last = null;
     canvas.addEventListener('pointerdown', e => {
+      if (state.mode === 'identify') return;
       dragging = true;
       last = { x: e.clientX, y: e.clientY };
       canvas.setPointerCapture(e.pointerId);
