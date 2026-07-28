@@ -235,6 +235,15 @@
   function namedStarDesignationFromSky(star) {
     return starDesignation(star) || String(star.bf || star.bayer || '').trim();
   }
+  function isNormalNamedStarName(name) {
+    const s = String(name || '').trim();
+    if (!s) return false;
+    if (/\d/.test(s)) return false;
+    if (/\bG\.?\b/i.test(s)) return false;
+    if (/\bGroombridge\b/i.test(s)) return false;
+    if (/^[a-z]\s+[A-Z][a-z]+/i.test(s)) return false;
+    return /[A-Za-z]/.test(s);
+  }
   function attachSkyStarIdentity(entry, star) {
     if (!entry || !star) return;
     entry.skyHip = Number.isFinite(star.hip) ? star.hip : null;
@@ -282,7 +291,7 @@
   }
   function augmentNamedStarCatalogueFromSky() {
     if (namedStarCatalogueReady) return;
-    skyStars.filter(star => String(star.name || '').trim()).forEach(addNamedStarCatalogueEntry);
+    skyStars.filter(star => isNormalNamedStarName(star.name)).forEach(addNamedStarCatalogueEntry);
     DATA.stars.sort(sortStarCatalogueRows);
     namedStarCatalogueReady = true;
   }
@@ -451,7 +460,19 @@
     tabs.innerHTML = '';
     games.forEach(g => tabs.append(el('button', { type: 'button', class: g.id === activeGame ? 'active' : '', onclick: () => switchGame(g.id) }, [document.createTextNode(g.title)])));
   }
+  function cleanupTransientGameState() {
+    ['starChallenge', 'dsoChallenge'].forEach(key => {
+      const state = states[key];
+      if (state && state.blinkTimer) {
+        clearInterval(state.blinkTimer);
+        state.blinkTimer = null;
+        state.blinkOn = true;
+      }
+    });
+  }
   function switchGame(id) {
+    cleanupTransientGameState();
+    sphereFullscreenActive = false;
     activeGame = id;
     setupTabs();
     if (!launchState.active) render();
@@ -1113,7 +1134,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=141';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=143';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -4115,8 +4136,10 @@
       if (state.noteEdges.length) {
         ctx.save();
         ctx.strokeStyle = '#111';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([5, 4]);
+        ctx.globalAlpha = 0.9;
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         state.noteEdges.forEach(edge => {
           const a = byId.get(edge.a);
           const b = byId.get(edge.b);
@@ -5548,6 +5571,7 @@
     const seen = new Set();
     const out = [];
     DATA.stars.forEach(entry => {
+      if (!isNormalNamedStarName(entry.name)) return;
       const item = starChallengeRecord(entry);
       if (!item || !String(item.name || '').trim()) return;
       const key = compactObjectKey('stars', item);
@@ -5716,13 +5740,9 @@
   function objectGameInterestStarColour(kind, item, state, targetKey, wrongKey, found) {
     if (kind !== 'stars' || !item) return 'black';
     const key = compactObjectKey(kind, item);
-    if (state.mode === 'identify') return key === targetKey ? '#e60012' : 'black';
-    if (state.mode === 'marathon') return found.has(key) ? '#d6a900' : '#8b42ff';
-    if (state.mode === 'find') {
-      if (!state.answered && key === state.selectedKey) return '#1f6feb';
-      if (state.answered && key === state.selectedKey) return key === targetKey ? '#d6a900' : '#777';
-      return '#8b42ff';
-    }
+    if (state.mode === 'identify') return 'black';
+    if (state.mode === 'marathon') return found.has(key) ? '#198754' : '#e60012';
+    if (state.mode === 'find') return '#8b42ff';
     return 'black';
   }
 
@@ -5780,10 +5800,13 @@
       const interest = kind === 'stars' ? itemBySkyKey.get(objectSkyKey(s)) : null;
       const key = interest ? compactObjectKey(kind, interest) : '';
       const r = objectGameStarRadius(s);
-      ctx.fillStyle = interest ? objectGameInterestStarColour(kind, interest, state, targetKey, wrongKey, found) : 'black';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      ctx.fill();
+      const hiddenBlinkTarget = interest && state.mode === 'identify' && key === targetKey && state.blinkOn === false;
+      if (!hiddenBlinkTarget) {
+        ctx.fillStyle = interest ? objectGameInterestStarColour(kind, interest, state, targetKey, wrongKey, found) : 'black';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
       if (interest && key === selectedKey && (state.mode === 'find' || state.mode === 'marathon')) {
         ctx.save();
         ctx.strokeStyle = '#111';
@@ -5806,12 +5829,12 @@
         let fill = '#8b42ff';
         if (state.mode === 'identify') {
           if (!isTarget) return;
-          fill = '#e60012';
+          fill = '#111';
+          if (state.blinkOn === false) return;
         } else if (state.mode === 'marathon') {
-          fill = found.has(key) ? '#d6a900' : '#8b42ff';
+          fill = found.has(key) ? '#198754' : '#e60012';
         } else if (state.mode === 'find') {
-          if (!state.answered && key === selectedKey) fill = '#1f6feb';
-          else if (state.answered && key === selectedKey) fill = isTarget ? '#d6a900' : '#777';
+          fill = '#8b42ff';
         }
         const r = objectGameObjectRadius(kind, item);
         ctx.fillStyle = fill;
@@ -5977,7 +6000,9 @@
       identifyBasis: null,
       identifyTargetKey: '',
       modeMaps: null,
-      activeModeMap: ''
+      activeModeMap: '',
+      blinkOn: true,
+      blinkTimer: null
     });
 
     if (!Array.isArray(state.found)) state.found = [];
@@ -6030,7 +6055,7 @@
       <label>Gamemode<select id="objectGameMode"><option value="find" ${state.mode === 'find' ? 'selected' : ''}>${esc(cfg.find)}</option><option value="identify" ${state.mode === 'identify' ? 'selected' : ''}>${esc(cfg.identify)}</option><option value="marathon" ${state.mode === 'marathon' ? 'selected' : ''}>${esc(cfg.marathon)}</option></select></label>
       <h3>${esc(modeTitle)}</h3>
       ${state.mode === 'find' ? `<div class="object-target-box">Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></div>` : ''}
-      ${state.mode === 'identify' ? `<div class="object-target-box">Name the <strong>red ${esc(cfg.singular)}</strong>.</div>` : ''}
+      ${state.mode === 'identify' ? `<div class="object-target-box">Name the <strong>blinking ${esc(cfg.singular)}</strong>.</div>` : ''}
       ${state.mode === 'marathon' ? `<div class="object-target-box"><strong>${esc(counter)}</strong> named</div>` : ''}
       ${state.mode !== 'identify' ? `<label>FOV degrees<div class="slider-text-row"><input id="objectGameFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="objectGameFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label>` : ''}
       ${state.mode !== 'identify' ? `<label>Star density / faintest magnitude<div class="slider-text-row"><input id="objectGameMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="objectGameMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label>` : ''}
@@ -6041,6 +6066,7 @@
       ${state.mode !== 'find' ? `<input id="objectGameAnswer" autocomplete="off" placeholder="${state.mode === 'marathon' ? selected && !selectedAlreadyFound ? `name this ${cfg.singular}` : `click a purple ${cfg.singular} first` : `type ${cfg.singular} name`}">` : ''}
       <div class="controls">
         ${state.mode === 'find' || state.mode === 'identify' || state.mode === 'marathon' ? `<button type="button" id="objectGameSubmit">submit</button>` : ''}
+        ${state.mode === 'find' || state.mode === 'identify' ? `<button type="button" id="objectGameReveal">reveal</button>` : ''}
         ${state.mode !== 'marathon' ? `<button type="button" id="objectGameNext">new question</button>` : `<button type="button" id="objectGameReset">reset marathon</button>`}
       </div>
       <div id="objectGameMsg" class="message">${esc(state.message || '')}</div>
@@ -6122,6 +6148,24 @@
       rotateBasis(b.f, direction * 10 * Math.PI / 180);
       draw();
       focusCanvas();
+    }
+
+    function centreOnObject(item) {
+      if (!item?.v) return;
+      state.orient = localBasisFromForward(item.v);
+      objectSaveModeMap(state);
+    }
+
+    function revealObjectAnswer() {
+      const t = ensureObjectGameTarget(kind, state, items);
+      if (!t) return;
+      state.answered = true;
+      state.selectedKey = compactObjectKey(kind, t);
+      state.wrongKey = '';
+      state.message = `answer: ${objectGameName(kind, t)}`;
+      state.answerCard = objectGameCard(kind, t, 'revealed');
+      if (state.mode === 'find') centreOnObject(t);
+      renderObjectChallengeGame(kind);
     }
 
     function centreMap() {
@@ -6251,6 +6295,7 @@
     }
 
     if ($('#objectGameSubmit')) $('#objectGameSubmit').addEventListener('click', submitTypedAnswer);
+    if ($('#objectGameReveal')) $('#objectGameReveal').addEventListener('click', revealObjectAnswer);
     if (answer) {
       answer.addEventListener('keydown', e => {
         if (shiftEnterNext(e)) return;
@@ -6277,14 +6322,6 @@
       const near = objectGameNearest(canvas, x, y, state.mode !== 'find');
 
       if (state.mode === 'find') {
-        if (!near) return;
-        state.selectedKey = near.key;
-        state.wrongKey = '';
-        state.answered = false;
-        state.answerCard = '';
-        state.message = `${cfg.singular} selected`;
-        draw();
-        focusCanvas();
         return;
       }
 
@@ -6322,9 +6359,15 @@
 
     let dragging = false;
     let last = null;
+    let objectPress = null;
+    let dragMoved = false;
     canvas.addEventListener('pointerdown', e => {
-      if (state.mode === 'identify') return;
-      dragging = true;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * canvas.width / rect.width;
+      const y = (e.clientY - rect.top) * canvas.height / rect.height;
+      objectPress = state.mode === 'find' ? objectGameNearest(canvas, x, y, true) : null;
+      dragMoved = false;
+      dragging = state.mode !== 'identify';
       last = { x: e.clientX, y: e.clientY };
       canvas.setPointerCapture(e.pointerId);
       focusCanvas();
@@ -6333,16 +6376,47 @@
       if (!dragging || !last) return;
       const dx = e.clientX - last.x;
       const dy = e.clientY - last.y;
+      if (Math.hypot(dx, dy) > 2) dragMoved = true;
       last = { x: e.clientX, y: e.clientY };
-      move(dx, dy, 1);
+      if (state.mode !== 'find' || !objectPress) move(dx, dy, 1);
     });
     canvas.addEventListener('pointerup', e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * canvas.width / rect.width;
+      const y = (e.clientY - rect.top) * canvas.height / rect.height;
+      const releaseTarget = state.mode === 'find' ? objectGameNearest(canvas, x, y, true) : null;
+      if (state.mode === 'find' && objectPress && releaseTarget && objectPress.key === releaseTarget.key && !dragMoved) {
+        state.selectedKey = releaseTarget.key;
+        state.wrongKey = '';
+        state.answered = false;
+        state.answerCard = '';
+        state.message = `${cfg.singular} selected`;
+        draw();
+      }
+      objectPress = null;
+      dragMoved = false;
       dragging = false;
       last = null;
       try { canvas.releasePointerCapture(e.pointerId); } catch {}
     });
-    canvas.addEventListener('pointercancel', () => { dragging = false; last = null; });
+    canvas.addEventListener('pointercancel', () => { objectPress = null; dragMoved = false; dragging = false; last = null; });
 
+    if (state.blinkTimer) {
+      clearInterval(state.blinkTimer);
+      state.blinkTimer = null;
+    }
+    state.blinkOn = true;
+    if (state.mode === 'identify') {
+      state.blinkTimer = setInterval(() => {
+        if ((kind === 'stars' && activeGame !== 'stars') || (kind === 'dso' && activeGame !== 'dso') || state.mode !== 'identify') {
+          clearInterval(state.blinkTimer);
+          state.blinkTimer = null;
+          return;
+        }
+        state.blinkOn = !state.blinkOn;
+        draw();
+      }, 650);
+    }
     draw();
     if (!answer) setTimeout(() => focusCanvas(), 0);
   }
@@ -6350,6 +6424,7 @@
 
   function render() {
     setShiftEnterAction(null);
+    if (activeGame !== 'stars' && activeGame !== 'dso') cleanupTransientGameState();
     if (activeGame === 'skyguessr') renderSkyGuessr();
     else if (activeGame === 'skymap') renderSkyMap();
     else if (activeGame === 'skyregions') renderSkyRegions();
