@@ -967,3 +967,12 @@ input[type='range']::-moz-range-thumb {
 .object-game-side .object-mode-tabs {
   display: none;
 }
+
+/* v145 object-game cleanup: no raised/boxed target prompt styling. */
+.object-target-box {
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 6px 0 !important;
+  background: transparent !important;
+}

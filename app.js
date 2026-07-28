@@ -1134,7 +1134,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=144';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=145';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -5582,7 +5582,7 @@
 
   function dsoChallengeItems() {
     return buildSkyDsoObjects()
-      .filter(o => o.v && o.hasReliablePosition)
+      .filter(o => o.v && o.hasReliablePosition && String(o.commonName || '').trim() && ['M', 'C'].includes(String(o.catalog || '').toUpperCase()))
       .sort((a, b) => {
         const ca = String(a.catalog || ''), cb = String(b.catalog || '');
         if (ca !== cb) return ca.localeCompare(cb);
@@ -5734,7 +5734,7 @@
     if (kind !== 'stars' || !item) return 'black';
     const key = compactObjectKey(kind, item);
     if (state.mode === 'identify') return 'black';
-    if (state.mode === 'marathon') return found.has(key) ? '#198754' : '#e60012';
+    if (state.mode === 'marathon') return found.has(key) ? '#55ff00' : '#e60012';
     if (state.mode === 'find') return '#8b42ff';
     return 'black';
   }
@@ -5781,7 +5781,7 @@
     ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
     ctx.clip();
 
-    if (state.mode !== 'identify' && state.showLines === true && skyConstellationLineDb) {
+    if (state.showLines === true && skyConstellationLineDb) {
       drawSkyAsterismLines(ctx, project, basis, radius, fovRad);
     }
 
@@ -5793,7 +5793,7 @@
       const interest = kind === 'stars' ? itemBySkyKey.get(objectSkyKey(s)) : null;
       const key = interest ? compactObjectKey(kind, interest) : '';
       const r = objectGameStarRadius(s);
-      const hiddenBlinkTarget = interest && state.mode === 'identify' && key === targetKey && state.blinkOn === false;
+      const hiddenBlinkTarget = state.mode === 'identify' && kind === 'stars' && target?.v && state.blinkOn === false && angularDeg(s.v, target.v) <= 0.25;
       if (!hiddenBlinkTarget) {
         ctx.fillStyle = interest ? objectGameInterestStarColour(kind, interest, state, targetKey, wrongKey, found) : 'black';
         ctx.beginPath();
@@ -5822,10 +5822,9 @@
         let fill = '#8b42ff';
         if (state.mode === 'identify') {
           if (!isTarget) return;
-          fill = '#111';
-          if (state.blinkOn === false) return;
+          fill = '#8b42ff';
         } else if (state.mode === 'marathon') {
-          fill = found.has(key) ? '#198754' : '#e60012';
+          fill = found.has(key) ? '#55ff00' : '#e60012';
         } else if (state.mode === 'find') {
           fill = '#8b42ff';
         }
@@ -6047,19 +6046,19 @@
     app.innerHTML = `<h2>${cfg.title}</h2><div class="sky-layout object-game-layout"><section class="panel sky-panel object-game-map-panel"><canvas id="objectGameCanvas" width="900" height="900" tabindex="0" aria-label="${esc(cfg.title)} sky map"></canvas></section><aside class="panel object-game-side">
       <label>Gamemode<select id="objectGameMode"><option value="find" ${state.mode === 'find' ? 'selected' : ''}>${esc(cfg.find)}</option><option value="identify" ${state.mode === 'identify' ? 'selected' : ''}>${esc(cfg.identify)}</option><option value="marathon" ${state.mode === 'marathon' ? 'selected' : ''}>${esc(cfg.marathon)}</option></select></label>
       <h3>${esc(modeTitle)}</h3>
-      ${state.mode === 'find' ? `<div class="object-target-box">Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></div>` : ''}
-      ${state.mode === 'identify' ? `<div class="object-target-box">Name the <strong>blinking ${esc(cfg.singular)}</strong>.</div>` : ''}
-      ${state.mode === 'marathon' ? `<div class="object-target-box"><strong>${esc(counter)}</strong> named</div>` : ''}
+      ${state.mode === 'find' ? `<p>Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></p>` : ''}
+      ${state.mode === 'identify' ? `` : ''}
+      ${state.mode === 'marathon' ? `<p><strong>${esc(counter)}</strong> named</p>` : ''}
       ${state.mode !== 'identify' ? `<label>FOV degrees<div class="slider-text-row"><input id="objectGameFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="objectGameFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label>` : ''}
       ${state.mode !== 'identify' ? `<label>Star density / faintest magnitude<div class="slider-text-row"><input id="objectGameMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="objectGameMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label>` : ''}
-      ${state.mode !== 'identify' ? `<label class="checkline"><input id="objectGameLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label>` : ''}
+      <label class="checkline"><input id="objectGameLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label>
       ${state.mode !== 'identify' ? `<div class="sky-nav-grid" aria-label="${esc(cfg.title)} map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="objectGameCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div>
       <div class="controls"><button type="button" id="objectGameZoomOut">− zoom</button><button type="button" id="objectGameZoomIn">zoom +</button></div>` : ''}
       <div class="controls"><button type="button" id="objectGameRollCCW">↺ rotate</button><button type="button" id="objectGameRollCW">rotate ↻</button></div>
-      ${state.mode !== 'find' ? `<input id="objectGameAnswer" autocomplete="off" placeholder="${state.mode === 'marathon' ? selected && !selectedAlreadyFound ? `name this ${cfg.singular}` : `click a purple ${cfg.singular} first` : `type ${cfg.singular} name`}">` : ''}
+      ${state.mode !== 'find' ? `<input id="objectGameAnswer" autocomplete="off" placeholder="${state.mode === 'marathon' ? selected && !selectedAlreadyFound ? `name this ${cfg.singular}` : `click a ${cfg.singular} first` : `type ${cfg.singular} name`}">` : ''}
       <div class="controls">
         ${state.mode === 'find' || state.mode === 'identify' || state.mode === 'marathon' ? `<button type="button" id="objectGameSubmit">submit</button>` : ''}
-        ${state.mode === 'find' || state.mode === 'identify' ? `<button type="button" id="objectGameReveal">reveal</button>` : ''}
+        <button type="button" id="objectGameReveal">reveal</button>
         ${state.mode !== 'marathon' ? `<button type="button" id="objectGameNext">new question</button>` : `<button type="button" id="objectGameReset">reset marathon</button>`}
       </div>
       <div id="objectGameMsg" class="message">${esc(state.message || '')}</div>
@@ -6150,6 +6149,18 @@
     }
 
     function revealObjectAnswer() {
+      if (state.mode === 'marathon') {
+        const sel = items.find(item => compactObjectKey(kind, item) === state.selectedKey);
+        if (!sel) {
+          state.message = `click a ${cfg.singular} first`;
+          if (msg) msg.textContent = state.message;
+          return;
+        }
+        state.message = `answer: ${objectGameName(kind, sel)}`;
+        state.answerCard = objectGameCard(kind, sel, 'revealed');
+        renderObjectChallengeGame(kind);
+        return;
+      }
       const t = ensureObjectGameTarget(kind, state, items);
       if (!t) return;
       state.answered = true;
@@ -6212,8 +6223,8 @@
     if ($('#objectGameCentre')) $('#objectGameCentre').addEventListener('click', centreMap);
     if ($('#objectGameZoomOut')) $('#objectGameZoomOut').addEventListener('click', () => setFov(state.fov * 1.25));
     if ($('#objectGameZoomIn')) $('#objectGameZoomIn').addEventListener('click', () => setFov(state.fov * 0.8));
-    if ($('#objectGameRollCCW')) $('#objectGameRollCCW').addEventListener('click', () => rollFrame(-1));
-    if ($('#objectGameRollCW')) $('#objectGameRollCW').addEventListener('click', () => rollFrame(1));
+    if ($('#objectGameRollCCW')) $('#objectGameRollCCW').addEventListener('click', () => rollFrame(-1)); // visual anticlockwise
+    if ($('#objectGameRollCW')) $('#objectGameRollCW').addEventListener('click', () => rollFrame(1)); // visual clockwise
 
     function submitTypedAnswer() {
       if (state.mode === 'find') {
@@ -6251,7 +6262,7 @@
       if (state.mode === 'marathon') {
         const sel = items.find(item => compactObjectKey(kind, item) === state.selectedKey);
         if (!sel) {
-          state.message = `click a purple ${cfg.singular} first`;
+          state.message = `click a ${cfg.singular} first`;
           if (msg) msg.textContent = state.message;
           return;
         }
@@ -6321,7 +6332,7 @@
       if (state.mode === 'marathon') {
         if (!near) {
           state.selectedKey = '';
-          state.message = `click a purple ${cfg.singular}`;
+          state.message = `click a ${cfg.singular}`;
           state.answerCard = '';
           renderObjectChallengeGame(kind);
           return;
@@ -6399,7 +6410,7 @@
       state.blinkTimer = null;
     }
     state.blinkOn = true;
-    if (state.mode === 'identify') {
+    if (state.mode === 'identify' && kind === 'stars') {
       state.blinkTimer = setInterval(() => {
         if ((kind === 'stars' && activeGame !== 'stars') || (kind === 'dso' && activeGame !== 'dso') || state.mode !== 'identify') {
           clearInterval(state.blinkTimer);
