@@ -1096,7 +1096,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=135';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=137';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1240,6 +1240,12 @@
       const nameI = pickColumn(headers, ['proper', 'name', 'star_name']);
       const bayerI = pickColumn(headers, ['bayer', 'Bayer']);
       const bfI = pickColumn(headers, ['bf', 'bayer_flamsteed', 'Bayer Flamsteed']);
+      const distI = pickColumn(headers, ['dist', 'distance']);
+      const absmagI = pickColumn(headers, ['absmag', 'abs_mag', 'absolute_magnitude']);
+      const spectI = pickColumn(headers, ['spect', 'spectrum', 'spectral_type']);
+      const ciI = pickColumn(headers, ['ci', 'color_index', 'colour_index']);
+      const hdI = pickColumn(headers, ['hd', 'HD']);
+      const hrI = pickColumn(headers, ['hr', 'HR']);
       if (raI < 0 || decI < 0 || magI < 0 || conI < 0) throw new Error('sky data unavailable.');
       const raw = [];
       for (let i = 1; i < lines.length; i++) {
@@ -1254,7 +1260,24 @@
         const hipMatch = hipText.match(/\d+/);
         const hip = hipMatch ? parseInt(hipMatch[0], 10) : NaN;
         const v = vecFromRaDec(ra, dec);
-        raw.push({ ra, dec, mag, hip: Number.isFinite(hip) ? hip : null, constellation, name: nameI >= 0 ? row[nameI] : '', bayer: bayerI >= 0 ? row[bayerI] : '', bf: bfI >= 0 ? row[bfI] : '', v });
+        const dist = distI >= 0 ? parseFloat(row[distI]) : NaN;
+        const absmag = absmagI >= 0 ? parseFloat(row[absmagI]) : NaN;
+        const ci = ciI >= 0 ? parseFloat(row[ciI]) : NaN;
+        raw.push({
+          ra, dec, mag,
+          hip: Number.isFinite(hip) ? hip : null,
+          constellation,
+          name: nameI >= 0 ? row[nameI] : '',
+          bayer: bayerI >= 0 ? row[bayerI] : '',
+          bf: bfI >= 0 ? row[bfI] : '',
+          dist: Number.isFinite(dist) ? dist : null,
+          absmag: Number.isFinite(absmag) ? absmag : null,
+          spect: spectI >= 0 ? String(row[spectI] || '').trim() : '',
+          ci: Number.isFinite(ci) ? ci : null,
+          hd: hdI >= 0 ? String(row[hdI] || '').trim() : '',
+          hr: hrI >= 0 ? String(row[hrI] || '').trim() : '',
+          v
+        });
       }
       skyStars = raw.sort((a, b) => a.mag - b.mag);
       skyHipByNumber = new Map();
@@ -2877,7 +2900,7 @@
     if (typeof state.noteMode !== 'boolean') state.noteMode = false;
     if (!('noteSelected' in state)) state.noteSelected = null;
 
-    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines === true ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso === true ? "checked" : ""}><span>DSOs</span></label><label class="checkline"><input id="mapNotes" type="checkbox" ${state.noteMode === true ? "checked" : ""}><span>make notes</span></label><div class="controls map-note-controls"><button type="button" id="mapUndoNotes">undo</button><button type="button" id="mapClearNotes">clear notes</button></div><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomOut">− zoom</button><button type="button" id="mapZoomIn">zoom +</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
+    app.innerHTML = `<h2>Sky Map</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="skyMapCanvas" width="900" height="900" tabindex="0" aria-label="sky map sphere"></canvas></section><aside class="panel"><label>FOV degrees<div class="slider-text-row"><input id="mapFovSlider" type="range" min="20" max="190" step="5" value="${state.fov}"><input id="mapFov" type="number" min="20" max="190" step="5" value="${state.fov}"></div></label><label>Star density / faintest magnitude<div class="slider-text-row"><input id="mapMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="mapMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="mapLines" type="checkbox" ${state.showLines === true ? "checked" : ""}><span>constellation lines</span></label><label class="checkline"><input id="mapDso" type="checkbox" ${state.showDso === true ? "checked" : ""}><span>DSOs</span></label><label class="checkline"><input id="mapNotes" type="checkbox" ${state.noteMode === true ? "checked" : ""}><span>make notes</span></label><div id="mapNoteControls" class="controls map-note-controls" ${state.noteMode === true ? "" : 'style="display:none"'}><button type="button" id="mapUndoNotes">undo</button><button type="button" id="mapClearNotes">clear notes</button></div><label>Search sky<input id="mapSearch" list="mapSearchList" autocomplete="off" placeholder="star or DSO"></label><datalist id="mapSearchList"></datalist><div class="sky-nav-grid" aria-label="sky map movement controls"><button type="button" data-move="-1,-1">↖</button><button type="button" data-move="0,-1">↑</button><button type="button" data-move="1,-1">↗</button><button type="button" data-move="-1,0">←</button><button type="button" id="mapCentre">○</button><button type="button" data-move="1,0">→</button><button type="button" data-move="-1,1">↙</button><button type="button" data-move="0,1">↓</button><button type="button" data-move="1,1">↘</button></div><div class="controls"><button type="button" id="mapZoomOut">− zoom</button><button type="button" id="mapZoomIn">zoom +</button></div><div class="controls"><button type="button" id="mapRollCCW">↺ rotate</button><button type="button" id="mapRollCW">rotate ↻</button><button type="button" id="mapClear">deselect</button></div><div class="dso-legend small"><span><b style="background:#8a2be2"></b>nebula</span><span><b style="background:#d4a600"></b>open cluster</span><span><b style="background:#198754"></b>globular</span><span><b style="background:#1f6feb"></b>galaxy</span><span><b style="background:#d63384"></b>misc</span></div><div id="mapMsg" class="message">${state.message || ''}</div></aside></div>`;
 
     initRangeVisuals(app);
     setupSphereFullscreen();
@@ -3500,6 +3523,8 @@
     $('#mapNotes').addEventListener('change', e => {
       state.noteMode = e.target.checked;
       if (!state.noteMode) state.noteSelected = null;
+      const noteControls = $('#mapNoteControls');
+      if (noteControls) noteControls.style.display = state.noteMode ? '' : 'none';
       draw();
       focusCanvas();
     });
@@ -3699,7 +3724,7 @@
     const scoreId = () => state.mode === '1' ? 'guessconst' : `guessconst${state.mode}`;
     const savedValue = i => esc(state.inputs[i] || '');
 
-    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="guessConstLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><label class="checkline"><input id="guessConstNotes" type="checkbox" ${state.noteMode === true ? 'checked' : ''}><span>make notes</span></label><div class="controls map-note-controls"><button type="button" id="guessConstUndoNotes">undo</button><button type="button" id="guessConstClearNotes">clear notes</button></div><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="guessConstZoomOut">− zoom</button><button type="button" id="guessConstZoomIn">zoom +</button><button type="button" id="guessConstResetView">reset view</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">${modeCount > 1 ? 'new constellations' : 'new constellation'}</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
+    app.innerHTML = `<h2>Guess Constellation</h2><div class="sky-layout"><section class="panel sky-panel"><canvas id="guessConstCanvas" width="900" height="900" aria-label="constellation guess map"></canvas></section><aside class="panel"><div class="prompt">Which constellation${modeCount > 1 ? 's are these' : ' is this'}?</div><div class="guess-mode-row"><select id="guessConstMode" aria-label="guess constellation mode"><option value="1" ${state.mode === '1' ? 'selected' : ''}>1 constellation</option><option value="3" ${state.mode === '3' ? 'selected' : ''}>3 constellations</option><option value="5" ${state.mode === '5' ? 'selected' : ''}>5 constellations</option></select></div><label>Limiting magnitude<div class="slider-text-row"><input id="guessConstMagSlider" type="range" min="4" max="6" step="0.1" value="${state.magLimit}"><input id="guessConstMag" type="number" min="4" max="6" step="0.1" value="${state.magLimit}"></div></label><label class="checkline"><input id="guessConstLines" type="checkbox" ${state.showLines === true ? 'checked' : ''}><span>constellation lines</span></label><label class="checkline"><input id="guessConstNotes" type="checkbox" ${state.noteMode === true ? 'checked' : ''}><span>make notes</span></label><div id="guessConstNoteControls" class="controls map-note-controls" ${state.noteMode === true ? "" : 'style="display:none"'}><button type="button" id="guessConstUndoNotes">undo</button><button type="button" id="guessConstClearNotes">clear notes</button></div><div class="controls"><button type="button" id="guessConstRollCCW">↺ rotate</button><button type="button" id="guessConstRollCW">rotate ↻</button></div><div class="controls"><button type="button" id="guessConstZoomOut">− zoom</button><button type="button" id="guessConstZoomIn">zoom +</button><button type="button" id="guessConstResetView">reset view</button></div>${modeCount > 1 ? `<label class="checkline"><input id="guessConstAuto" type="checkbox" ${state.autoCheck ? 'checked' : ''}><span>autocheck</span></label>` : ''}<div id="guessConstInputs" class="guess-const-inputs">${Array.from({ length: modeCount }, (_, i) => `<input class="guessConstAnswer" autocomplete="off" value="${savedValue(i)}" placeholder="constellation ${modeCount > 1 ? i + 1 : 'name'}">`).join('')}</div><div class="controls"><button type="button" id="guessConstReveal">reveal</button></div><div class="controls new-round-controls"><button type="button" id="guessConstNew" class="new-round-button">${modeCount > 1 ? 'new constellations' : 'new constellation'}</button></div><div id="guessConstMsg" class="message">${state.message || ''}</div><div id="guessConstStats" class="stats">${formatScore(scoreId())}</div></aside></div>`;
     initRangeVisuals(app);
     setupSphereFullscreen();
 
@@ -4340,6 +4365,8 @@
     $('#guessConstNotes').addEventListener('change', e => {
       state.noteMode = e.target.checked;
       if (!state.noteMode) state.noteSelected = null;
+      const noteControls = $('#guessConstNoteControls');
+      if (noteControls) noteControls.style.display = state.noteMode ? '' : 'none';
       draw();
     });
     $('#guessConstUndoNotes').addEventListener('click', undoGuessNotes);
@@ -5396,6 +5423,578 @@
     search.focus();
   }
 
+
+  const OBJECT_GAME_LABELS = {
+    stars: { title: 'Stars', singular: 'star', plural: 'stars', find: 'Find Star', identify: 'Identify Star', marathon: 'Star Marathon' },
+    dso: { title: 'DSOs', singular: 'DSO', plural: 'DSOs', find: 'Find DSO', identify: 'Identify DSO', marathon: 'DSO Marathon' }
+  };
+
+  function compactObjectKey(kind, item) {
+    return kind === 'stars'
+      ? `star:${compact(item.name)}:${compact(item.constellation)}`
+      : `dso:${compact(item.code)}`;
+  }
+
+  function challengeRaDecHtml(v) {
+    if (!v) return 'not available';
+    const { ra, dec } = raDecFromVec(v);
+    const totalMinutes = ra / 15 * 60;
+    const h = Math.floor(totalMinutes / 60);
+    const m = Math.round(totalMinutes - h * 60);
+    const sign = dec < 0 ? '−' : '+';
+    const absDec = Math.abs(dec);
+    const d = Math.floor(absDec);
+    const dm = Math.round((absDec - d) * 60);
+    return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m / ${sign}${String(d).padStart(2, '0')}° ${String(dm).padStart(2, '0')}′`;
+  }
+
+  function spectralClassLetter(spect) {
+    const m = String(spect || '').trim().toUpperCase().match(/[OBAFGKM]/);
+    return m ? m[0] : '';
+  }
+
+  function spectralStripHtml(spect) {
+    const cls = spectralClassLetter(spect);
+    const letters = ['O', 'B', 'A', 'F', 'G', 'K', 'M'];
+    return `<div class="spectral-strip" aria-label="spectral class">${letters.map(l => `<span class="${l === cls ? 'active' : ''}">${l}</span>`).join('')}</div>`;
+  }
+
+  function starChallengeRecord(entry) {
+    const keys = [entry.name, entry.designation].map(compact).filter(Boolean);
+    let sky = skyStars.find(s => s.constellation === entry.constellation && (
+      keys.includes(compact(s.name)) ||
+      keys.includes(compact(starDisplayName(s))) ||
+      keys.includes(compact(starDesignation(s))) ||
+      keys.includes(compact(s.bf)) ||
+      keys.includes(compact(s.bayer))
+    ));
+    if (!sky) sky = findSkyStarByAnyName([entry.name, entry.designation].filter(Boolean), 6.5);
+    if (!sky || !sky.v) return null;
+    return {
+      ...entry,
+      sky,
+      v: sky.v,
+      ra: sky.ra,
+      dec: sky.dec,
+      mag: Number.isFinite(sky.mag) ? sky.mag : entry.mag,
+      designation: entry.designation || starDesignation(sky) || sky.bf || sky.bayer || '',
+      spect: sky.spect || '',
+      absmag: Number.isFinite(sky.absmag) ? sky.absmag : null,
+      dist: Number.isFinite(sky.dist) ? sky.dist : null,
+      ci: Number.isFinite(sky.ci) ? sky.ci : null,
+      hip: sky.hip,
+      hd: sky.hd,
+      hr: sky.hr
+    };
+  }
+
+  function starChallengeItems() {
+    const seen = new Set();
+    const out = [];
+    DATA.stars.forEach(entry => {
+      const item = starChallengeRecord(entry);
+      if (!item || !String(item.name || '').trim()) return;
+      const key = compactObjectKey('stars', item);
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(item);
+    });
+    return out.sort((a, b) => {
+      const ma = Number.isFinite(a.mag) ? a.mag : 99;
+      const mb = Number.isFinite(b.mag) ? b.mag : 99;
+      if (ma !== mb) return ma - mb;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }
+
+  function dsoChallengeItems() {
+    return buildSkyDsoObjects()
+      .filter(o => o.v && o.hasReliablePosition)
+      .sort((a, b) => {
+        const ca = String(a.catalog || ''), cb = String(b.catalog || '');
+        if (ca !== cb) return ca.localeCompare(cb);
+        return (Number(a.number) || 9999) - (Number(b.number) || 9999);
+      });
+  }
+
+  function challengeItems(kind) {
+    return kind === 'stars' ? starChallengeItems() : dsoChallengeItems();
+  }
+
+  function objectGameName(kind, item) {
+    return kind === 'stars' ? String(item.name || '').trim() : dsoLabelPlain(item);
+  }
+
+  function objectGameAnswers(kind, item) {
+    if (kind === 'stars') {
+      return [item.name, item.designation, item.sky?.name, starDesignation(item.sky || {}), item.sky?.bf, item.sky?.bayer].filter(Boolean);
+    }
+    return [item.code, item.commonName, ...(item.accepted || []), ...(item.aliases || [])].filter(Boolean);
+  }
+
+  function objectGameCard(kind, item, result = '') {
+    if (!item) return '';
+    if (kind === 'stars') {
+      const fields = [
+        ['designation', item.designation || 'not listed'],
+        ['constellation', constellationWikiLink(item.constellation)],
+        ['spectral type', item.spect ? `${esc(item.spect)}${spectralStripHtml(item.spect)}` : 'not in current catalogue'],
+        ['apparent mag', Number.isFinite(item.mag) ? Number(item.mag).toFixed(2) : 'not listed'],
+        ['absolute mag', Number.isFinite(item.absmag) ? Number(item.absmag).toFixed(2) : 'not listed'],
+        ['RA/Dec', challengeRaDecHtml(item.v)],
+        ['distance', Number.isFinite(item.dist) ? `${Number(item.dist).toFixed(1)} ly` : 'not listed'],
+        ['catalogue', [Number.isFinite(item.hip) ? `HIP ${item.hip}` : '', item.hd ? `HD ${esc(item.hd)}` : '', item.hr ? `HR ${esc(item.hr)}` : ''].filter(Boolean).join(' · ') || 'not listed']
+      ];
+      return `<div class="study-card object-info-card ${result ? 'answered-card' : ''}"><h3>${starWikiLink(item)}</h3>${result ? `<p class="object-result">${esc(result)}</p>` : ''}
+        <dl class="study-facts">${fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
+        ${starStudyHtml(item).replace(/^<div class="study-card star-study">|<\/div>$/g, '')}
+      </div>`;
+    }
+
+    const aliases = [item.code, item.commonName, ...(item.aliases || [])].filter(Boolean);
+    const fields = [
+      ['catalogue', esc(item.code)],
+      ['common name', esc(item.commonName || 'not listed')],
+      ['type', esc(item.type || 'not listed')],
+      ['constellation', constellationWikiLink(item.constellation)],
+      ['RA/Dec', challengeRaDecHtml(item.v)],
+      ['aliases', aliases.length ? aliases.map(esc).join(' · ') : 'not listed'],
+      ['position source', esc(item.coordinateSource || 'catalogue')]
+    ];
+    return `<div class="study-card object-info-card ${result ? 'answered-card' : ''}"><h3>${dsoWikiLink(item, dsoLabelPlain(item))}</h3>${result ? `<p class="object-result">${esc(result)}</p>` : ''}
+      <dl class="study-facts">${fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
+      ${dsoStudyHtml(item).replace(/^<div class="study-card dso-study">|<\/div>$/g, '')}
+    </div>`;
+  }
+
+  function objectGameProjectAllSky(v, canvas) {
+    const { ra, dec } = raDecFromVec(v);
+    return {
+      x: ((360 - ra) / 360) * canvas.width,
+      y: ((90 - dec) / 180) * canvas.height
+    };
+  }
+
+  function objectGameVecFromAllSky(x, y, canvas) {
+    const ra = (360 - x / canvas.width * 360 + 360) % 360;
+    const dec = 90 - y / canvas.height * 180;
+    return vecFromRaDec(ra, dec);
+  }
+
+  function objectGameProjectLocal(v, basis, radius, fovRad, canvas) {
+    const z = dot(v, basis.f);
+    const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+    if (ang > fovRad / 2) return null;
+    const x = dot(v, basis.right);
+    const y = dot(v, basis.up);
+    const sin = Math.sin(ang) || 1e-9;
+    const rr = (ang / (fovRad / 2)) * radius;
+    return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
+  }
+
+  function objectGameDrawWrappedLine(ctx, p1, p2, colour, width) {
+    const w = ctx.canvas.width;
+    const dx = p2.x - p1.x;
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (Math.abs(dx) <= w / 2) {
+      ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+    } else if (dx > 0) {
+      ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x - w, p2.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p1.x + w, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x + w, p2.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p1.x - w, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+    }
+  }
+
+  function objectGameDrawMap(canvas, kind, items, state, options = {}) {
+    const ctx = canvas.getContext('2d');
+    const projection = options.projection || 'allsky';
+    const target = options.target || null;
+    const selectedKey = state.selectedKey || '';
+    const found = new Set(state.found || []);
+    const targets = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#030306';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const fovDeg = kind === 'stars' ? 65 : 85;
+    const fovRad = fovDeg * Math.PI / 180;
+    const radius = Math.min(canvas.width, canvas.height) * 0.47;
+    const basis = projection === 'local'
+      ? (state.identifyBasis || localBasisFromForward(target?.v || vecFromRaDec(0, 0)))
+      : null;
+
+    function project(v) {
+      return projection === 'local' ? objectGameProjectLocal(v, basis, radius, fovRad, canvas) : objectGameProjectAllSky(v, canvas);
+    }
+
+    if (projection === 'local') {
+      ctx.save();
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (skyConstellationLineDb && skyHipByNumber.size) {
+      ctx.save();
+      ctx.globalAlpha = projection === 'local' ? 0.48 : 0.42;
+      skyLineEdgesFromDatabase().forEach(edge => {
+        if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
+        const p1 = project(edge.s1.v);
+        const p2 = project(edge.s2.v);
+        if (!p1 || !p2) return;
+        if (projection === 'allsky') objectGameDrawWrappedLine(ctx, p1, p2, '#545a68', 1.15);
+        else {
+          ctx.strokeStyle = '#545a68';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+        }
+      });
+      ctx.restore();
+    }
+
+    const starPool = skyStars.filter(s => s.mag <= (projection === 'local' ? 6 : 5.6));
+    starPool.forEach(s => {
+      const p = project(s.v);
+      if (!p) return;
+      const r = Math.max(0.65, Math.min(3.2, 3.4 - s.mag * 0.38));
+      ctx.fillStyle = s.mag <= 2 ? '#f4f4f0' : s.mag <= 4 ? '#cfd5df' : '#8c94a4';
+      ctx.globalAlpha = s.mag <= 2 ? 0.95 : s.mag <= 4 ? 0.72 : 0.52;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    items.forEach(item => {
+      const p = project(item.v);
+      if (!p) return;
+      const key = compactObjectKey(kind, item);
+      const isFound = found.has(key);
+      const isSelected = key === selectedKey;
+      const isTarget = target && compactObjectKey(kind, target) === key;
+      const inMarathon = state.mode === 'marathon';
+      const inIdentify = state.mode === 'identify';
+      const showObjectMarker = kind === 'dso' || inMarathon || inIdentify || state.mode === 'find';
+
+      if (!showObjectMarker) return;
+
+      let colour = '#a56bff';
+      let stroke = '#ffffff';
+      let size = kind === 'stars' ? Math.max(4.2, Math.min(8.8, 8.8 - (Number(item.mag) || 4) * 0.8)) : 6.8;
+      if (isFound) colour = '#ffd84d';
+      if (isSelected) { colour = '#ffffff'; stroke = '#ffd84d'; size += 2; }
+      if (isTarget && inIdentify) { colour = '#ff3030'; stroke = '#ffffff'; size += 2.2; }
+
+      ctx.save();
+      if (kind === 'stars') {
+        ctx.fillStyle = colour;
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = isTarget || isSelected ? 2.2 : 1.1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = colour;
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = isTarget || isSelected ? 2.2 : 1.1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      targets.push({ key, item, x: p.x, y: p.y, r: Math.max(12, size + 7) });
+    });
+
+    canvas._objectGameTargets = targets;
+    canvas._objectGameProjection = projection;
+    canvas._objectGameBasis = basis;
+    canvas._objectGameFovRad = fovRad;
+  }
+
+  function objectGameNearest(canvas, x, y) {
+    const targets = canvas._objectGameTargets || [];
+    let best = null;
+    targets.forEach(t => {
+      const d = Math.hypot(t.x - x, t.y - y);
+      if (d <= t.r && (!best || d < best.d)) best = { ...t, d };
+    });
+    return best;
+  }
+
+  function objectGameScoreFromDistance(kind, degrees) {
+    const zero = kind === 'stars' ? 25 : 35;
+    return Math.max(0, Math.round(500 * (1 - degrees / zero)));
+  }
+
+  function randomOffsetBasisForTarget(v) {
+    const b = localBasisFromForward(v);
+    const dx = (Math.random() - 0.5) * 0.28;
+    const dy = (Math.random() - 0.5) * 0.20;
+    let f = normVec({
+      x: b.f.x + b.right.x * dx + b.up.x * dy,
+      y: b.f.y + b.right.y * dx + b.up.y * dy,
+      z: b.f.z + b.right.z * dx + b.up.z * dy
+    });
+    return localBasisFromForward(f);
+  }
+
+  function ensureObjectGameTarget(kind, state, items) {
+    if (!items.length) return null;
+    if (state.mode === 'marathon') return null;
+    if (!state.targetKey || !items.some(item => compactObjectKey(kind, item) === state.targetKey)) {
+      const pick = rand(items);
+      state.targetKey = compactObjectKey(kind, pick);
+      state.answered = false;
+      state.answerCard = '';
+      state.identifyBasis = randomOffsetBasisForTarget(pick.v);
+    }
+    return items.find(item => compactObjectKey(kind, item) === state.targetKey) || items[0];
+  }
+
+  function nextObjectGameQuestion(kind, state, items) {
+    if (!items.length) return;
+    const oldKey = state.targetKey;
+    let pick = rand(items);
+    if (items.length > 1) {
+      let guard = 0;
+      while (compactObjectKey(kind, pick) === oldKey && guard < 20) {
+        pick = rand(items);
+        guard++;
+      }
+    }
+    state.targetKey = compactObjectKey(kind, pick);
+    state.answered = false;
+    state.answerCard = '';
+    state.message = '';
+    state.identifyBasis = randomOffsetBasisForTarget(pick.v);
+  }
+
+  function resetObjectGameMarathon(kind, state) {
+    state.found = [];
+    state.selectedKey = '';
+    state.message = '';
+    state.answerCard = '';
+  }
+
+  function renderObjectChallengeGame(kind) {
+    const cfg = OBJECT_GAME_LABELS[kind];
+    const gameId = kind === 'stars' ? 'stars' : 'dso';
+    const stateKey = kind === 'stars' ? 'starChallenge' : 'dsoChallenge';
+    const state = states[stateKey] || (states[stateKey] = {
+      loaded: false,
+      loading: false,
+      error: '',
+      mode: 'find',
+      targetKey: '',
+      selectedKey: '',
+      found: [],
+      message: '',
+      answerCard: '',
+      answered: false
+    });
+
+    if (!Array.isArray(state.found)) state.found = [];
+    if (!['find', 'identify', 'marathon'].includes(state.mode)) state.mode = 'find';
+
+    if (!state.loaded) {
+      if (!state.loading) {
+        state.loading = true;
+        app.innerHTML = `<h2>${cfg.title}</h2><section class="panel"><p>loading sky catalogue...</p></section>`;
+        showLoadingOverlay(`loading ${cfg.plural}`);
+        const tasks = kind === 'stars'
+          ? [ensureNamedStarCatalogue(), loadSkyData(), loadSkyConstellationLines()]
+          : [loadSkyData(), loadSkyConstellationLines(), loadDsoCoordinateData()];
+        Promise.all(tasks).then(() => {
+          if (kind === 'dso') buildSkyDsoObjects();
+          state.loaded = true;
+          state.loading = false;
+          hideLoadingOverlay();
+          if ((kind === 'stars' && activeGame === 'stars') || (kind === 'dso' && activeGame === 'dso')) renderObjectChallengeGame(kind);
+        }).catch(err => {
+          state.error = `could not load ${cfg.plural}`;
+          state.loading = false;
+          hideLoadingOverlay();
+          app.innerHTML = `<h2>${cfg.title}</h2><section class="panel"><p>${esc(state.error)}</p></section>`;
+          console.warn(`iloveastro: ${cfg.title} game failed to load`, err);
+        });
+      } else {
+        app.innerHTML = `<h2>${cfg.title}</h2><section class="panel"><p>loading sky catalogue...</p></section>`;
+      }
+      return;
+    }
+
+    const items = challengeItems(kind);
+    if (!items.length) {
+      app.innerHTML = `<h2>${cfg.title}</h2><section class="panel"><p>no positioned ${cfg.plural} available.</p></section>`;
+      return;
+    }
+
+    const target = ensureObjectGameTarget(kind, state, items);
+    const found = new Set(state.found || []);
+    const targetName = target ? objectGameName(kind, target) : '';
+    const modeTitle = state.mode === 'find' ? cfg.find : state.mode === 'identify' ? cfg.identify : cfg.marathon;
+    const projection = state.mode === 'identify' ? 'local' : 'allsky';
+    const selected = items.find(item => compactObjectKey(kind, item) === state.selectedKey) || null;
+    const counter = `${found.size} / ${items.length}`;
+
+    app.innerHTML = `<h2>${cfg.title}</h2><div class="object-game-layout"><section class="panel object-game-map-panel"><canvas id="objectGameCanvas" class="object-game-canvas" width="1100" height="680" tabindex="0" aria-label="${esc(cfg.title)} sky game"></canvas></section><aside class="panel object-game-side">
+      <div class="object-mode-tabs">
+        <button type="button" data-object-mode="find" class="${state.mode === 'find' ? 'active' : ''}">${esc(cfg.find)}</button>
+        <button type="button" data-object-mode="identify" class="${state.mode === 'identify' ? 'active' : ''}">${esc(cfg.identify)}</button>
+        <button type="button" data-object-mode="marathon" class="${state.mode === 'marathon' ? 'active' : ''}">${esc(cfg.marathon)}</button>
+      </div>
+      <h3>${esc(modeTitle)}</h3>
+      ${state.mode === 'find' ? `<div class="object-target-box">Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></div><div class="small">Click its position on the all-sky map.</div>` : ''}
+      ${state.mode === 'identify' ? `<div class="object-target-box">Name the <strong>red ${esc(cfg.singular)}</strong>.</div><div class="small">Medium FOV gives enough constellation context without making the answer too obvious.</div>` : ''}
+      ${state.mode === 'marathon' ? `<div class="object-target-box"><strong>${esc(counter)}</strong> named</div><div class="small">Click a purple ${esc(cfg.singular)}, type its name, and it turns yellow.</div>` : ''}
+      ${state.mode !== 'find' ? `<input id="objectGameAnswer" autocomplete="off" placeholder="${state.mode === 'marathon' ? selected ? `name this ${cfg.singular}` : `click a ${cfg.singular} first` : `type ${cfg.singular} name`}">` : ''}
+      <div class="controls">
+        ${state.mode === 'identify' ? `<button type="button" id="objectGameSubmit">submit</button>` : ''}
+        ${state.mode !== 'marathon' ? `<button type="button" id="objectGameNext">new question</button>` : `<button type="button" id="objectGameReset">reset marathon</button>`}
+      </div>
+      <div id="objectGameMsg" class="message">${esc(state.message || '')}</div>
+      <div id="objectGameCard">${state.answerCard || (state.mode === 'marathon' && selected ? objectGameCard(kind, selected, 'selected') : '')}</div>
+    </aside></div>`;
+
+    const canvas = $('#objectGameCanvas');
+    const msg = $('#objectGameMsg');
+    const answer = $('#objectGameAnswer');
+    objectGameDrawMap(canvas, kind, items, state, { projection, target });
+
+    function redrawOnly() {
+      objectGameDrawMap(canvas, kind, items, state, { projection: state.mode === 'identify' ? 'local' : 'allsky', target: ensureObjectGameTarget(kind, state, items) });
+      const card = $('#objectGameCard');
+      const sel = items.find(item => compactObjectKey(kind, item) === state.selectedKey) || null;
+      if (card && state.mode === 'marathon') card.innerHTML = state.answerCard || (sel ? objectGameCard(kind, sel, 'selected') : '');
+      if (msg) msg.textContent = state.message || '';
+    }
+
+    document.querySelectorAll('[data-object-mode]').forEach(btn => btn.addEventListener('click', () => {
+      const nextMode = btn.dataset.objectMode;
+      if (!nextMode || nextMode === state.mode) return;
+      state.mode = nextMode;
+      state.message = '';
+      state.answerCard = '';
+      state.answered = false;
+      state.selectedKey = '';
+      if (state.mode !== 'marathon') nextObjectGameQuestion(kind, state, items);
+      renderObjectChallengeGame(kind);
+    }));
+
+    if ($('#objectGameNext')) $('#objectGameNext').addEventListener('click', () => {
+      nextObjectGameQuestion(kind, state, items);
+      renderObjectChallengeGame(kind);
+    });
+
+    if ($('#objectGameReset')) $('#objectGameReset').addEventListener('click', () => {
+      resetObjectGameMarathon(kind, state);
+      renderObjectChallengeGame(kind);
+    });
+
+    function submitTypedAnswer() {
+      if (!answer) return;
+      const value = answer.value;
+      if (state.mode === 'identify') {
+        const t = ensureObjectGameTarget(kind, state, items);
+        if (!t) return;
+        const ok = answerMatches(value, objectGameAnswers(kind, t));
+        record(gameId, ok);
+        state.answered = true;
+        state.message = ok ? 'correct' : `answer: ${objectGameName(kind, t)}`;
+        state.answerCard = objectGameCard(kind, t, ok ? 'correct' : 'revealed');
+        renderObjectChallengeGame(kind);
+        return;
+      }
+
+      if (state.mode === 'marathon') {
+        const sel = items.find(item => compactObjectKey(kind, item) === state.selectedKey);
+        if (!sel) {
+          state.message = `click a ${cfg.singular} first`;
+          if (msg) msg.textContent = state.message;
+          return;
+        }
+        const key = compactObjectKey(kind, sel);
+        if (found.has(key)) {
+          state.message = 'already named';
+          if (msg) msg.textContent = state.message;
+          return;
+        }
+        const ok = answerMatches(value, objectGameAnswers(kind, sel));
+        record(gameId, ok);
+        if (ok) {
+          state.found.push(key);
+          state.message = `${objectGameName(kind, sel)} named`;
+          state.answerCard = objectGameCard(kind, sel, 'named');
+          answer.value = '';
+          renderObjectChallengeGame(kind);
+        } else {
+          state.message = 'not quite';
+          if (msg) msg.textContent = state.message;
+        }
+      }
+    }
+
+    if ($('#objectGameSubmit')) $('#objectGameSubmit').addEventListener('click', submitTypedAnswer);
+    if (answer) {
+      answer.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitTypedAnswer();
+        }
+      });
+      setTimeout(() => answer.focus(), 0);
+    }
+
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * canvas.width / rect.width;
+      const y = (e.clientY - rect.top) * canvas.height / rect.height;
+      const near = objectGameNearest(canvas, x, y);
+
+      if (state.mode === 'find') {
+        const t = ensureObjectGameTarget(kind, state, items);
+        if (!t) return;
+        const clickVec = objectGameVecFromAllSky(x, y, canvas);
+        const dist = angularDeg(clickVec, t.v);
+        const score = objectGameScoreFromDistance(kind, dist);
+        const hit = dist <= (kind === 'stars' ? 2.2 : 3.2);
+        record(gameId, hit);
+        state.answered = true;
+        state.message = `${score} / 500 (${dist.toFixed(1)}° away)`;
+        state.answerCard = objectGameCard(kind, t, hit ? 'correct click' : 'target shown');
+        state.selectedKey = compactObjectKey(kind, t);
+        renderObjectChallengeGame(kind);
+        return;
+      }
+
+      if (state.mode === 'marathon') {
+        if (!near) {
+          state.selectedKey = '';
+          state.message = `click a purple ${cfg.singular}`;
+          state.answerCard = '';
+          renderObjectChallengeGame(kind);
+          return;
+        }
+        state.selectedKey = near.key;
+        state.message = `selected ${objectGameName(kind, near.item)}`;
+        state.answerCard = objectGameCard(kind, near.item, found.has(near.key) ? 'already named' : 'selected');
+        renderObjectChallengeGame(kind);
+      }
+    });
+  }
+
+
   function render() {
     setShiftEnterAction(null);
     if (activeGame === 'skyguessr') renderSkyGuessr();
@@ -5406,9 +6005,9 @@
     else if (activeGame === 'guessconst') renderGuessConstellation();
     else if (activeGame === 'stars') {
       if (!namedStarCatalogueReady) deferForNamedStars('Stars', () => { if (activeGame === 'stars') render(); });
-      else makeQuestionGame('stars', 'Stars', { modes: starModes, defaultMode: 'starToConstellation', make: starQuestion });
+      else renderObjectChallengeGame('stars');
     }
-    else if (activeGame === 'dso') makeQuestionGame('dso', 'DSOs', { modes: dsoModes, defaultMode: 'codeToName', make: dsoQuestion });
+    else if (activeGame === 'dso') renderObjectChallengeGame('dso');
     else if (activeGame === 'timer') renderTimer();
     else if (activeGame === 'atlas') renderAtlas();
     else if (activeGame === 'tables') renderTables();
