@@ -1168,7 +1168,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=148';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=151';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1743,9 +1743,9 @@
     return starPreferredName(s);
   }
   function starDesignation(s) {
-    const symbol = greekBayerSymbol(s.bayer) || greekBayerSymbol(s.bf);
-    if (!symbol) return '';
-    return `${symbol} ${CONSTELLATION_GENITIVE[s.constellation] || s.constellation}`;
+    const symbol = greekBayerSymbol(s?.bayer) || greekBayerSymbol(s?.bf) || greekBayerSymbol(s?.skyBayer) || greekBayerSymbol(s?.skyBf);
+    if (symbol) return `${symbol} ${CONSTELLATION_GENITIVE[s.constellation] || s.constellation}`;
+    return greekDesignationText(s?.designation || '');
   }
   function starInfoHtml(s) {
     const lines = [];
@@ -2898,7 +2898,6 @@
     function newTarget() {
       if (!skyStars.length) return;
       state.fov = defaultFov();
-      state.magLimit = defaultMag();
       state.target = randomSkyTarget();
       randomViewAroundTarget(false);
       state.answered = false; state.message = ''; answer.value = ''; renderSkyGuessr();
@@ -4494,7 +4493,6 @@
 
     $('#guessConstMode').addEventListener('change', e => {
       state.mode = normaliseMode(e.target.value);
-      state.magLimit = defaultMag();
       state.targets = [];
       state.target = '';
       state.message = '';
@@ -4779,7 +4777,6 @@
       state.submitted = false;
       state.result = '';
       state.fov = defaultFov();
-      state.magLimit = defaultMag();
       randomOrientation();
       renderAlphaPin();
     }
@@ -5542,7 +5539,7 @@
           { label: 'constellation', sortable: true },
           { label: 'mag', sortable: true },
           { label: 'note', sortable: false }
-        ], DATA.stars.map(s => [{ text: [starPreferredName(s), ...starAnswerNames(s)].join(' '), value: starPreferredName(s), html: starNameChoiceHtml(s) }, s.designation, s.constellation, Number.isFinite(s.mag) ? s.mag.toFixed(2) : '', s.note]));
+        ], DATA.stars.map(s => [{ text: [starPreferredName(s), ...starAnswerNames(s)].join(' '), value: starPreferredName(s), html: starNameChoiceHtml(s) }, starDesignation(s) || greekDesignationText(s.designation), s.constellation, Number.isFinite(s.mag) ? s.mag.toFixed(2) : '', s.note]));
       } else if (state.mode === 'dso') {
         table([
           { label: 'code', sortable: true, sortType: 'dsoCode' },
@@ -5718,8 +5715,15 @@
     return kind === 'stars' ? starPreferredName(item) : dsoLabelPlain(item);
   }
 
-  function objectGameScoreHtml(gameId, mode) {
-    return mode === 'find' || mode === 'identify' ? `<div class="score-row">${formatScore(gameId)}</div>` : '';
+  function objectGameScoreId(kind, mode) {
+    const prefix = kind === 'stars' ? 'stars' : 'dso';
+    if (mode === 'find') return `${prefix}Find`;
+    if (mode === 'identify') return `${prefix}Identify`;
+    return `${prefix}Marathon`;
+  }
+
+  function objectGameScoreHtml(kind, mode) {
+    return mode === 'find' || mode === 'identify' ? `<div id="objectGameStats" class="stats">${formatScore(objectGameScoreId(kind, mode))}</div>` : '';
   }
 
   function objectGameAnswers(kind, item) {
@@ -6101,7 +6105,6 @@
 
   function renderObjectChallengeGame(kind) {
     const cfg = OBJECT_GAME_LABELS[kind];
-    const gameId = kind === 'stars' ? 'stars' : 'dso';
     const stateKey = kind === 'stars' ? 'starChallenge' : 'dsoChallenge';
     const state = states[stateKey] || (states[stateKey] = {
       loaded: false,
@@ -6176,7 +6179,6 @@
     app.innerHTML = `<h2>${cfg.title}</h2><div class="sky-layout object-game-layout"><section class="panel sky-panel object-game-map-panel"><canvas id="objectGameCanvas" width="900" height="900" tabindex="0" aria-label="${esc(cfg.title)} sky map"></canvas></section><aside class="panel object-game-side">
       <label>Gamemode<select id="objectGameMode"><option value="find" ${state.mode === 'find' ? 'selected' : ''}>${esc(cfg.find)}</option><option value="identify" ${state.mode === 'identify' ? 'selected' : ''}>${esc(cfg.identify)}</option><option value="marathon" ${state.mode === 'marathon' ? 'selected' : ''}>${esc(cfg.marathon)}</option></select></label>
       <h3>${esc(modeTitle)}</h3>
-      ${objectGameScoreHtml(gameId, state.mode)}
       ${state.mode === 'find' ? `<p>Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></p>` : ''}
       ${state.mode === 'identify' ? `` : ''}
       ${state.mode === 'marathon' ? `<p><strong>${esc(counter)}</strong> named</p>` : ''}
@@ -6194,6 +6196,7 @@
       </div>
       <div id="objectGameMsg" class="message">${esc(state.message || '')}</div>
       <div id="objectGameCard">${state.answerCard || (canShowSelectedCard ? objectGameCard(kind, selected, 'already named') : '')}</div>
+      ${objectGameScoreHtml(kind, state.mode)}
     </aside></div>`;
 
     initRangeVisuals(app);
@@ -6294,7 +6297,7 @@
       }
       const t = ensureObjectGameTarget(kind, state, items);
       if (!t) return;
-      if ((state.mode === 'find' || state.mode === 'identify') && !state.answered) record(gameId, false);
+      if ((state.mode === 'find' || state.mode === 'identify') && !state.answered) record(objectGameScoreId(kind, state.mode), false);
       state.answered = true;
       state.selectedKey = compactObjectKey(kind, t);
       state.wrongKey = '';
@@ -6355,11 +6358,16 @@
     if ($('#objectGameCentre')) $('#objectGameCentre').addEventListener('click', centreMap);
     if ($('#objectGameZoomOut')) $('#objectGameZoomOut').addEventListener('click', () => setFov(state.fov * 1.25));
     if ($('#objectGameZoomIn')) $('#objectGameZoomIn').addEventListener('click', () => setFov(state.fov * 0.8));
-    if ($('#objectGameRollCCW')) $('#objectGameRollCCW').addEventListener('click', () => rollFrame(-1)); // visual anticlockwise
-    if ($('#objectGameRollCW')) $('#objectGameRollCW').addEventListener('click', () => rollFrame(1)); // visual clockwise
+    if ($('#objectGameRollCCW')) $('#objectGameRollCCW').addEventListener('click', () => rollFrame(1)); // visual anticlockwise
+    if ($('#objectGameRollCW')) $('#objectGameRollCW').addEventListener('click', () => rollFrame(-1)); // visual clockwise
 
     function submitTypedAnswer() {
       if (state.mode === 'find') {
+        if (state.answered) {
+          state.message = 'already submitted';
+          if (msg) msg.textContent = state.message;
+          return;
+        }
         const t = ensureObjectGameTarget(kind, state, items);
         const sel = items.find(item => compactObjectKey(kind, item) === state.selectedKey);
         if (!t || !sel) {
@@ -6368,7 +6376,7 @@
           return;
         }
         const hit = compactObjectKey(kind, sel) === compactObjectKey(kind, t);
-        record(gameId, hit);
+        record(objectGameScoreId(kind, state.mode), hit);
         state.answered = true;
         state.wrongKey = hit ? '' : compactObjectKey(kind, sel);
         state.message = hit ? 'correct' : 'wrong';
@@ -6380,10 +6388,15 @@
       if (!answer) return;
       const value = answer.value;
       if (state.mode === 'identify') {
+        if (state.answered) {
+          state.message = 'already submitted';
+          if (msg) msg.textContent = state.message;
+          return;
+        }
         const t = ensureObjectGameTarget(kind, state, items);
         if (!t) return;
         const ok = answerMatches(value, objectGameAnswers(kind, t));
-        record(gameId, ok);
+        record(objectGameScoreId(kind, state.mode), ok);
         state.answered = true;
         state.message = ok ? 'correct' : `answer: ${objectGameName(kind, t)}`;
         state.answerCard = objectGameCard(kind, t, ok ? 'correct' : 'revealed');
@@ -6406,7 +6419,6 @@
           return;
         }
         const ok = answerMatches(value, objectGameAnswers(kind, sel));
-        record(gameId, ok);
         if (ok) {
           if (!state.found.includes(key)) state.found.push(key);
           state.message = 'correct';
