@@ -244,6 +244,14 @@
     if (/^[a-z]\s+[A-Z][a-z]+/i.test(s)) return false;
     return /[A-Za-z]/.test(s);
   }
+  function addStarAliasName(entry, alias) {
+    const value = String(alias || '').trim();
+    if (!entry || !value) return;
+    if (compact(value) === compact(entry.name)) return;
+    if (!Array.isArray(entry.accepted)) entry.accepted = [entry.name, entry.designation].filter(Boolean);
+    if (!entry.accepted.some(x => compact(x) === compact(value))) entry.accepted.push(value);
+    addStrict(value);
+  }
   function attachSkyStarIdentity(entry, star) {
     if (!entry || !star) return;
     entry.skyHip = Number.isFinite(star.hip) ? star.hip : null;
@@ -262,15 +270,39 @@
   function addNamedStarCatalogueEntry(star) {
     const name = String(star.name || '').trim();
     if (!name || !star.constellation) return false;
-    const existing = DATA.stars.find(s => compact(s.constellation) === compact(star.constellation) && compact(s.name) === compact(name));
+    const nameKey = compact(name);
+    const constKey = compact(star.constellation);
+    const group = starCommonNameGroup(star);
+    const sameName = DATA.stars.filter(s => compact(s.name) === nameKey);
+    const samePhysical = group ? DATA.stars.find(s => starCommonNameGroup(s)?.key === group.key) : null;
+    if (samePhysical) {
+      attachSkyStarIdentity(samePhysical, star);
+      addStarAliasName(samePhysical, name);
+      (group.names || []).forEach(alias => addStarAliasName(samePhysical, alias));
+      if (!Number.isFinite(samePhysical.mag) && Number.isFinite(star.mag)) samePhysical.mag = star.mag;
+      if (!samePhysical.designation) samePhysical.designation = namedStarDesignationFromSky(star);
+      addStrict(samePhysical.name);
+      addStrict(samePhysical.designation);
+      addStarToConstellationMap(samePhysical);
+      addStarToConstellationInfo(samePhysical);
+      return false;
+    }
+    const existing = sameName.find(s => compact(s.constellation) === constKey);
     if (existing) {
       attachSkyStarIdentity(existing, star);
+      if (group) (group.names || []).forEach(alias => addStarAliasName(existing, alias));
       if (!Number.isFinite(existing.mag) && Number.isFinite(star.mag)) existing.mag = star.mag;
       if (!existing.designation) existing.designation = namedStarDesignationFromSky(star);
       addStrict(existing.name);
       addStrict(existing.designation);
       addStarToConstellationMap(existing);
       addStarToConstellationInfo(existing);
+      return false;
+    }
+    if (sameName.length) {
+      // Avoid ambiguous one-word duplicate proper names across constellations.
+      // Example: HYG has Gienah in Cygnus, while the curated list uses Gienah for Gamma Corvi.
+      // Creating both would make typing/flashcard prompts ambiguous.
       return false;
     }
     const entry = {
@@ -282,6 +314,7 @@
       generated: true
     };
     attachSkyStarIdentity(entry, star);
+    if (group) (group.names || []).forEach(alias => addStarAliasName(entry, alias));
     DATA.stars.push(entry);
     addStrict(entry.name);
     addStrict(entry.designation);
@@ -289,6 +322,7 @@
     addStarToConstellationInfo(entry);
     return true;
   }
+
   function augmentNamedStarCatalogueFromSky() {
     if (namedStarCatalogueReady) return;
     skyStars.filter(star => isNormalNamedStarName(star.name)).forEach(addNamedStarCatalogueEntry);
@@ -657,7 +691,7 @@
   function infoCard(name) {
     const info = DATA.constellationInfo[name];
     if (!info) return '';
-    const stars = info.stars.length ? info.stars.slice(0, 8).map(s => `${esc(s.name)}${s.designation ? ` (${esc(s.designation)})` : ''}`).join(', ') : 'none in current star list';
+    const stars = info.stars.length ? info.stars.slice(0, 8).map(s => `${starWikiLink(s)}${s.designation ? ` (${esc(s.designation)})` : ''}`).join(', ') : 'none in current star list';
     const dsos = info.dsos.length ? info.dsos.slice(0, 10).map(o => `${esc(o.code)}${o.commonName ? ` ${esc(o.commonName)}` : ''}`).join(', ') : 'none in Messier/Caldwell list';
     return `<h3>${esc(name)}</h3><p>${esc(info.myth)}</p><p><strong>asterisms:</strong> ${info.asterisms.length ? info.asterisms.map(esc).join(', ') : 'none listed yet'}</p><p><strong>stars:</strong> ${stars}</p><p><strong>DSOs:</strong> ${dsos}</p>`;
   }
@@ -676,7 +710,7 @@
       const picked = rand(pool.length ? pool : DATA.stars);
       return {
         prompt: `Which named star has designation <strong>${esc(picked.designation)}</strong>?`,
-        answers: [picked.name],
+        answers: starAnswerNames(picked),
         study: starStudyHtml(picked),
         card: () => starStudyHtml(picked)
       };
@@ -696,7 +730,7 @@
       const [constellation, arr] = rand(entries);
       return {
         prompt: `Name any listed star in <strong>${esc(constellation)}</strong>.`,
-        answers: arr.map(x => x.name),
+        answers: arr.flatMap(starAnswerNames),
         study: `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>Named stars to remember:</p><ul>${arr.slice(0, 18).map(x => `<li>${starWikiLink(x)}${x.designation ? ` — ${esc(x.designation)}` : ''}</li>`).join('')}</ul>${infoCard(constellation)}</div>`,
         card: () => `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>${arr.map(x => `${starWikiLink(x)} (${esc(x.designation)})`).join(', ')}</p>${infoCard(constellation)}</div>`
       };
@@ -996,7 +1030,7 @@
     const info = DATA.constellationInfo[name], charts = chartsByName.get(name) || [];
     const relatedAsterisms = DATA.asterisms.filter(a => (a.constellations || []).includes(name));
     const asterismRows = relatedAsterisms.length ? relatedAsterisms.map(a => `<tr><td>${esc(a.name)}</td><td>${(a.members || []).map(esc).join(', ') || '—'}</td><td>${esc(a.clue || '')}</td></tr>`).join('') : '<tr><td colspan="3">No listed asterism in the current catalogue.</td></tr>';
-    const starRows = info.stars.length ? info.stars.map(s => `<tr><td>${esc(s.name)}</td><td>${esc(s.designation)}</td><td>${esc(s.note)}</td></tr>`).join('') : '<tr><td colspan="3">No star in the current curated named-star list.</td></tr>';
+    const starRows = info.stars.length ? info.stars.map(s => `<tr><td>${starNameChoiceHtml(s)}</td><td>${esc(s.designation)}</td><td>${esc(s.note)}</td></tr>`).join('') : '<tr><td colspan="3">No star in the current curated named-star list.</td></tr>';
     const dsoRows = info.dsos.length ? info.dsos.map(o => `<tr><td>${esc(o.code)}</td><td>${esc(o.commonName)}</td><td>${esc(o.type)}</td></tr>`).join('') : '<tr><td colspan="3">No Messier/Caldwell object in the current list.</td></tr>';
     const chartHtml = charts.length ? charts.map((ch, i) => `<div class="chart-detail-box atlas-chart-box"><h3>${esc(ch.displayName || name)}${charts.length > 1 ? ` chart ${i + 1}` : ''}</h3>${chartImg(ch, true, 'chart-img detail-chart atlas-zoomable-chart', `${ch.displayName || name} labelled chart`)}</div>`).join('') : '';
     const atlasNotes = (info.atlasNotes || []).length ? `<h3>Sky picture</h3>${info.atlasNotes.map(x => `<p>${esc(x)}</p>`).join('')}` : '';
@@ -1134,7 +1168,7 @@
 
 
   const HYG_MAG65_URL = 'https://raw.githubusercontent.com/eleanorlutz/western_constellations_atlas_of_space/refs/heads/main/data/processed/hygdata_processed_mag65.csv';
-  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=145';
+  const CONSTELLATION_LINES_URL = 'constellation_lines.json?v=148';
   const CON_ABBR_TO_NAME = new Map(DATA.constellations.map(c => [compact(c.abbr), c.name]));
   CON_ABBR_TO_NAME.set('ser1', 'Serpens');
   CON_ABBR_TO_NAME.set('ser2', 'Serpens');
@@ -1640,8 +1674,73 @@
     }
     return '';
   }
+  const STAR_NAME_PREFS_KEY = 'iloveastroStarNamePreferences';
+  const STAR_COMMON_NAME_GROUPS = [
+    { key: 'beta-crucis', constellation: 'Crux', designation: 'Beta Crucis', names: ['Mimosa', 'Becrux'] },
+    { key: 'epsilon-leonis', constellation: 'Leo', designation: 'Epsilon Leonis', names: ['Algenubi', 'Ras Elased Australis'] },
+    { key: 'beta-centauri', constellation: 'Centaurus', designation: 'Beta Centauri', names: ['Hadar', 'Agena'] },
+    { key: 'eta-ursae-majoris', constellation: 'Ursa Major', designation: 'Eta Ursae Majoris', names: ['Alkaid', 'Benetnasch'] },
+    { key: 'beta-ceti', constellation: 'Cetus', designation: 'Beta Ceti', names: ['Diphda', 'Deneb Kaitos'] },
+    { key: 'alpha-andromedae', constellation: 'Andromeda', designation: 'Alpha Andromedae', names: ['Alpheratz', 'Sirrah'] },
+    { key: 'beta-canis-majoris', constellation: 'Canis Major', designation: 'Beta Canis Majoris', names: ['Mirzam', 'Murzim'] },
+    { key: 'gamma-ursae-majoris', constellation: 'Ursa Major', designation: 'Gamma Ursae Majoris', names: ['Phecda', 'Phad'] },
+    { key: 'beta-tauri', constellation: 'Taurus', designation: 'Beta Tauri', names: ['Elnath', 'El Nath'] },
+    { key: 'alpha-cassiopeiae', constellation: 'Cassiopeia', designation: 'Alpha Cassiopeiae', names: ['Schedar', 'Shedir'] },
+    { key: 'alpha-librae', constellation: 'Libra', designation: 'Alpha Librae', names: ['Zubenelgenubi', 'Kiffa Australis'] },
+    { key: 'beta-librae', constellation: 'Libra', designation: 'Beta Librae', names: ['Zubeneschamali', 'Kiffa Borealis'] }
+  ];
+  function loadStarNamePrefs() {
+    try {
+      const value = JSON.parse(localStorage.getItem(STAR_NAME_PREFS_KEY) || '{}');
+      return value && typeof value === 'object' ? value : {};
+    } catch {
+      return {};
+    }
+  }
+  let starNamePrefs = loadStarNamePrefs();
+  function saveStarNamePrefs() {
+    try { localStorage.setItem(STAR_NAME_PREFS_KEY, JSON.stringify(starNamePrefs)); } catch {}
+  }
+  function starNameCandidates(star) {
+    return [star?.name, star?.designation, ...(star?.accepted || []), star?.sky?.name, starDesignation(star || {}), star?.bf, star?.bayer].filter(Boolean);
+  }
+  function starCommonNameGroup(star) {
+    if (!star) return null;
+    const constKey = compact(star.constellation);
+    const candidates = starNameCandidates(star).map(compact).filter(Boolean);
+    return STAR_COMMON_NAME_GROUPS.find(group => {
+      if (group.constellation && constKey && compact(group.constellation) !== constKey) return false;
+      const groupKeys = [group.designation, ...group.names].map(compact);
+      return groupKeys.some(k => candidates.includes(k));
+    }) || null;
+  }
+  function starPreferredName(star) {
+    const group = starCommonNameGroup(star);
+    if (!group) return String(star?.name || '').trim();
+    const saved = starNamePrefs[group.key];
+    if (saved && group.names.some(n => compact(n) === compact(saved))) return saved;
+    const current = String(star?.name || '').trim();
+    const match = group.names.find(n => compact(n) === compact(current));
+    return match || group.names[0];
+  }
+  function setStarPreferredName(groupKey, name) {
+    const group = STAR_COMMON_NAME_GROUPS.find(g => g.key === groupKey);
+    if (!group || !group.names.some(n => compact(n) === compact(name))) return;
+    starNamePrefs[group.key] = name;
+    saveStarNamePrefs();
+  }
+  document.addEventListener('change', e => {
+    const select = e.target?.closest?.('[data-star-name-group]');
+    if (!select) return;
+    setStarPreferredName(select.dataset.starNameGroup, select.value);
+    if (activeGame !== 'tables') render();
+  });
+  function starAnswerNames(star) {
+    const group = starCommonNameGroup(star);
+    return [...new Set([star?.name, starPreferredName(star), ...(group ? group.names : []), star?.designation, ...(star?.accepted || [])].filter(Boolean))];
+  }
   function starDisplayName(s) {
-    return String(s.name || '').trim();
+    return starPreferredName(s);
   }
   function starDesignation(s) {
     const symbol = greekBayerSymbol(s.bayer) || greekBayerSymbol(s.bf);
@@ -2035,12 +2134,21 @@
     return STAR_STUDY_INFO[name] || STAR_STUDY_INFO[name.replace(/\s+/g, '_')] || null;
   }
   function starWikiTitle(star) {
-    const name = String(star?.name || '').trim();
-    return STAR_WIKI_TITLES[name] || STAR_WIKI_TITLES[name.replace(/\s+/g, '_')] || name || star?.designation || '';
+    const preferred = starPreferredName(star);
+    const primary = String(star?.name || '').trim();
+    return STAR_WIKI_TITLES[preferred] || STAR_WIKI_TITLES[preferred.replace(/\s+/g, '_')] || STAR_WIKI_TITLES[primary] || STAR_WIKI_TITLES[primary.replace(/\s+/g, '_')] || preferred || primary || star?.designation || '';
   }
   function starWikiLink(star, label = null) {
     const title = starWikiTitle(star);
-    return title ? externalLink(wikiUrl(title), label || String(star?.name || title), 'wiki-link') : esc(label || '');
+    return title ? externalLink(wikiUrl(title), label || starPreferredName(star) || String(title), 'wiki-link') : esc(label || '');
+  }
+  function starNameChoiceHtml(star) {
+    const group = starCommonNameGroup(star);
+    const current = starPreferredName(star);
+    const link = starWikiLink(star, current);
+    if (!group || group.names.length < 2) return link;
+    const options = group.names.map(name => `<option value="${esc(name)}" ${compact(name) === compact(current) ? 'selected' : ''}>${esc(name)}</option>`).join('');
+    return `<span class="star-name-choice" title="choose common name">${link}<select class="star-name-select" data-star-name-group="${esc(group.key)}" aria-label="choose common name for ${esc(current)}">${options}</select></span>`;
   }
   function constellationWikiLink(name) {
     return externalLink(wikiUrl(`${name} constellation`), name, 'wiki-link');
@@ -3424,7 +3532,7 @@
         labels.push(`${symbol} ${genitive}`, `${symbol} ${star.constellation}`, `${symbol} ${abbr}`);
       }
       const curated = DATA.stars.find(s => s.constellation === star.constellation && compact(s.name) === compact(star.name));
-      if (curated) labels.push(curated.designation, `${curated.designation} ${curated.name}`);
+      if (curated) labels.push(curated.designation, `${curated.designation} ${starPreferredName(curated)}`, ...starAnswerNames(curated));
       return labels.filter(x => String(x || '').trim());
     }
 
@@ -5418,6 +5526,10 @@
         state.sort[state.mode] = current && current.index === index && current.dir === 'asc' ? { index, dir: 'desc' } : { index, dir: 'asc' };
         redraw();
       }));
+      wrap.querySelectorAll('[data-star-name-group]').forEach(select => select.addEventListener('change', () => {
+        setStarPreferredName(select.dataset.starNameGroup, select.value);
+        redraw();
+      }));
     }
 
     function redraw() {
@@ -5430,7 +5542,7 @@
           { label: 'constellation', sortable: true },
           { label: 'mag', sortable: true },
           { label: 'note', sortable: false }
-        ], DATA.stars.map(s => [s.name, s.designation, s.constellation, Number.isFinite(s.mag) ? s.mag.toFixed(2) : '', s.note]));
+        ], DATA.stars.map(s => [{ text: [starPreferredName(s), ...starAnswerNames(s)].join(' '), value: starPreferredName(s), html: starNameChoiceHtml(s) }, s.designation, s.constellation, Number.isFinite(s.mag) ? s.mag.toFixed(2) : '', s.note]));
       } else if (state.mode === 'dso') {
         table([
           { label: 'code', sortable: true, sortType: 'dsoCode' },
@@ -5516,6 +5628,7 @@
   function starChallengeRecord(entry) {
     const nameKey = compact(entry.name);
     const constKey = compact(entry.constellation);
+    const designationKey = compact(entry.designation);
     let sky = null;
 
     if (Number.isFinite(entry.skyHip)) {
@@ -5526,24 +5639,31 @@
       sky = skyStars.find(s => Math.abs(s.ra - entry.skyRa) < 1e-6 && Math.abs(s.dec - entry.skyDec) < 1e-6) || null;
     }
 
-    if (!sky && nameKey) {
-      sky = skyStars.find(s => compact(s.name) === nameKey && compact(s.constellation) === constKey) ||
-            skyStars.find(s => compact(s.name) === nameKey) ||
-            null;
-    }
-
-    if (!sky) {
-      const designationKey = compact(entry.designation);
-      sky = skyStars.find(s => compact(s.constellation) === constKey && designationKey && (
+    if (!sky && designationKey) {
+      sky = skyStars.find(s => compact(s.constellation) === constKey && (
         compact(starDesignation(s)) === designationKey ||
         compact(s.bf) === designationKey ||
         compact(s.bayer) === designationKey
       )) || null;
     }
 
+    if (!sky && nameKey) {
+      sky = skyStars.find(s => compact(s.constellation) === constKey && compact(s.name) === nameKey) ||
+            skyStars.find(s => compact(s.constellation) === constKey && compact(s.name).startsWith(`${nameKey}`)) ||
+            null;
+    }
+
+    if (!sky && nameKey) {
+      const exactNameMatches = skyStars.filter(s => compact(s.name) === nameKey);
+      if (exactNameMatches.length === 1) sky = exactNameMatches[0];
+    }
+
     if (!sky || !sky.v) return null;
+    const cleanName = String(entry.name || sky.name || starDisplayName(sky) || '').trim();
     return {
       ...entry,
+      name: cleanName,
+      constellation: sky.constellation || entry.constellation,
       sky,
       v: sky.v,
       ra: sky.ra,
@@ -5595,12 +5715,22 @@
   }
 
   function objectGameName(kind, item) {
-    return kind === 'stars' ? String(item.name || '').trim() : dsoLabelPlain(item);
+    return kind === 'stars' ? starPreferredName(item) : dsoLabelPlain(item);
+  }
+
+  function objectGameScoreHtml(gameId, mode) {
+    return mode === 'find' || mode === 'identify' ? `<div class="score-row">${formatScore(gameId)}</div>` : '';
   }
 
   function objectGameAnswers(kind, item) {
     if (kind === 'stars') {
-      return [item.name, item.designation, item.sky?.name, starDesignation(item.sky || {}), item.sky?.bf, item.sky?.bayer].filter(Boolean);
+      return [
+        ...starAnswerNames(item),
+        item.sky?.name,
+        starDesignation(item.sky || {}),
+        item.sky?.bf,
+        item.sky?.bayer
+      ].filter(Boolean);
     }
     return [item.code, item.commonName, ...(item.accepted || []), ...(item.aliases || [])].filter(Boolean);
   }
@@ -6046,6 +6176,7 @@
     app.innerHTML = `<h2>${cfg.title}</h2><div class="sky-layout object-game-layout"><section class="panel sky-panel object-game-map-panel"><canvas id="objectGameCanvas" width="900" height="900" tabindex="0" aria-label="${esc(cfg.title)} sky map"></canvas></section><aside class="panel object-game-side">
       <label>Gamemode<select id="objectGameMode"><option value="find" ${state.mode === 'find' ? 'selected' : ''}>${esc(cfg.find)}</option><option value="identify" ${state.mode === 'identify' ? 'selected' : ''}>${esc(cfg.identify)}</option><option value="marathon" ${state.mode === 'marathon' ? 'selected' : ''}>${esc(cfg.marathon)}</option></select></label>
       <h3>${esc(modeTitle)}</h3>
+      ${objectGameScoreHtml(gameId, state.mode)}
       ${state.mode === 'find' ? `<p>Find <strong>${kind === 'stars' ? starWikiLink(target) : dsoWikiLink(target, targetName)}</strong></p>` : ''}
       ${state.mode === 'identify' ? `` : ''}
       ${state.mode === 'marathon' ? `<p><strong>${esc(counter)}</strong> named</p>` : ''}
@@ -6163,6 +6294,7 @@
       }
       const t = ensureObjectGameTarget(kind, state, items);
       if (!t) return;
+      if ((state.mode === 'find' || state.mode === 'identify') && !state.answered) record(gameId, false);
       state.answered = true;
       state.selectedKey = compactObjectKey(kind, t);
       state.wrongKey = '';

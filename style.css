@@ -976,3 +976,21 @@ input[type='range']::-moz-range-thumb {
   margin: 6px 0 !important;
   background: transparent !important;
 }
+
+/* v148: conservative common-name chooser for stars in Tables. */
+.star-name-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+.star-name-choice .star-name-select {
+  display: none;
+  max-width: 160px;
+  font: inherit;
+  padding: 1px 4px;
+}
+.star-name-choice:hover .star-name-select,
+.star-name-choice:focus-within .star-name-select {
+  display: inline-block;
+}
