@@ -884,14 +884,23 @@ input[type='range']::-moz-range-thumb {
 .former-list {
   display: grid;
   gap: 0;
-  max-width: 920px;
+  max-width: 1080px;
 }
 .former-entry {
   padding: 17px 2px 18px;
   border-top: 1px solid #ddd;
 }
+.former-entry.has-image {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 310px);
+  gap: 20px;
+  align-items: start;
+}
 .former-entry:first-child {
   border-top: 0;
+}
+.former-copy {
+  min-width: 0;
 }
 .former-entry h3 {
   margin: 0 0 4px;
@@ -919,9 +928,91 @@ input[type='range']::-moz-range-thumb {
 .former-entry p {
   max-width: 760px;
   margin: 9px 0 0;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 .former-source {
+  color: #666;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.former-image-wrap {
+  min-width: 0;
+}
+.former-image-link {
+  display: block;
+  width: 100%;
+}
+.former-image {
+  display: block;
+  width: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  object-position: center;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+.former-image-source {
+  display: inline-block;
+  margin-top: 4px;
+  color: #777;
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .former-entry.has-image {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .former-image {
+    max-height: 320px;
+    width: auto;
+    max-width: 100%;
+  }
+}
+
+
+/* Interesting stars */
+.star-story-toolbar {
+  margin: 10px 0 8px;
+}
+.star-story-toolbar input {
+  width: min(100%, 420px);
+}
+.star-story-list {
+  max-width: 900px;
+}
+.star-story-group {
+  margin: 28px 0 2px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #111;
+  font-size: 18px;
+}
+.star-story-group:first-child {
+  margin-top: 12px;
+}
+.star-story-entry {
+  padding: 16px 2px 18px;
+  border-bottom: 1px solid #ddd;
+}
+.star-story-entry h4 {
+  margin: 0 0 3px;
+  font-size: 20px;
+}
+.star-story-stars {
+  font-size: 15px;
+  color: #555;
+}
+.star-story-key {
+  margin-top: 3px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.star-story-entry p {
+  max-width: 780px;
+  margin: 9px 0 0;
+  line-height: 1.55;
+}
+.star-story-source {
+  margin-left: 5px;
   color: #666;
   font-size: 12px;
   white-space: nowrap;
