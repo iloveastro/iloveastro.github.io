@@ -804,3 +804,73 @@ input[type='range']::-moz-range-thumb {
 .star-name-choice:focus-within .star-name-select {
   display: inline-block;
 }
+
+
+
+/* Misc hub and Analemma */
+.misc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.misc-card {
+  width: 100%;
+  min-height: 112px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  background: #fff;
+  text-align: left;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.misc-card:hover { background: #fafafa; }
+.misc-card strong { font-size: 18px; }
+.misc-card span { color: #555; line-height: 1.35; }
+.misc-back-controls { margin: 0 0 8px; }
+
+.analemma-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.analemma-controls { min-width: 0; }
+.analemma-buttons { margin-top: 12px; }
+.analemma-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 12px;
+}
+.analemma-stats .stat span {
+  display: block;
+  font-size: 12px;
+  color: #555;
+}
+.analemma-stats .stat strong {
+  margin-top: 2px;
+  font-size: 17px;
+}
+.analemma-views {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 14px;
+  align-items: start;
+}
+.analemma-views canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #fff;
+  border: 1px solid #111;
+}
+.analemma-legend { grid-column: 1 / -1; margin-top: -4px; }
+@media (max-width: 1000px) {
+  .analemma-views { grid-template-columns: 1fr; }
+}
+@media (max-width: 850px) {
+  .analemma-layout { grid-template-columns: 1fr; gap: 8px; }
+  .analemma-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -420,7 +420,8 @@
     { id: 'dso', title: 'DSOs' },
     { id: 'timer', title: '88 Timer' },
     { id: 'atlas', title: 'Atlas' },
-    { id: 'tables', title: 'Tables' }
+    { id: 'tables', title: 'Tables' },
+    { id: 'misc', title: 'Misc' }
   ];
 
   let activeGame = 'skyguessr';
@@ -456,6 +457,11 @@
         state.blinkOn = true;
       }
     });
+    const analemmaState = states.analemma;
+    if (analemmaState && analemmaState.timer) {
+      clearInterval(analemmaState.timer);
+      analemmaState.timer = null;
+    }
   }
   function switchGame(id) {
     cleanupTransientGameState();
@@ -5942,6 +5948,338 @@
   }
 
 
+  const MISC_TOOLS = [
+    {
+      id: 'analemma',
+      title: 'Analemma',
+      description: 'Explore the Sun\'s analemma, daily path, altitude and azimuth through the year.',
+      render: renderAnalemma
+    }
+  ];
+
+  const analemmaRad = x => x * Math.PI / 180;
+  const analemmaDeg = x => x * 180 / Math.PI;
+  function analemmaSolar(day) {
+    const g = 2 * Math.PI / 365 * (day - 1);
+    const eot = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+    const dec = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+    return { eot, dec };
+  }
+  function analemmaAltAz(latDeg, timeHours, day) {
+    const s = analemmaSolar(day);
+    const ast = timeHours + s.eot / 60;
+    const H = analemmaRad(15 * (ast - 12));
+    const lat = analemmaRad(latDeg);
+    const dec = s.dec;
+    const sinAlt = Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H);
+    const alt = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
+    const y = -Math.sin(H) * Math.cos(dec);
+    const x = Math.sin(dec) * Math.cos(lat) - Math.cos(dec) * Math.sin(lat) * Math.cos(H);
+    let az = Math.atan2(y, x);
+    if (az < 0) az += 2 * Math.PI;
+    return { alt: analemmaDeg(alt), az: analemmaDeg(az), dec: analemmaDeg(dec), eot: s.eot };
+  }
+  function analemmaDayToDate(day) {
+    const d = new Date(Date.UTC(2025, 0, 1));
+    d.setUTCDate(day);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function analemmaFmtTime(hours) {
+    let h = ((hours % 24) + 24) % 24;
+    let hh = Math.floor(h);
+    let mm = Math.round((h - hh) * 60);
+    if (mm === 60) { hh = (hh + 1) % 24; mm = 0; }
+    return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+  }
+
+  function renderMisc() {
+    const state = states.misc || (states.misc = { view: 'home' });
+    const selectedTool = MISC_TOOLS.find(tool => tool.id === state.view);
+    if (selectedTool) {
+      selectedTool.render();
+      return;
+    }
+    app.innerHTML = `<h2>Misc</h2><p class="small">Small astronomy tools and collections.</p><div class="misc-grid">${MISC_TOOLS.map(tool => `<button type="button" class="misc-card" data-misc-tool="${esc(tool.id)}"><strong>${esc(tool.title)}</strong><span>${esc(tool.description)}</span></button>`).join('')}</div>`;
+    document.querySelectorAll('[data-misc-tool]').forEach(button => button.addEventListener('click', () => {
+      state.view = button.dataset.miscTool;
+      renderMisc();
+    }));
+  }
+
+  function renderAnalemma() {
+    const miscState = states.misc || (states.misc = { view: 'analemma' });
+    const state = states.analemma || (states.analemma = {
+      lat: 1.35,
+      time: 12,
+      day: 80,
+      dailyPath: true,
+      showBelow: false,
+      labels: true,
+      timer: null
+    });
+    miscState.view = 'analemma';
+
+    app.innerHTML = `<div class="controls misc-back-controls"><button type="button" id="miscBack">← Misc</button></div>
+      <h2>Analemma</h2>
+      <p class="small">Sun position through the year at a fixed local mean solar time.</p>
+      <div class="analemma-layout">
+        <aside class="panel analemma-controls">
+          <label for="analemmaLat">Latitude</label>
+          <div class="slider-text-row"><input id="analemmaLat" type="range" min="-90" max="90" step="0.5" value="${state.lat}"><input id="analemmaLatNumber" type="number" min="-90" max="90" step="0.5" value="${state.lat}"></div>
+          <div id="analemmaLatValue" class="small"></div>
+
+          <label for="analemmaTime">Local mean solar time</label>
+          <div class="slider-text-row"><input id="analemmaTime" type="range" min="0" max="24" step="0.05" value="${state.time}"><input id="analemmaTimeNumber" type="number" min="0" max="24" step="0.05" value="${state.time}"></div>
+          <div id="analemmaTimeValue" class="small"></div>
+
+          <label for="analemmaDay">Day of year</label>
+          <div class="slider-text-row"><input id="analemmaDay" type="range" min="1" max="365" step="1" value="${state.day}"><input id="analemmaDayNumber" type="number" min="1" max="365" step="1" value="${state.day}"></div>
+          <div id="analemmaDayValue" class="small"></div>
+
+          <label class="checkline"><input id="analemmaDailyPath" type="checkbox" ${state.dailyPath ? 'checked' : ''}><span>Show Sun's daily path</span></label>
+          <label class="checkline"><input id="analemmaBelow" type="checkbox" ${state.showBelow ? 'checked' : ''}><span>Show below-horizon points on rectangular plot</span></label>
+          <label class="checkline"><input id="analemmaLabels" type="checkbox" ${state.labels ? 'checked' : ''}><span>Label equinoxes and solstices</span></label>
+
+          <div class="controls analemma-buttons"><button type="button" id="analemmaPlay">play year</button><button type="button" id="analemmaPause">pause</button><button type="button" id="analemmaSingapore">Singapore</button><button type="button" id="analemmaReset">reset</button></div>
+
+          <div class="analemma-stats">
+            <div class="stat"><span>solar declination</span><strong id="analemmaDec"></strong></div>
+            <div class="stat"><span>equation of time</span><strong id="analemmaEot"></strong></div>
+            <div class="stat"><span>altitude</span><strong id="analemmaAlt"></strong></div>
+            <div class="stat"><span>azimuth</span><strong id="analemmaAz"></strong></div>
+          </div>
+          <p class="small">Uses the same standard NOAA-style approximation as the reference explorer. Time is local mean solar time; the year is represented by 365 days.</p>
+        </aside>
+        <section class="analemma-views">
+          <div class="panel">
+            <h3>Altitude–azimuth plot</h3>
+            <canvas id="analemmaSky" width="900" height="620" aria-label="analemma altitude-azimuth plot"></canvas>
+            <p class="small">Azimuth runs north → east → south → west. Altitude runs from −30° to 90°.</p>
+          </div>
+          <div class="panel">
+            <h3>Circular horizon view</h3>
+            <canvas id="analemmaHorizon" width="700" height="700" aria-label="analemma circular horizon view"></canvas>
+            <p class="small">Outer circle = horizon; centre = zenith. N is at the top, E right, S bottom and W left.</p>
+          </div>
+          <p class="small analemma-legend">Black curve = analemma at the selected time. Dashed grey curve = the Sun's daily path on the selected date. Red dot = selected date.</p>
+        </section>
+      </div>`;
+
+    const sky = $('#analemmaSky'), ctx = sky.getContext('2d');
+    const horizon = $('#analemmaHorizon'), hctx = horizon.getContext('2d');
+    const latSlider = $('#analemmaLat'), latNumber = $('#analemmaLatNumber');
+    const timeSlider = $('#analemmaTime'), timeNumber = $('#analemmaTimeNumber');
+    const daySlider = $('#analemmaDay'), dayNumber = $('#analemmaDayNumber');
+
+    function setLat(value) {
+      const n = Math.max(-90, Math.min(90, Number(value)));
+      if (!Number.isFinite(n)) return;
+      state.lat = n;
+      latSlider.value = String(n); latNumber.value = String(n);
+      updateRangeVisual(latSlider);
+      draw();
+    }
+    function setTime(value) {
+      const n = Math.max(0, Math.min(24, Number(value)));
+      if (!Number.isFinite(n)) return;
+      state.time = n;
+      timeSlider.value = String(n); timeNumber.value = String(n);
+      updateRangeVisual(timeSlider);
+      draw();
+    }
+    function setDay(value) {
+      const n = Math.max(1, Math.min(365, Math.round(Number(value))));
+      if (!Number.isFinite(n)) return;
+      state.day = n;
+      daySlider.value = String(n); dayNumber.value = String(n);
+      updateRangeVisual(daySlider);
+      draw();
+    }
+
+    function mapX(az) { return 64 + az / 360 * (sky.width - 88); }
+    function mapY(alt) { return 24 + (90 - alt) / 120 * (sky.height - 78); }
+    function drawLine(points, colour, width = 2, dash = []) {
+      ctx.save();
+      ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.setLineDash(dash); ctx.beginPath();
+      let started = false, prev = null;
+      for (const p of points) {
+        if (!p) { started = false; prev = null; continue; }
+        if (prev !== null && Math.abs(p.az - prev) > 180) started = false;
+        const x = mapX(p.az), y = mapY(p.alt);
+        if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+        prev = p.az;
+      }
+      ctx.stroke(); ctx.restore();
+    }
+    function horizonPoint(az, alt) {
+      const cx = horizon.width / 2, cy = horizon.height / 2, R = Math.min(horizon.width, horizon.height) * 0.42;
+      const rho = R * (90 - alt) / 90, a = analemmaRad(az);
+      return { x: cx + rho * Math.sin(a), y: cy - rho * Math.cos(a) };
+    }
+    function drawHorizonLine(points, colour, width = 2, dash = []) {
+      hctx.save();
+      hctx.strokeStyle = colour; hctx.lineWidth = width; hctx.setLineDash(dash); hctx.beginPath();
+      let started = false, prev = null;
+      for (const p of points) {
+        if (!p || p.alt < 0) { started = false; prev = null; continue; }
+        if (prev !== null && Math.abs(p.az - prev) > 180) started = false;
+        const q = horizonPoint(p.az, p.alt);
+        if (!started) { hctx.moveTo(q.x, q.y); started = true; } else hctx.lineTo(q.x, q.y);
+        prev = p.az;
+      }
+      hctx.stroke(); hctx.restore();
+    }
+    function drawHorizon(now) {
+      const W = horizon.width, H = horizon.height, cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.42;
+      hctx.clearRect(0, 0, W, H); hctx.fillStyle = '#fff'; hctx.fillRect(0, 0, W, H);
+      for (const alt of [0, 15, 30, 45, 60, 75]) {
+        const rr = R * (90 - alt) / 90;
+        hctx.strokeStyle = alt === 0 ? '#777' : '#ddd'; hctx.lineWidth = alt === 0 ? 2 : 1;
+        hctx.beginPath(); hctx.arc(cx, cy, rr, 0, 2 * Math.PI); hctx.stroke();
+        if (alt > 0) {
+          hctx.fillStyle = '#666'; hctx.font = '13px Arial'; hctx.textAlign = 'left'; hctx.textBaseline = 'middle';
+          hctx.fillText(`${alt}°`, cx + 6, cy - rr);
+        }
+      }
+      for (let az = 0; az < 360; az += 45) {
+        const a = analemmaRad(az);
+        hctx.strokeStyle = az % 90 === 0 ? '#aaa' : '#e4e4e4'; hctx.lineWidth = az % 90 === 0 ? 1.4 : 1;
+        hctx.beginPath(); hctx.moveTo(cx, cy); hctx.lineTo(cx + R * Math.sin(a), cy - R * Math.cos(a)); hctx.stroke();
+      }
+      hctx.fillStyle = '#111'; hctx.font = '700 24px Arial'; hctx.textAlign = 'center'; hctx.textBaseline = 'middle';
+      for (const [az, label] of [[0, 'N'], [90, 'E'], [180, 'S'], [270, 'W']]) {
+        const a = analemmaRad(az), rr = R + 30;
+        hctx.fillText(label, cx + rr * Math.sin(a), cy - rr * Math.cos(a));
+      }
+      hctx.font = '600 15px Arial'; hctx.fillStyle = '#555'; hctx.fillText('Z', cx, cy);
+
+      const ana = [];
+      for (let d = 1; d <= 365; d++) ana.push(analemmaAltAz(state.lat, state.time, d));
+      drawHorizonLine(ana, '#111', 4);
+      if (state.dailyPath) {
+        const daily = [];
+        for (let t = 0; t <= 24; t += 0.04) daily.push(analemmaAltAz(state.lat, t, state.day));
+        drawHorizonLine(daily, '#777', 2, [8, 7]);
+      }
+      if (state.labels) {
+        hctx.font = '13px Arial'; hctx.textAlign = 'left'; hctx.textBaseline = 'middle';
+        for (const [d, label] of [[80, 'Mar'], [172, 'Jun'], [266, 'Sep'], [355, 'Dec']]) {
+          const p = analemmaAltAz(state.lat, state.time, d);
+          if (p.alt >= 0) {
+            const q = horizonPoint(p.az, p.alt);
+            hctx.fillStyle = '#111'; hctx.beginPath(); hctx.arc(q.x, q.y, 4, 0, 2 * Math.PI); hctx.fill();
+            hctx.fillStyle = '#333'; hctx.fillText(label, q.x + 8, q.y);
+          }
+        }
+      }
+      if (now.alt >= 0) {
+        const q = horizonPoint(now.az, now.alt);
+        hctx.fillStyle = '#e60012'; hctx.beginPath(); hctx.arc(q.x, q.y, 9, 0, 2 * Math.PI); hctx.fill();
+        hctx.strokeStyle = '#fff'; hctx.lineWidth = 2; hctx.beginPath(); hctx.arc(q.x, q.y, 9, 0, 2 * Math.PI); hctx.stroke();
+      } else {
+        hctx.fillStyle = '#8a2d2d'; hctx.font = '15px Arial'; hctx.textAlign = 'center';
+        hctx.fillText('Selected Sun is below the horizon', cx, H - 18);
+      }
+    }
+    function draw() {
+      const now = analemmaAltAz(state.lat, state.time, state.day);
+      $('#analemmaLatValue').textContent = `${Math.abs(state.lat).toFixed(1)}° ${state.lat >= 0 ? 'N' : 'S'}`;
+      $('#analemmaTimeValue').textContent = analemmaFmtTime(state.time);
+      $('#analemmaDayValue').textContent = `${state.day} · ${analemmaDayToDate(state.day)}`;
+      $('#analemmaDec').textContent = `${now.dec.toFixed(2)}°`;
+      $('#analemmaEot').textContent = `${now.eot >= 0 ? '+' : ''}${now.eot.toFixed(1)} min`;
+      $('#analemmaAlt').textContent = `${now.alt.toFixed(2)}°`;
+      $('#analemmaAz').textContent = `${now.az.toFixed(2)}°`;
+
+      ctx.clearRect(0, 0, sky.width, sky.height); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, sky.width, sky.height);
+      ctx.font = '14px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      for (let az = 0; az <= 360; az += 30) {
+        const x = mapX(az); ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, mapY(90)); ctx.lineTo(x, mapY(-30)); ctx.stroke();
+        ctx.fillStyle = '#666';
+        const labels = { 0: 'N', 90: 'E', 180: 'S', 270: 'W', 360: 'N' };
+        ctx.fillText(labels[az] ?? `${az}°`, x, mapY(-30) + 10);
+      }
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      for (let alt = -30; alt <= 90; alt += 15) {
+        const y = mapY(alt); ctx.strokeStyle = alt === 0 ? '#999' : '#ddd'; ctx.lineWidth = alt === 0 ? 1.8 : 1;
+        ctx.beginPath(); ctx.moveTo(mapX(0), y); ctx.lineTo(mapX(360), y); ctx.stroke();
+        ctx.fillStyle = '#666'; ctx.fillText(`${alt}°`, mapX(0) - 8, y);
+      }
+      const ana = [];
+      for (let d = 1; d <= 365; d++) {
+        const p = analemmaAltAz(state.lat, state.time, d);
+        ana.push((state.showBelow || p.alt >= 0) ? p : null);
+      }
+      drawLine(ana, '#111', 3);
+      if (state.dailyPath) {
+        const path = [];
+        for (let t = 0; t <= 24; t += 0.05) {
+          const p = analemmaAltAz(state.lat, t, state.day);
+          path.push((state.showBelow || p.alt >= 0) ? p : null);
+        }
+        drawLine(path, '#777', 1.5, [7, 6]);
+      }
+      if (state.labels) {
+        ctx.font = '13px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        for (const [d, label] of [[80, 'Mar eqx'], [172, 'Jun sol'], [266, 'Sep eqx'], [355, 'Dec sol']]) {
+          const p = analemmaAltAz(state.lat, state.time, d);
+          if (state.showBelow || p.alt >= 0) {
+            const x = mapX(p.az), y = mapY(p.alt);
+            ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x, y, 4, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = '#333'; ctx.fillText(label, x + 7, y);
+          }
+        }
+      }
+      if (state.showBelow || now.alt >= 0) {
+        const x = mapX(now.az), y = mapY(now.alt);
+        ctx.fillStyle = '#e60012'; ctx.beginPath(); ctx.arc(x, y, 7, 0, 2 * Math.PI); ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 7, 0, 2 * Math.PI); ctx.stroke();
+      } else {
+        ctx.fillStyle = '#8a2d2d'; ctx.textAlign = 'center'; ctx.font = '15px Arial';
+        ctx.fillText('Selected Sun position is below the horizon', sky.width / 2, 38);
+      }
+      ctx.fillStyle = '#222'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '600 16px Arial';
+      ctx.fillText(`Latitude ${Math.abs(state.lat).toFixed(1)}° ${state.lat >= 0 ? 'N' : 'S'} · Fixed time ${analemmaFmtTime(state.time)}`, 72, 34);
+      drawHorizon(now);
+    }
+
+    latSlider.addEventListener('input', () => setLat(latSlider.value));
+    latNumber.addEventListener('change', () => setLat(latNumber.value));
+    timeSlider.addEventListener('input', () => setTime(timeSlider.value));
+    timeNumber.addEventListener('change', () => setTime(timeNumber.value));
+    daySlider.addEventListener('input', () => setDay(daySlider.value));
+    dayNumber.addEventListener('change', () => setDay(dayNumber.value));
+    $('#analemmaDailyPath').addEventListener('change', e => { state.dailyPath = e.target.checked; draw(); });
+    $('#analemmaBelow').addEventListener('change', e => { state.showBelow = e.target.checked; draw(); });
+    $('#analemmaLabels').addEventListener('change', e => { state.labels = e.target.checked; draw(); });
+    $('#analemmaPlay').addEventListener('click', () => {
+      if (state.timer) return;
+      state.timer = setInterval(() => setDay(state.day >= 365 ? 1 : state.day + 1), 45);
+    });
+    $('#analemmaPause').addEventListener('click', () => {
+      if (state.timer) clearInterval(state.timer);
+      state.timer = null;
+    });
+    $('#analemmaSingapore').addEventListener('click', () => { setLat(1.35); setTime(12); setDay(80); });
+    $('#analemmaReset').addEventListener('click', () => {
+      if (state.timer) clearInterval(state.timer);
+      state.timer = null;
+      state.lat = 1.35; state.time = 12; state.day = 80;
+      state.dailyPath = true; state.showBelow = false; state.labels = true;
+      renderAnalemma();
+    });
+    $('#miscBack').addEventListener('click', () => {
+      if (state.timer) clearInterval(state.timer);
+      state.timer = null;
+      miscState.view = 'home';
+      renderMisc();
+    });
+    initRangeVisuals(app);
+    draw();
+  }
+
+
   function render() {
     setShiftEnterAction(null);
     if (activeGame !== 'stars' && activeGame !== 'dso') cleanupTransientGameState();
@@ -5959,6 +6297,7 @@
     else if (activeGame === 'timer') renderTimer();
     else if (activeGame === 'atlas') renderAtlas();
     else if (activeGame === 'tables') renderTables();
+    else if (activeGame === 'misc') renderMisc();
   }
   function finishLaunchThenRender() {
     launchState.active = false;
