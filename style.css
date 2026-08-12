@@ -17,17 +17,13 @@ input, select { width: 100%; max-width: 760px; padding: 7px; border: 1px solid #
 .layout { display: grid; grid-template-columns: minmax(260px, 330px) minmax(0, 1fr); gap: 16px; align-items: start; }
 aside, .panel { border: 1px solid #ccc; padding: 10px; background: white; }
 .prompt { font-size: 19px; margin: 8px 0 10px; }
-.answer-input { margin-top: 8px; }
 .message { min-height: 1.5em; margin: 8px 0; font-weight: 700; }
-.good { color: #006400; }
-.bad { color: #900; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
 .stat { border: 1px solid #ddd; padding: 4px 6px; background: #fafafa; }
 .stat strong { display: block; font-size: 18px; }
 img { max-width: 100%; height: auto; border: 1px solid #ccc; background: white; }
 .chart-img { width: 100%; }
 .controls { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.last-card { margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px; }
 .small { font-size: 13px; color: #555; }
 .pill { display: inline-block; margin: 3px; padding: 3px 6px; border: 1px solid #ddd; background: #fafafa; }
 .atlas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
@@ -38,7 +34,6 @@ table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th, td { border: 1px solid #ccc; padding: 5px; text-align: left; vertical-align: top; }
 th { background: #eee; }
 .hidden { display: none; }
-.kbd { font-family: monospace; border: 1px solid #ccc; padding: 1px 4px; background: #f8f8f8; }
 @media (max-width: 850px) { .layout { grid-template-columns: 1fr; } header { align-items: flex-start; flex-direction: column; } }
 
 .detail-grid { display: grid; grid-template-columns: minmax(280px, 430px) minmax(0, 1fr); gap: 14px; align-items: start; margin: 10px 0; }
@@ -57,10 +52,7 @@ ul { margin-top: 6px; padding-left: 22px; }
 
 
 /* Mobile quiz comfort: keep the answer area compact so the chart/photo sits higher. */
-.answer-details summary { cursor: pointer; font-weight: 700; }
-.answer-details[open] > summary { margin-bottom: 6px; }
 @media (min-width: 851px) {
-  .answer-details[open] > summary { display: none; }
 }
 @media (max-width: 850px) {
   main { padding: 8px; }
@@ -75,21 +67,12 @@ ul { margin-top: 6px; padding-left: 22px; }
   .layout > aside h2 { font-size: 18px; margin-bottom: 6px; }
   .layout > aside label { margin: 5px 0 2px; }
   .layout > aside .prompt { font-size: 16px; margin: 5px 0 6px; }
-  .layout > aside .answer-input { margin-top: 4px; }
   .layout > aside .message { min-height: 0; margin: 4px 0; }
   .layout > aside .controls { margin-top: 5px; }
   .layout > aside .stats { margin-top: 6px; gap: 4px; }
   .layout > aside .stat { padding: 2px 4px; font-size: 12px; }
   .layout > aside .stat strong { font-size: 14px; }
   .layout > .panel { padding: 6px; }
-  .last-card { margin-top: 6px; padding-top: 6px; }
-  .answer-details:not([open]) { border-top: 1px solid #ddd; padding-top: 6px; }
-  .answer-details[open] {
-    max-height: 45vh;
-    overflow: auto;
-    overscroll-behavior: contain;
-  }
-  .answer-details .chart-img { max-height: 40vh; object-fit: contain; }
   .chart-img { display: block; margin: 0 auto; }
 }
 
@@ -183,49 +166,6 @@ input[type='range']::-moz-range-thumb {
 }
 
 
-.zoomable-image { cursor: zoom-in; }
-.image-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(255,255,255,0.96);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  z-index: 1000;
-}
-.image-modal.hidden { display: none; }
-.image-modal-img {
-  max-width: min(96vw, 1400px);
-  max-height: 90vh;
-  width: auto;
-  height: auto;
-  border: 1px solid #333;
-  background: #fff;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-}
-.image-modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 40px;
-  height: 40px;
-  font-size: 28px;
-  line-height: 1;
-  padding: 0;
-  border: 1px solid #333;
-  background: #fff;
-}
-.main-chart-crop {
-  width: 100%;
-  overflow: hidden;
-}
-.main-chart-crop .chart-main-img {
-  display: block;
-  width: 100%;
-  transform: translateY(-8%);
-  margin-bottom: -8%;
-}
 .alpha-pin-hint {
   margin-top: 8px;
   text-align: center;
@@ -673,9 +613,6 @@ input[type='range']::-moz-range-thumb {
 }
 
 
-
-
-
 .guess-mode-row {
   margin: 0.45rem 0 0.65rem;
 }
@@ -687,14 +624,6 @@ input[type='range']::-moz-range-thumb {
 .guess-const-inputs input {
   width: 100%;
 }
-
-
-
-
-
-
-
-
 
 
 #app {
@@ -728,7 +657,6 @@ input[type='range']::-moz-range-thumb {
 }
 
 
-.study-panel { min-height: 320px; }
 .study-card { max-width: 900px; line-height: 1.35; }
 .study-card h3 { margin-top: 0; font-size: 24px; }
 .study-card h4 { margin: 14px 0 6px; }
@@ -757,8 +685,6 @@ input[type='range']::-moz-range-thumb {
 .map-note-controls {
   margin-top: 4px;
 }
-
-
 
 
 .save-menu-panel #scoreBackupText {
@@ -798,74 +724,20 @@ input[type='range']::-moz-range-thumb {
 .object-game-map-panel {
   padding: 10px;
 }
-.object-game-canvas {
-  display: block;
-  width: 100%;
-  height: auto;
-  background: #030306;
-  border: 1px solid #111;
-  border-radius: 10px;
-  cursor: crosshair;
-}
 .object-game-side input {
   width: 100%;
   box-sizing: border-box;
   margin-top: 10px;
 }
-.object-mode-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.object-mode-tabs button {
-  font-size: 12px;
-  padding: 6px 9px;
-}
-.object-mode-tabs button.active {
-  background: #111;
-  color: white;
-  border-color: #111;
-}
-.object-target-box {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin: 8px 0;
-  background: #fafafa;
-}
 .object-result {
   margin: 4px 0 10px;
   font-weight: 700;
-}
-.spectral-strip {
-  display: inline-flex;
-  gap: 3px;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-.spectral-strip span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  border: 1px solid #ddd;
-  font-size: 10px;
-  color: #555;
-}
-.spectral-strip span.active {
-  background: #111;
-  color: white;
-  border-color: #111;
 }
 @media (max-width: 900px) {
   .object-game-layout {
     grid-template-columns: 1fr;
   }
 }
-
 
 
 /* v138 Stars/DSOs use the same square sky-map canvas style as SkyGuessr / Guess Constellation. */
@@ -882,64 +754,14 @@ input[type='range']::-moz-range-thumb {
   justify-content: center;
   align-items: flex-start;
 }
-.object-game-canvas {
-  border: none;
-  border-radius: 0;
-  cursor: crosshair;
-  background: white;
-}
-.object-target-box {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin: 8px 0;
-  background: #fafafa;
-}
 .object-game-side input {
   width: 100%;
   box-sizing: border-box;
   margin-top: 10px;
 }
-.object-mode-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.object-mode-tabs button {
-  font-size: 12px;
-  padding: 6px 9px;
-}
-.object-mode-tabs button.active {
-  background: #111;
-  color: white;
-  border-color: #111;
-}
 .object-result {
   margin: 4px 0 10px;
   font-weight: 700;
-}
-.spectral-strip {
-  display: inline-flex;
-  gap: 3px;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-.spectral-strip span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  border: 1px solid #ddd;
-  font-size: 10px;
-  color: #555;
-}
-.spectral-strip span.active {
-  background: #111;
-  color: white;
-  border-color: #111;
 }
 .sky-layout.sphere-fullscreen #objectGameCanvas {
   width: min(calc(100vw - 380px), calc(100vh - 24px));
@@ -957,25 +779,13 @@ input[type='range']::-moz-range-thumb {
 }
 
 
-
 /* v140 Stars/DSOs dropdown selector cleanup. */
 .object-game-side select {
   width: 100%;
   box-sizing: border-box;
   margin-top: 6px;
 }
-.object-game-side .object-mode-tabs {
-  display: none;
-}
 
-/* v145 object-game cleanup: no raised/boxed target prompt styling. */
-.object-target-box {
-  border: 0 !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  margin: 6px 0 !important;
-  background: transparent !important;
-}
 
 /* v148: conservative common-name chooser for stars in Tables. */
 .star-name-choice {

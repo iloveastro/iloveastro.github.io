@@ -111,32 +111,6 @@
   window.addEventListener('error', () => hideLaunchLoadingOverlay());
   window.addEventListener('unhandledrejection', () => hideLaunchLoadingOverlay());
 
-  function ensureImageModal() {
-    let modal = document.getElementById('imageModal');
-    if (modal) return modal;
-    modal = document.createElement('div');
-    modal.id = 'imageModal';
-    modal.className = 'image-modal hidden';
-    modal.innerHTML = '<button type="button" class="image-modal-close" aria-label="close image">×</button><img class="image-modal-img" alt="enlarged image">';
-    const img = modal.querySelector('.image-modal-img');
-    const close = () => modal.classList.add('hidden');
-    modal.addEventListener('click', e => { if (e.target === modal) close(); });
-    modal.querySelector('.image-modal-close').addEventListener('click', close);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-    modal.openImage = (src, alt='') => { img.src = src; img.alt = alt || 'enlarged image'; modal.classList.remove('hidden'); };
-    document.body.appendChild(modal);
-    return modal;
-  }
-  function enableAnswerImageZoom(root) {
-    const modal = ensureImageModal();
-    root.querySelectorAll('.answer-details img').forEach(img => {
-      img.classList.add('zoomable-image');
-      if (img.dataset.zoomBound) return;
-      img.dataset.zoomBound = '1';
-      img.addEventListener('click', () => modal.openImage(img.currentSrc || img.src, img.alt || 'enlarged image'));
-    });
-  }
-
   window.__iloveastroImgFallback = img => {
     const rest = (img.dataset.fallbacks || '').split('|').filter(Boolean);
     if (!rest.length) return;
@@ -169,10 +143,6 @@
     const paths = chartAssetPaths(c, labelled);
     return `<img class="${esc(cls)}" src="${esc(paths[0])}" data-fallbacks="${esc(paths.slice(1).join('|'))}" onerror="window.__iloveastroImgFallback(this)" loading="lazy" decoding="async" alt="${esc(alt)}">`;
   }
-  function chartPanelImg(c, labelled = false, alt = 'constellation chart') {
-    return `<div class="main-chart-crop">${chartImg(c, labelled, 'chart-img chart-main-img', alt)}</div>`;
-  }
-
   const norm = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   const compact = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
   function oneSubstitutionTypo(a, b) {
@@ -184,13 +154,6 @@
     }
     return edits === 1;
   }
-  const strictAnswers = new Set();
-  function addStrict(v) { const c = compact(v); if (c) strictAnswers.add(c); }
-  DATA.constellations.forEach(c => addStrict(c.name));
-  DATA.stars.forEach(s => { addStrict(s.name); addStrict(s.designation); });
-  DATA.dso.forEach(o => { addStrict(o.code); addStrict(o.commonName); (o.accepted || []).forEach(addStrict); });
-  DATA.dso.forEach(o => addStrict(o.type));
-  DATA.asterisms.forEach(a => addStrict(a.name));
 
   function answerMatches(input, answers) {
     const n = norm(input), c = compact(input);
@@ -198,8 +161,6 @@
     return answers.some(a => norm(a) === n || compact(a) === c);
   }
   const rand = arr => arr[Math.floor(Math.random() * arr.length)];
-  const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
-  const sample = (arr, n) => shuffle(arr.slice()).slice(0, n);
   const byConstellation = (items, key = 'constellation') => {
     const m = new Map();
     items.forEach(item => { if (!m.has(item[key])) m.set(item[key], []); m.get(item[key]).push(item); });
@@ -250,7 +211,6 @@
     if (compact(value) === compact(entry.name)) return;
     if (!Array.isArray(entry.accepted)) entry.accepted = [entry.name, entry.designation].filter(Boolean);
     if (!entry.accepted.some(x => compact(x) === compact(value))) entry.accepted.push(value);
-    addStrict(value);
   }
   function attachSkyStarIdentity(entry, star) {
     if (!entry || !star) return;
@@ -281,8 +241,6 @@
       (group.names || []).forEach(alias => addStarAliasName(samePhysical, alias));
       if (!Number.isFinite(samePhysical.mag) && Number.isFinite(star.mag)) samePhysical.mag = star.mag;
       if (!samePhysical.designation) samePhysical.designation = namedStarDesignationFromSky(star);
-      addStrict(samePhysical.name);
-      addStrict(samePhysical.designation);
       addStarToConstellationMap(samePhysical);
       addStarToConstellationInfo(samePhysical);
       return false;
@@ -293,8 +251,6 @@
       if (group) (group.names || []).forEach(alias => addStarAliasName(existing, alias));
       if (!Number.isFinite(existing.mag) && Number.isFinite(star.mag)) existing.mag = star.mag;
       if (!existing.designation) existing.designation = namedStarDesignationFromSky(star);
-      addStrict(existing.name);
-      addStrict(existing.designation);
       addStarToConstellationMap(existing);
       addStarToConstellationInfo(existing);
       return false;
@@ -316,8 +272,6 @@
     attachSkyStarIdentity(entry, star);
     if (group) (group.names || []).forEach(alias => addStarAliasName(entry, alias));
     DATA.stars.push(entry);
-    addStrict(entry.name);
-    addStrict(entry.designation);
     addStarToConstellationMap(entry);
     addStarToConstellationInfo(entry);
     return true;
@@ -344,7 +298,6 @@
       .then(() => { hideLoadingOverlay(); thenRender(); })
       .catch(() => { hideLoadingOverlay(); app.innerHTML = `<h2>${esc(title)}</h2><section class="panel"><p>could not load the extended star catalogue.</p></section>`; });
   }
-  const dsoByConst = byConstellation(DATA.dso);
   const chartsByName = new Map();
   DATA.charts.forEach(c => { if (!chartsByName.has(c.name)) chartsByName.set(c.name, []); chartsByName.get(c.name).push(c); });
   const chartByName = new Map();
@@ -623,207 +576,7 @@
     setupSaveMenu();
   }
 
-  function makeQuestionGame(gameId, title, options) {
-    const state = states[gameId] || (states[gameId] = { current: null, answered: false, last: '', mode: options.defaultMode || '', next: () => newQuestion() });
-    function newQuestion() {
-      const modeEl = document.querySelector(`#${gameId}Mode`);
-      if (modeEl) state.mode = modeEl.value;
-      state.current = options.make(state.mode);
-      state.answered = false;
-      draw();
-      setTimeout(() => { const input = document.querySelector(`#${gameId}Input`); if (input) input.focus(); }, 0);
-    }
-    function correct(inputValue) {
-      if (!state.current || state.answered) return;
-      if (!answerMatches(inputValue, state.current.answers)) return;
-      state.answered = true;
-      record(gameId, true);
-      state.last = state.current.card(true);
-      newQuestion(); // continuous mode: previous card remains while the next question starts
-    }
-    function reveal() {
-      if (!state.current || state.answered) return;
-      state.answered = true;
-      record(gameId, false);
-      state.last = state.current.card(false);
-      newQuestion();
-    }
-    function skipQuestion() {
-      newQuestion(); // no score change
-    }
-    function draw(revealed = null) {
-      const q = state.current || options.make(state.mode);
-      state.current = q;
-      app.innerHTML = '';
-      const aside = el('aside');
-      aside.append(el('h2', {}, [document.createTextNode(title)]));
-      if (options.modes) {
-        const select = el('select', { id: `${gameId}Mode`, onchange: () => newQuestion() });
-        options.modes.forEach(m => select.append(el('option', { value: m.id, ...(m.id === (state.mode || options.defaultMode) ? { selected: 'selected' } : {}) }, [document.createTextNode(m.label)])));
-        aside.append(el('label', {}, [document.createTextNode('mode'), select]));
-      }
-      aside.append(el('div', { class: 'prompt', html: q.prompt }));
-      const input = el('input', { id: `${gameId}Input`, class: 'answer-input', autocomplete: 'off', placeholder: q.placeholder || 'type answer' });
-      input.addEventListener('input', () => correct(input.value));
-      input.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && e.shiftKey) {
-          e.preventDefault();
-          e.stopPropagation();
-          reveal();
-        } else if (e.key === 'Enter') e.preventDefault();
-      });
-      aside.append(input);
-      aside.append(el('div', { class: 'message' }));
-      aside.append(el('div', { class: 'controls' }, [
-        el('button', { type: 'button', onclick: reveal }, [document.createTextNode('reveal')]),
-        el('button', { type: 'button', onclick: skipQuestion }, [document.createTextNode('next')])
-      ]));
-      aside.append(el('div', { class: 'stats', html: formatScore(gameId) }));
-      const main = el('section', { class: `panel ${state.last ? 'study-panel' : ''}`, html: state.last || q.visual || '' });
-      app.append(el('div', { class: 'layout' }, [aside, main]));
-      enableAnswerImageZoom(app);
-    }
-    state.next = newQuestion;
-    setShiftEnterAction(reveal);
-    if (!state.current) newQuestion(); else draw();
-  }
 
-  function infoCard(name) {
-    const info = DATA.constellationInfo[name];
-    if (!info) return '';
-    const stars = info.stars.length ? info.stars.slice(0, 8).map(s => `${starWikiLink(s)}${s.designation ? ` (${esc(s.designation)})` : ''}`).join(', ') : 'none in current star list';
-    const dsos = info.dsos.length ? info.dsos.slice(0, 10).map(o => `${esc(o.code)}${o.commonName ? ` ${esc(o.commonName)}` : ''}`).join(', ') : 'none in Messier/Caldwell list';
-    return `<h3>${esc(name)}</h3><p>${esc(info.myth)}</p><p><strong>asterisms:</strong> ${info.asterisms.length ? info.asterisms.map(esc).join(', ') : 'none listed yet'}</p><p><strong>stars:</strong> ${stars}</p><p><strong>DSOs:</strong> ${dsos}</p>`;
-  }
-  const starModes = [
-    { id: 'starToConstellation', label: 'star -> constellation' },
-    { id: 'designationToStar', label: 'designation -> star' },
-    { id: 'starToDesignation', label: 'star -> designation' },
-    { id: 'constellationToStar', label: 'constellation -> any listed star' },
-    { id: 'groupToConstellation', label: 'star group -> constellation' }
-  ];
-  function starQuestion(mode) {
-    if (mode === 'groupToConstellation') return starGroupQuestion();
-    const s = rand(DATA.stars);
-    if (mode === 'designationToStar') {
-      const pool = DATA.stars.filter(x => String(x.designation || '').trim());
-      const picked = rand(pool.length ? pool : DATA.stars);
-      return {
-        prompt: `Which named star has designation <strong>${esc(picked.designation)}</strong>?`,
-        answers: starAnswerNames(picked),
-        study: starStudyHtml(picked),
-        card: () => starStudyHtml(picked)
-      };
-    }
-    if (mode === 'starToDesignation') {
-      const pool = DATA.stars.filter(x => String(x.designation || '').trim());
-      const picked = rand(pool.length ? pool : DATA.stars);
-      return {
-        prompt: `What is the designation of <strong>${starWikiLink(picked)}</strong>?`,
-        answers: [picked.designation],
-        study: starStudyHtml(picked),
-        card: () => starStudyHtml(picked)
-      };
-    }
-    if (mode === 'constellationToStar') {
-      const entries = [...starByConst.entries()].filter(([, arr]) => arr.length >= 1);
-      const [constellation, arr] = rand(entries);
-      return {
-        prompt: `Name any listed star in <strong>${esc(constellation)}</strong>.`,
-        answers: arr.flatMap(starAnswerNames),
-        study: `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>Named stars to remember:</p><ul>${arr.slice(0, 18).map(x => `<li>${starWikiLink(x)}${x.designation ? ` — ${esc(x.designation)}` : ''}</li>`).join('')}</ul>${infoCard(constellation)}</div>`,
-        card: () => `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>${arr.map(x => `${starWikiLink(x)} (${esc(x.designation)})`).join(', ')}</p>${infoCard(constellation)}</div>`
-      };
-    }
-    return {
-      prompt: `Which constellation contains <strong>${starWikiLink(s)}</strong>?`,
-      answers: [s.constellation],
-      study: starStudyHtml(s),
-      card: () => starStudyHtml(s)
-    };
-  }
-  function starGroupQuestion() {
-    const entries = [...starByConst.entries()].filter(([, arr]) => arr.length >= 2);
-    const [constellation, arr] = rand(entries);
-    const picks = sample(arr, Math.min(4, arr.length));
-    const listHtml = arr.slice(0, 18).map(x => `<li>${starWikiLink(x)}${x.designation ? ` — ${esc(x.designation)}` : ''}</li>`).join('');
-    return {
-      prompt: `These stars are in which constellation?<br><strong>${picks.map(x => starWikiLink(x)).join(', ')}</strong>`,
-      answers: [constellation],
-      study: `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>Use these named stars as memory anchors:</p><ul>${listHtml}</ul>${infoCard(constellation)}</div>`,
-      card: () => `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>${arr.map(x => `${starWikiLink(x)} (${esc(x.designation)})`).join(', ')}</p>${infoCard(constellation)}</div>`
-    };
-  }
-
-  const dsoModes = [
-    { id: 'codeToName', label: 'number -> common name' },
-    { id: 'nameToCode', label: 'common name -> number' },
-    { id: 'objectToConstellation', label: 'object -> constellation' },
-    { id: 'constellationToObject', label: 'constellation -> any listed DSO' },
-    { id: 'objectToType', label: 'object -> type' },
-    { id: 'groupToConstellation', label: 'DSO group -> constellation' }
-  ];
-  const namedDSO = DATA.dso.filter(o => o.commonName && o.commonName.trim());
-  function dsoLabel(o) { return dsoLabelLinked(o); }
-  function dsoAnswers(o) { return [o.code, o.commonName].filter(Boolean); }
-  function dsoQuestion(mode) {
-    if (mode === 'groupToConstellation') return dsoGroupQuestion();
-    if (mode === 'nameToCode') {
-      const o = rand(namedDSO);
-      return {
-        prompt: `What catalogue number is <strong>${dsoWikiLink(o, o.commonName)}</strong>?`,
-        answers: [o.code],
-        study: dsoStudyHtml(o),
-        card: () => dsoStudyHtml(o)
-      };
-    }
-    if (mode === 'objectToConstellation') {
-      const o = rand(DATA.dso);
-      return {
-        prompt: `Which constellation contains <strong>${dsoLabel(o)}</strong>?`,
-        answers: [o.constellation],
-        study: dsoStudyHtml(o),
-        card: () => dsoStudyHtml(o)
-      };
-    }
-    if (mode === 'constellationToObject') {
-      const entries = [...dsoByConst.entries()].filter(([, arr]) => arr.length >= 1);
-      const [constellation, arr] = rand(entries);
-      return {
-        prompt: `Name any listed Messier/Caldwell object in <strong>${esc(constellation)}</strong>.`,
-        answers: arr.flatMap(dsoAnswers),
-        study: `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>Listed DSOs:</p><ul>${arr.map(o => `<li>${dsoLabel(o)} — ${esc(o.type)}</li>`).join('')}</ul>${infoCard(constellation)}</div>`,
-        card: () => `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>${arr.map(dsoLabel).join(', ')}</p>${infoCard(constellation)}</div>`
-      };
-    }
-    if (mode === 'objectToType') {
-      const o = rand(DATA.dso);
-      return {
-        prompt: `What type of object is <strong>${dsoLabel(o)}</strong>?`,
-        answers: [o.type],
-        study: dsoStudyHtml(o),
-        card: () => dsoStudyHtml(o)
-      };
-    }
-    const o = rand(namedDSO);
-    return {
-      prompt: `What common name is associated with <strong>${esc(o.code)}</strong>?`,
-      answers: [o.commonName],
-      study: dsoStudyHtml(o),
-      card: () => dsoStudyHtml(o)
-    };
-  }
-  function dsoGroupQuestion() {
-    const entries = [...dsoByConst.entries()].filter(([, arr]) => arr.length >= 2);
-    const [constellation, arr] = rand(entries);
-    const picks = sample(arr, Math.min(5, arr.length));
-    return {
-      prompt: `These DSOs belong to which constellation?<br><strong>${picks.map(dsoLabel).join(', ')}</strong>`,
-      answers: [constellation],
-      study: `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>Listed DSOs:</p><ul>${arr.map(o => `<li>${dsoLabel(o)} — ${esc(o.type)}</li>`).join('')}</ul>${infoCard(constellation)}</div>`,
-      card: () => `<div class="study-card"><h3>${constellationWikiLink(constellation)}</h3><p>${arr.map(dsoLabel).join(', ')}</p>${infoCard(constellation)}</div>`
-    };
-  }
   let timerState = states.timer || (states.timer = { running: false, seconds: 0, interval: null, found: new Set(), next: () => {}, hintName: null, hintLength: 0, disqualified: false });
   if (!timerState.found) timerState.found = new Set();
   if (!('hintName' in timerState)) timerState.hintName = null;
@@ -1584,16 +1337,6 @@
 
     return skyDsoCoordinatePromise;
   }
-  function hashUnit(value, salt = '') {
-    const s = String(value || '') + '|' + salt;
-    let h = 2166136261;
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0) / 4294967296;
-  }
-
   function dsoCategory(o) {
     const t = compact(o.type || '');
     if (t.includes('nebula')) return 'nebula';
@@ -1775,288 +1518,6 @@
     return `<a class="${className}" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(label)}</a>`;
   }
 
-  const STAR_STUDY_INFO = {
-    Alphard: {
-      meaning: 'Arabic “the solitary one”, fitting its isolated position in Hydra.',
-      location: 'Bright orange heart/body star of Hydra, sitting alone below Cancer and Leo.',
-      facts: ['Hydra’s brightest star.', 'A useful anchor because much of Hydra is faint and stretched across a huge part of the sky.']
-    },
-    Mizar: {
-      meaning: 'Usually traced to Arabic for a belt/apron or waist-covering.',
-      location: 'Middle star in the handle of the Big Dipper, in Ursa Major.',
-      facts: ['Mizar and nearby Alcor are a classic naked-eye eyesight test.', 'Mizar was one of the first telescopic double stars to be widely noted.']
-    },
-    Alcor: {
-      meaning: 'Arabic name traditionally associated with the Mizar companion.',
-      location: 'Tiny naked-eye companion beside Mizar in the Big Dipper handle.',
-      facts: ['Often paired with Mizar as a visual acuity test.', 'Remember it as the “little rider” next to the handle star.']
-    },
-    Alpheratz: {
-      meaning: 'Arabic-derived name traditionally meaning the horse’s navel.',
-      location: 'Corner star shared visually by Andromeda and the Great Square of Pegasus.',
-      facts: ['Officially Alpha Andromedae, but it completes the Great Square pattern.', 'A good anchor for finding both Andromeda and Pegasus.']
-    },
-    Markab: {
-      meaning: 'Arabic-derived name meaning saddle or something ridden.',
-      location: 'One of the Great Square of Pegasus corner stars.',
-      facts: ['Useful for recognizing the lower/right part of the Great Square depending on map orientation.']
-    },
-    Scheat: {
-      meaning: 'Arabic-derived name associated with the upper arm/leg of Pegasus.',
-      location: 'One of the Great Square of Pegasus corner stars.',
-      facts: ['A red giant, so it is a good color contrast target near the Great Square.']
-    },
-    Algenib: {
-      meaning: 'Arabic-derived name meaning side or flank.',
-      location: 'One of the Great Square of Pegasus corner stars.',
-      facts: ['Forms the Square corner opposite Alpheratz in many chart orientations.']
-    },
-    Sirius: {
-      meaning: 'Greek “scorching” or “glowing”.',
-      location: 'Brilliant nose/chest anchor of Canis Major below Orion.',
-      facts: ['Brightest star in the night sky.', 'Part of the Winter Triangle with Procyon and Betelgeuse.']
-    },
-    Procyon: {
-      meaning: 'Greek “before the dog”, because it rises before Sirius for many northern observers.',
-      location: 'Main star of tiny Canis Minor.',
-      facts: ['Part of the Winter Triangle.', 'Good stepping stone between Orion/Gemini and Hydra/Monoceros.']
-    },
-    Betelgeuse: {
-      meaning: 'Name history is messy, but it is usually traced through Arabic forms associated with Orion’s hand/arm.',
-      location: 'Orange-red shoulder of Orion.',
-      facts: ['A red supergiant.', 'Part of the Winter Triangle with Sirius and Procyon.']
-    },
-    Rigel: {
-      meaning: 'Arabic-derived name meaning foot or leg.',
-      location: 'Bright blue-white foot of Orion, opposite Betelgeuse.',
-      facts: ['One of the brightest stars in the sky.', 'Contrasts strongly with orange Betelgeuse.']
-    },
-    Bellatrix: {
-      meaning: 'Latin “female warrior”.',
-      location: 'Orion shoulder opposite Betelgeuse.',
-      facts: ['Helps frame Orion’s upper body.']
-    },
-    Saiph: {
-      meaning: 'Arabic-derived name associated with a sword.',
-      location: 'Orion knee/foot opposite Rigel.',
-      facts: ['One of the four bright outer stars of Orion.']
-    },
-    Alnitak: {
-      meaning: 'Arabic-derived name meaning girdle/belt.',
-      location: 'One end of Orion’s Belt.',
-      facts: ['Near the Flame Nebula and Horsehead Nebula region.']
-    },
-    Alnilam: {
-      meaning: 'Arabic-derived name meaning string of pearls.',
-      location: 'Middle star of Orion’s Belt.',
-      facts: ['A very luminous blue supergiant.']
-    },
-    Mintaka: {
-      meaning: 'Arabic-derived name meaning belt.',
-      location: 'One end of Orion’s Belt.',
-      facts: ['Useful for finding Orion’s celestial-equator region.']
-    },
-    Meissa: {
-      meaning: 'Arabic-derived name associated with the shining/white spot.',
-      location: 'Head of Orion above the Belt.',
-      facts: ['Marks Orion’s head in many line figures.']
-    },
-    Aldebaran: {
-      meaning: 'Arabic “the follower”, because it appears to follow the Pleiades across the sky.',
-      location: 'Orange eye of Taurus in the Hyades V.',
-      facts: ['Foreground star, not a physical member of the Hyades cluster.', 'Good anchor for Taurus.']
-    },
-    Elnath: {
-      meaning: 'Arabic-derived name meaning the butting/horn point.',
-      location: 'Northern horn tip of Taurus; also used as a context corner of Auriga.',
-      facts: ['Officially Beta Tauri.', 'A shared-looking star between Taurus and Auriga line figures.']
-    },
-    Capella: {
-      meaning: 'Latin “little she-goat”.',
-      location: 'Bright anchor star of Auriga.',
-      facts: ['One of the brightest northern stars.', 'The small nearby Auriga triangle is traditionally the Kids.']
-    },
-    Vega: {
-      meaning: 'Arabic-derived name from a phrase for a falling or swooping eagle.',
-      location: 'Brilliant star in Lyra, near the small parallelogram.',
-      facts: ['Part of the Summer Triangle.', 'Historically important as a photometric standard.']
-    },
-    Deneb: {
-      meaning: 'Arabic “tail”.',
-      location: 'Tail of Cygnus and top of the Northern Cross.',
-      facts: ['Part of the Summer Triangle.', 'A very luminous supergiant.']
-    },
-    Sadr: {
-      meaning: 'Arabic “chest”.',
-      location: 'Central crossing star of Cygnus.',
-      facts: ['The Cygnus wings and body meet at Sadr.']
-    },
-    Albireo: {
-      meaning: 'Historical name of uncertain/garbled origin.',
-      location: 'Head/beak end of Cygnus.',
-      facts: ['Famous colorful double star through a telescope.']
-    },
-    Altair: {
-      meaning: 'Arabic-derived name meaning the flying eagle.',
-      location: 'Central bright star of Aquila.',
-      facts: ['Part of the Summer Triangle.', 'A fast-rotating nearby star.']
-    },
-    Arcturus: {
-      meaning: 'Greek “guardian of the bear”.',
-      location: 'Bright orange base/anchor of Boötes, found by arcing from the Big Dipper handle.',
-      facts: ['One of the brightest stars in the sky.', 'Mnemonic: arc to Arcturus, then speed on to Spica.']
-    },
-    Spica: {
-      meaning: 'Latin “ear of grain”.',
-      location: 'Bright star in Virgo, held like a wheat ear in traditional imagery.',
-      facts: ['A close binary system.', 'Mnemonic target after arcing to Arcturus.']
-    },
-    Regulus: {
-      meaning: 'Latin “little king”.',
-      location: 'Heart/base star of Leo’s Sickle.',
-      facts: ['Very close to the ecliptic, so the Moon and planets pass near it.']
-    },
-    Denebola: {
-      meaning: 'Arabic-derived “tail of the lion”.',
-      location: 'Tail star of Leo.',
-      facts: ['Helps complete Leo’s body away from the Sickle.']
-    },
-    Antares: {
-      meaning: 'Greek “rival of Ares/Mars”, referring to its reddish color.',
-      location: 'Red heart of Scorpius.',
-      facts: ['A red supergiant.', 'The Scorpius head/fork and tail can be built from Antares.']
-    },
-    Shaula: {
-      meaning: 'Arabic-derived name referring to the raised tail/stinger.',
-      location: 'One of the bright stars in Scorpius’s stinger.',
-      facts: ['Often paired visually with Lesath at the stinger.']
-    },
-    Lesath: {
-      meaning: 'Name history is uncertain, traditionally associated with the sting region.',
-      location: 'One of Scorpius’s stinger stars beside Shaula.',
-      facts: ['Completes the bright stinger pair.']
-    },
-    Fomalhaut: {
-      meaning: 'Arabic “mouth of the fish”.',
-      location: 'Bright mouth star of Piscis Austrinus.',
-      facts: ['A lonely bright autumn star for northern observers.']
-    },
-    Polaris: {
-      meaning: 'The Pole Star.',
-      location: 'End of the Little Dipper handle, very close to the north celestial pole.',
-      facts: ['Useful for finding north and estimating latitude in the northern hemisphere.']
-    },
-    Dubhe: {
-      meaning: 'Arabic-derived name associated with the bear.',
-      location: 'Outer bowl pointer star of the Big Dipper.',
-      facts: ['Dubhe and Merak point toward Polaris.']
-    },
-    Merak: {
-      meaning: 'Arabic-derived name associated with the bear’s flank/loins.',
-      location: 'Lower outer bowl pointer star of the Big Dipper.',
-      facts: ['Merak plus Dubhe forms the pointer line to Polaris.']
-    },
-    Alkaid: {
-      meaning: 'Arabic-derived name associated with the leader/chief.',
-      location: 'End star of the Big Dipper handle.',
-      facts: ['Marks the tail tip of Ursa Major in the common asterism.']
-    },
-    Achernar: {
-      meaning: 'Arabic “end of the river”.',
-      location: 'Far southern end of Eridanus.',
-      facts: ['A bright, rapidly rotating star.']
-    },
-    Canopus: {
-      meaning: 'Traditionally associated with the pilot Canopus from Greek legend.',
-      location: 'Brilliant star in Carina.',
-      facts: ['Second-brightest star in the night sky.']
-    },
-    Rigil_Kentaurus: {
-      meaning: 'Arabic-derived “foot of the Centaur”.',
-      location: 'Bright Alpha Centauri system in Centaurus.',
-      facts: ['Nearest known star system to the Sun.', 'A key pointer region toward Crux with Hadar.']
-    },
-    Hadar: {
-      meaning: 'Arabic-derived name often rendered as ground or settled place.',
-      location: 'Bright Beta Centauri near Alpha Centauri.',
-      facts: ['Together with Alpha Centauri, points toward Crux.']
-    },
-    Acrux: {
-      meaning: 'Modern contraction of Alpha Crucis.',
-      location: 'Bottom/southern bright star of Crux in many sky views.',
-      facts: ['Brightest star of the Southern Cross.']
-    },
-    Gacrux: {
-      meaning: 'Modern contraction of Gamma Crucis.',
-      location: 'Red top/northern star of Crux.',
-      facts: ['Orange-red color makes it easy to distinguish in Crux.']
-    },
-    Rasalhague: {
-      meaning: 'Arabic “head of the serpent-charmer”.',
-      location: 'Top/head star of Ophiuchus.',
-      facts: ['Primary anchor for recognizing Ophiuchus above Scorpius.']
-    },
-    Sabik: {
-      meaning: 'Arabic-derived name of uncertain exact sense.',
-      location: 'Lower Ophiuchus body star near the Scorpius border.',
-      facts: ['A useful lower anchor in Ophiuchus line figures.']
-    },
-    Nunki: {
-      meaning: 'Ancient name transmitted through Babylonian/modern usage.',
-      location: 'Bright star in the handle/side of the Sagittarius Teapot.',
-      facts: ['Helps recognize the Teapot asterism.']
-    },
-    Kaus_Australis: {
-      meaning: 'Arabic/Latin hybrid: “southern bow”.',
-      location: 'Bright lower bow/teapot star of Sagittarius.',
-      facts: ['Brightest star in Sagittarius.']
-    },
-    Kaus_Media: {
-      meaning: 'Arabic/Latin hybrid: “middle bow”.',
-      location: 'Middle bow/teapot star of Sagittarius.',
-      facts: ['Part of the Sagittarius Teapot core.']
-    },
-    Kaus_Borealis: {
-      meaning: 'Arabic/Latin hybrid: “northern bow”.',
-      location: 'Top of the Sagittarius Teapot.',
-      facts: ['Good marker above the dense Milky Way center region.']
-    },
-    Rukbat: {
-      meaning: 'Arabic-derived name meaning knee.',
-      location: 'Alpha Sagittarius, below the Teapot area.',
-      facts: ['Despite being Alpha, it is not the brightest Sagittarius star.']
-    },
-    Algol: {
-      meaning: 'Arabic-derived “the demon”.',
-      location: 'Perseus star marking Medusa’s head in traditional imagery.',
-      facts: ['Prototype eclipsing binary; its brightness visibly varies.']
-    },
-    Mirfak: {
-      meaning: 'Arabic-derived name associated with the elbow.',
-      location: 'Bright central star of Perseus.',
-      facts: ['Anchor of the Alpha Persei moving group region.']
-    },
-    Mira: {
-      meaning: 'Latin “wonderful”.',
-      location: 'Long-period variable star in Cetus.',
-      facts: ['Famous pulsating variable that can become naked-eye bright and then fade.']
-    },
-    Hamal: {
-      meaning: 'Arabic “lamb” or “ram”.',
-      location: 'Brightest star of Aries.',
-      facts: ['Simple anchor for the small Aries line.']
-    },
-    Enif: {
-      meaning: 'Arabic “nose”.',
-      location: 'Nose/muzzle star of Pegasus.',
-      facts: ['Bright orange supergiant away from the Great Square.']
-    }
-  };
-  STAR_STUDY_INFO['Rigil Kentaurus'] = STAR_STUDY_INFO.Rigil_Kentaurus;
-  STAR_STUDY_INFO['Kaus Australis'] = STAR_STUDY_INFO.Kaus_Australis;
-  STAR_STUDY_INFO['Kaus Media'] = STAR_STUDY_INFO.Kaus_Media;
-  STAR_STUDY_INFO['Kaus Borealis'] = STAR_STUDY_INFO.Kaus_Borealis;
-
   const STAR_WIKI_TITLES = {
     Rigil_Kentaurus: 'Alpha Centauri',
     'Rigil Kentaurus': 'Alpha Centauri',
@@ -2071,36 +1532,6 @@
     'Kaus Media': 'Kaus Media',
     Kaus_Borealis: 'Kaus Borealis',
     'Kaus Borealis': 'Kaus Borealis'
-  };
-
-  const DSO_STUDY_INFO = {
-    M1: { importance: 'The Crab Nebula is the remnant of the supernova recorded in 1054.', memory: 'Think “crab = exploded star remains” in Taurus.', facts: ['Contains the Crab Pulsar.', 'One of the best-known supernova remnants.'] },
-    M13: { importance: 'The Great Globular Cluster in Hercules, one of the showpiece northern globular clusters.', memory: 'Hercules has the famous “great” globular cluster.', facts: ['Contains hundreds of thousands of old stars.', 'A classic small-telescope target.'] },
-    M31: { importance: 'The Andromeda Galaxy, the nearest large spiral galaxy to the Milky Way.', memory: 'Andromeda = our big neighboring galaxy.', facts: ['Visible to the naked eye under dark skies.', 'On a future timescale it will interact/merge with the Milky Way.'] },
-    M33: { importance: 'The Triangulum Galaxy, a nearby face-on spiral galaxy.', memory: 'Triangulum has the other famous Local Group spiral.', facts: ['Lower surface brightness than M31.', 'Good example of why total magnitude can be misleading.'] },
-    M42: { importance: 'The Orion Nebula, a nearby massive star-forming region.', memory: 'Orion’s sword contains the bright nebula.', facts: ['Contains the Trapezium young star cluster.', 'One of the easiest nebulae to observe.'] },
-    M44: { importance: 'The Beehive Cluster, a bright open cluster in Cancer.', memory: 'Cancer’s faint body hides a bright “beehive”.', facts: ['Also called Praesepe.', 'Visible to the naked eye as a hazy patch.'] },
-    M45: { importance: 'The Pleiades, a bright young open cluster in Taurus.', memory: 'Small blue cluster above the Taurus face; Aldebaran follows it across the sky.', facts: ['Also called the Seven Sisters.', 'Associated with reflection nebulosity in photographs.'] },
-    C41: { importance: 'The Hyades, the V-shaped open cluster forming the face of Taurus.', memory: 'Hyades = Taurus face; Pleiades = compact cluster nearby but separate.', facts: ['Aldebaran lies in front of it and is not a true cluster member.', 'One of the nearest open clusters.'] },
-    M57: { importance: 'The Ring Nebula in Lyra, a classic planetary nebula.', memory: 'Tiny smoke ring near Lyra’s parallelogram.', facts: ['Formed by a dying Sun-like star shedding outer layers.'] },
-    M27: { importance: 'The Dumbbell Nebula in Vulpecula, a bright planetary nebula.', memory: 'Dumbbell shape = planetary nebula, not a galaxy.', facts: ['Large and bright for a planetary nebula.'] },
-    M51: { importance: 'The Whirlpool Galaxy, a spiral galaxy interacting with a companion.', memory: 'Whirlpool = spiral arms + companion.', facts: ['A classic example of a grand-design spiral galaxy.'] },
-    M81: { importance: 'Bode’s Galaxy, a bright spiral galaxy in Ursa Major.', memory: 'Pair it with M82 in the same sky region.', facts: ['Nearby bright galaxy group member.'] },
-    M82: { importance: 'The Cigar Galaxy, a starburst galaxy in Ursa Major.', memory: 'Cigar = elongated, disturbed starburst neighbor of M81.', facts: ['Strong star formation activity gives it a dramatic appearance.'] },
-    M104: { importance: 'The Sombrero Galaxy, known for its bright bulge and dark dust lane.', memory: 'Sombrero shape = hat-like galaxy profile.', facts: ['Edge-on appearance makes the dust lane prominent.'] },
-    M8: { importance: 'The Lagoon Nebula, a bright emission nebula in Sagittarius.', memory: 'Sagittarius Milky Way region is rich in nebulae.', facts: ['A star-forming region visible in binoculars under dark skies.'] },
-    M20: { importance: 'The Trifid Nebula, combining emission, reflection, and dark nebulosity.', memory: 'Trifid = split into three dark lanes.', facts: ['Near the Lagoon Nebula in Sagittarius.'] },
-    M16: { importance: 'The Eagle Nebula, famous for the Pillars of Creation region.', memory: 'Eagle = pillars/star formation.', facts: ['Contains a young open cluster and emission nebula.'] },
-    M17: { importance: 'The Omega/Swan Nebula, a bright emission nebula in Sagittarius.', memory: 'Omega/Swan shape in the Milky Way region.', facts: ['Another major Sagittarius star-forming nebula.'] },
-    M22: { importance: 'A large bright globular cluster in Sagittarius.', memory: 'Sagittarius has both nebulae and globular clusters.', facts: ['One of the brightest globular clusters in the sky.'] },
-    M11: { importance: 'The Wild Duck Cluster in Scutum, a rich open cluster.', memory: 'Small Scutum, memorable Wild Duck cluster.', facts: ['Very dense-looking for an open cluster.'] },
-    M6: { importance: 'The Butterfly Cluster in Scorpius.', memory: 'Butterfly shape near Scorpius’s tail region.', facts: ['Bright open cluster near the Milky Way.'] },
-    M7: { importance: 'Ptolemy’s Cluster, a bright open cluster in Scorpius.', memory: 'Large obvious cluster near Scorpius’s stinger.', facts: ['Known since antiquity.'] },
-    M3: { importance: 'A bright globular cluster in Canes Venatici.', memory: 'One of the classic northern globulars.', facts: ['Rich old stellar system in the Galactic halo.'] },
-    M5: { importance: 'A bright globular cluster in Serpens.', memory: 'Serpens has one of the best globulars.', facts: ['Large and prominent in telescopes.'] },
-    M15: { importance: 'A dense globular cluster in Pegasus.', memory: 'Pegasus has a compact bright globular away from the Square.', facts: ['Known for a very dense core.'] },
-    M87: { importance: 'Giant elliptical galaxy in Virgo.', memory: 'Virgo cluster giant; famous black-hole image galaxy.', facts: ['Hosts a powerful relativistic jet.', 'Central galaxy of the Virgo Cluster region.'] },
-    M97: { importance: 'The Owl Nebula in Ursa Major.', memory: 'Owl = planetary nebula face/eyes in photos.', facts: ['Planetary nebula, not an animal-shaped star cluster.'] }
   };
 
   const DSO_WIKI_TITLES = {
@@ -2129,10 +1560,6 @@
     M104: 'Sombrero Galaxy'
   };
 
-  function starStudyInfo(star) {
-    const name = String(star?.name || '').trim();
-    return STAR_STUDY_INFO[name] || STAR_STUDY_INFO[name.replace(/\s+/g, '_')] || null;
-  }
   function starWikiTitle(star) {
     const preferred = starPreferredName(star);
     const primary = String(star?.name || '').trim();
@@ -2176,46 +1603,6 @@
   }
   function dsoLabelPlain(o) {
     return o.commonName ? `${o.code} - ${o.commonName}` : o.code;
-  }
-  function dsoLabelLinked(o) {
-    return o.commonName ? `${esc(o.code)} - ${dsoWikiLink(o, o.commonName)}` : dsoWikiLink(o, o.code);
-  }
-
-  function starStudyHtml(star) {
-    if (!star) return '';
-    const info = starStudyInfo(star);
-    const designation = star.designation || '';
-    const constellation = star.constellation || '';
-    const facts = info?.facts || [];
-    const note = String(star.note || '').trim();
-    return `<div class="study-card star-study"><h3>${starWikiLink(star)}</h3>
-      <dl class="study-facts">
-        <dt>designation</dt><dd>${esc(designation || 'not listed')}</dd>
-        <dt>constellation</dt><dd>${constellationWikiLink(constellation)}</dd>
-        <dt>location cue</dt><dd>${esc(info?.location || note || `A named star in ${constellation}.`)}</dd>
-        <dt>name meaning</dt><dd>${esc(info?.meaning || 'meaning not added yet')}</dd>
-      </dl>
-      ${facts.length ? `<h4>memory hooks</h4><ul>${facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
-      ${note && (!info || note !== info.location) ? `<p class="small"><strong>existing note:</strong> ${esc(note)}</p>` : ''}
-      ${infoCard(constellation)}
-    </div>`;
-  }
-
-  function dsoStudyHtml(o) {
-    if (!o) return '';
-    const info = DSO_STUDY_INFO[o.code] || {};
-    const facts = info.facts || [];
-    return `<div class="study-card dso-study"><h3>${dsoWikiLink(o, dsoLabelPlain(o))}</h3>
-      <dl class="study-facts">
-        <dt>catalogue</dt><dd>${esc(o.code)}</dd>
-        <dt>type</dt><dd>${esc(o.type)}</dd>
-        <dt>constellation</dt><dd>${constellationWikiLink(o.constellation)}</dd>
-        <dt>why it matters</dt><dd>${esc(info.importance || `A listed ${o.type} in ${o.constellation}.`)}</dd>
-        <dt>memory cue</dt><dd>${esc(info.memory || `${o.code}${o.commonName ? ` is ${o.commonName}` : ''}: ${o.type} in ${o.constellation}.`)}</dd>
-      </dl>
-      ${facts.length ? `<h4>interesting facts</h4><ul>${facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
-      ${infoCard(o.constellation)}
-    </div>`;
   }
   function uniqueSkyStars(list) {
     const seen = new Set();
@@ -5796,21 +5183,6 @@
     const sin = Math.sin(ang) || 1e-9;
     const rr = (ang / (fovRad / 2)) * radius;
     return { x: canvas.width / 2 + rr * x / sin, y: canvas.height / 2 - rr * y / sin, z };
-  }
-
-  function objectGameVecFromCanvasPoint(x, y, basis, radius, fovRad, canvas) {
-    const sx = x - canvas.width / 2;
-    const sy = canvas.height / 2 - y;
-    const rho = Math.hypot(sx, sy);
-    if (rho > radius) return null;
-    if (rho < 1e-9) return basis.f;
-    const ang = (rho / radius) * (fovRad / 2);
-    const tx = sx / rho, ty = sy / rho;
-    return normVec({
-      x: basis.f.x * Math.cos(ang) + (basis.right.x * tx + basis.up.x * ty) * Math.sin(ang),
-      y: basis.f.y * Math.cos(ang) + (basis.right.y * tx + basis.up.y * ty) * Math.sin(ang),
-      z: basis.f.z * Math.cos(ang) + (basis.right.z * tx + basis.up.z * ty) * Math.sin(ang)
-    });
   }
 
   function objectGameRotateVector(v, axis, angle) {
