@@ -6383,7 +6383,9 @@
       loading: false,
       error: '',
       magLimit: defaultMag(),
-      orient: null
+      orient: null,
+      highlightZodiacs: false,
+      galacticPlane: false
     });
     miscState.view = 'projection-distortion';
 
@@ -6394,6 +6396,10 @@
           <h3>Celestial sphere</h3>
           <canvas id="projectionSphereCanvas" width="820" height="820" tabindex="0" aria-label="rotatable celestial sphere defining right ascension and declination axes"></canvas>
           <div class="controls projection-reset-controls"><button type="button" id="projectionVernalEquinox">Vernal Equinox</button></div>
+          <div class="projection-display-controls">
+            <label class="checkline"><input id="projectionZodiacs" type="checkbox" ${state.highlightZodiacs ? 'checked' : ''}><span>highlight zodiacs</span></label>
+            <label class="checkline"><input id="projectionGalacticPlane" type="checkbox" ${state.galacticPlane ? 'checked' : ''}><span>galactic plane</span></label>
+          </div>
         </section>
         <section class="panel projection-map-panel">
           <h3>Rectangular projection</h3>
@@ -6496,6 +6502,56 @@
         y: geometry.top + (90 - dec) / 180 * geometry.height
       };
     }
+    const projectionZodiacConstellations = new Set([
+      'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+      'Libra', 'Scorpius', 'Ophiuchus', 'Sagittarius', 'Capricornus', 'Aquarius', 'Pisces'
+    ]);
+    const projectionZodiacPurple = '#8a2be2';
+    function drawProjectionZodiacSphereLines(basis, radius) {
+      if (!state.highlightZodiacs || !skyConstellationLineDb || !skyHipByNumber.size) return;
+      const edgeMarginRad = Math.min(Math.PI, Math.max(35 * Math.PI / 180, fovRad * 0.45));
+      const projectLineEndpoint = v => {
+        const z = dot(v, basis.f);
+        const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+        if (ang > Math.min(Math.PI, fovRad / 2 + edgeMarginRad)) return null;
+        const x = dot(v, basis.right), y = dot(v, basis.up);
+        const sin = Math.sin(ang) || 1e-9;
+        const rr = (ang / (fovRad / 2)) * radius;
+        return { x: sphere.width / 2 + rr * x / sin, y: sphere.height / 2 - rr * y / sin };
+      };
+      sctx.save();
+      sctx.strokeStyle = projectionZodiacPurple;
+      sctx.globalAlpha = 0.96;
+      sctx.lineWidth = 2.5;
+      sctx.lineCap = 'round';
+      sctx.lineJoin = 'round';
+      skyLineEdgesFromDatabase().forEach(edge => {
+        if (!projectionZodiacConstellations.has(edge.constellation)) return;
+        if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
+        const p1 = projectLineEndpoint(edge.s1.v);
+        const p2 = projectLineEndpoint(edge.s2.v);
+        if (!p1 || !p2) return;
+        sctx.beginPath();
+        sctx.moveTo(p1.x, p1.y);
+        sctx.lineTo(p2.x, p2.y);
+        sctx.stroke();
+      });
+      sctx.restore();
+    }
+    function projectionGalacticPlaneVectors() {
+      const out = [];
+      for (let l = 0; l <= 360; l += 2) {
+        const r = l * Math.PI / 180;
+        const gx = Math.cos(r), gy = Math.sin(r);
+        out.push(normVec({
+          x: -0.0548755604 * gx + 0.4941094279 * gy,
+          y: -0.8734370902 * gx - 0.4448296300 * gy,
+          z: -0.4838350155 * gx + 0.7469822445 * gy
+        }));
+      }
+      return out;
+    }
+    const projectionGalacticPlane = projectionGalacticPlaneVectors();
     function drawSphere(basis) {
       sctx.clearRect(0, 0, sphere.width, sphere.height);
       sctx.fillStyle = '#fff';
@@ -6517,6 +6573,7 @@
       sctx.clip();
 
       if (skyConstellationLineDb) drawSkyAsterismLines(sctx, sphereProject, basis, radius, fovRad);
+      drawProjectionZodiacSphereLines(basis, radius);
       const visible = skyStars.filter(star => star.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
       sctx.fillStyle = '#111';
       visible.forEach(star => {
@@ -6607,6 +6664,29 @@
       mctx.lineTo(g.left + g.width, my(0));
       mctx.stroke();
 
+      if (state.galacticPlane) {
+        mctx.save();
+        mctx.strokeStyle = '#888';
+        mctx.globalAlpha = 0.82;
+        mctx.lineWidth = 3.2;
+        mctx.setLineDash([13, 9]);
+        mctx.lineCap = 'butt';
+        for (let i = 1; i < projectionGalacticPlane.length; i++) {
+          const a = newCoordinates(projectionGalacticPlane[i - 1], basis);
+          const b = newCoordinates(projectionGalacticPlane[i], basis);
+          let ra1 = a.ra, ra2 = b.ra;
+          if (ra2 - ra1 > 180) ra2 -= 360;
+          else if (ra2 - ra1 < -180) ra2 += 360;
+          [-360, 0, 360].forEach(shift => {
+            mctx.beginPath();
+            mctx.moveTo(mx(ra1 + shift), my(a.dec));
+            mctx.lineTo(mx(ra2 + shift), my(b.dec));
+            mctx.stroke();
+          });
+        }
+        mctx.restore();
+      }
+
       if (skyConstellationLineDb) {
         mctx.strokeStyle = '#777';
         mctx.globalAlpha = 0.76;
@@ -6628,6 +6708,28 @@
           });
         });
         mctx.globalAlpha = 1;
+
+        if (state.highlightZodiacs) {
+          mctx.strokeStyle = projectionZodiacPurple;
+          mctx.globalAlpha = 0.96;
+          mctx.lineWidth = 2.5;
+          skyLineEdgesFromDatabase().forEach(edge => {
+            if (!projectionZodiacConstellations.has(edge.constellation)) return;
+            if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
+            const a = newCoordinates(edge.s1.v, basis);
+            const b = newCoordinates(edge.s2.v, basis);
+            let ra1 = a.ra, ra2 = b.ra;
+            if (ra2 - ra1 > 180) ra2 -= 360;
+            else if (ra2 - ra1 < -180) ra2 += 360;
+            [-360, 0, 360].forEach(shift => {
+              mctx.beginPath();
+              mctx.moveTo(mx(ra1 + shift), my(a.dec));
+              mctx.lineTo(mx(ra2 + shift), my(b.dec));
+              mctx.stroke();
+            });
+          });
+          mctx.globalAlpha = 1;
+        }
       }
 
       const visible = skyStars.filter(star => star.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
@@ -6749,6 +6851,14 @@
       };
       scheduleDraw();
       focusSphere();
+    });
+    $('#projectionZodiacs').addEventListener('change', e => {
+      state.highlightZodiacs = e.target.checked;
+      scheduleDraw();
+    });
+    $('#projectionGalacticPlane').addEventListener('change', e => {
+      state.galacticPlane = e.target.checked;
+      scheduleDraw();
     });
 
     if (!state.loaded && !state.loading) {

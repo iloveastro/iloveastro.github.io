@@ -1207,3 +1207,8 @@ input[type='range'].analemma-orbit-range::-moz-range-thumb {
   .projection-distortion-layout { grid-template-columns: 1fr; }
   .projection-sphere-panel { max-width: 760px; width: 100%; margin: 0 auto; }
 }
+.projection-display-controls {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
