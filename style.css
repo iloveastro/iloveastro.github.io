@@ -1200,16 +1200,17 @@ input[type='range'].analemma-orbit-range::-moz-range-thumb {
 }
 #projectionSphereCanvas:active { cursor: grabbing; }
 .projection-reset-controls {
-  margin-top: 8px;
+  margin-top: 7px;
 }
 .projection-rotate-controls {
-  margin-top: 6px;
+  margin-top: 4px;
 }
-.projection-rotate-controls button {
-  flex: 1 1 0;
-  min-width: 0;
+#projectionRectCanvas {
+  aspect-ratio: 2 / 1;
+  touch-action: none;
+  cursor: grab;
 }
-#projectionRectCanvas { aspect-ratio: 2 / 1; }
+#projectionRectCanvas:active { cursor: grabbing; }
 @media (max-width: 1000px) {
   .projection-distortion-layout { grid-template-columns: 1fr; }
   .projection-sphere-panel { max-width: 760px; width: 100%; margin: 0 auto; }

@@ -6397,8 +6397,8 @@
           <canvas id="projectionSphereCanvas" width="820" height="820" tabindex="0" aria-label="rotatable celestial sphere defining right ascension and declination axes"></canvas>
           <div class="controls projection-reset-controls"><button type="button" id="projectionVernalEquinox">Vernal Equinox</button></div>
           <div class="controls projection-rotate-controls">
-            <button type="button" id="projectionRotateCCW">↶ rotate</button>
-            <button type="button" id="projectionRotateCW">rotate ↷</button>
+            <button type="button" id="projectionRotateCCW">↺ rotate</button>
+            <button type="button" id="projectionRotateCW">rotate ↻</button>
           </div>
           <div class="projection-display-controls">
             <label class="checkline"><input id="projectionZodiacs" type="checkbox" ${state.highlightZodiacs ? 'checked' : ''}><span>highlight zodiacs</span></label>
@@ -6407,7 +6407,7 @@
         </section>
         <section class="panel projection-map-panel">
           <h3>Rectangular projection</h3>
-          <canvas id="projectionRectCanvas" width="1240" height="620" aria-label="rectangular projection in the rotated coordinate system"></canvas>
+          <canvas id="projectionRectCanvas" width="1240" height="620" tabindex="0" aria-label="rectangular projection in the rotated coordinate system"></canvas>
         </section>
       </div>`;
 
@@ -6420,6 +6420,9 @@
 
     function focusSphere() {
       try { sphere.focus({ preventScroll: true }); } catch { sphere.focus(); }
+    }
+    function focusMap() {
+      try { map.focus({ preventScroll: true }); } catch { map.focus(); }
     }
     function makeBasisFromForward(forward) {
       const f = normVec(forward);
@@ -6556,6 +6559,36 @@
       return out;
     }
     const projectionGalacticPlane = projectionGalacticPlaneVectors();
+    function drawProjectionGalacticPlaneSphere(basis, radius) {
+      if (!state.galacticPlane) return;
+      const project = v => {
+        const z = dot(v, basis.f);
+        const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+        if (ang > fovRad / 2 + 5 * Math.PI / 180) return null;
+        const x = dot(v, basis.right), y = dot(v, basis.up);
+        const sin = Math.sin(ang) || 1e-9;
+        const rr = (ang / (fovRad / 2)) * radius;
+        return { x: sphere.width / 2 + rr * x / sin, y: sphere.height / 2 - rr * y / sin };
+      };
+      sctx.save();
+      sctx.strokeStyle = '#888';
+      sctx.globalAlpha = 0.82;
+      sctx.lineWidth = 3.2;
+      sctx.setLineDash([13, 9]);
+      sctx.lineCap = 'butt';
+      let previous = null;
+      projectionGalacticPlane.forEach(v => {
+        const point = project(v);
+        if (point && previous) {
+          sctx.beginPath();
+          sctx.moveTo(previous.x, previous.y);
+          sctx.lineTo(point.x, point.y);
+          sctx.stroke();
+        }
+        previous = point;
+      });
+      sctx.restore();
+    }
     function drawSphere(basis) {
       sctx.clearRect(0, 0, sphere.width, sphere.height);
       sctx.fillStyle = '#fff';
@@ -6578,6 +6611,7 @@
 
       if (skyConstellationLineDb) drawSkyAsterismLines(sctx, sphereProject, basis, radius, fovRad);
       drawProjectionZodiacSphereLines(basis, radius);
+      drawProjectionGalacticPlaneSphere(basis, radius);
       const visible = skyStars.filter(star => star.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
       sctx.fillStyle = '#111';
       visible.forEach(star => {
@@ -6803,6 +6837,15 @@
       rotateBasis(ensureOrientation().right, pitch);
       scheduleDraw();
     }
+    function moveFromMap(dx, dy, multiplier = 1) {
+      const b = ensureOrientation();
+      const g = mapGeometry();
+      const yaw = -dx * (2 * Math.PI / g.width) * multiplier;
+      const pitch = -dy * (Math.PI / g.height) * multiplier;
+      rotateBasis(b.up, yaw);
+      rotateBasis(ensureOrientation().right, pitch);
+      scheduleDraw();
+    }
 
     const activePointers = new Map();
     let lastDrag = null;
@@ -6843,6 +6886,47 @@
       if (['ArrowDown', 's', 'S'].includes(e.key)) { e.preventDefault(); move(0, step); }
     });
 
+    const mapPointers = new Map();
+    let mapLastDrag = null;
+    function finishMapPointer(e) {
+      mapPointers.delete(e.pointerId);
+      mapLastDrag = mapPointers.size === 1 ? [...mapPointers.values()][0] : null;
+    }
+    map.addEventListener('pointerdown', e => {
+      mapPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      map.setPointerCapture(e.pointerId);
+      focusMap();
+      if (mapPointers.size === 1) mapLastDrag = { x: e.clientX, y: e.clientY };
+    });
+    map.addEventListener('pointermove', e => {
+      if (!mapPointers.has(e.pointerId)) return;
+      mapPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (mapPointers.size !== 1) return;
+      const point = mapPointers.get(e.pointerId);
+      if (!mapLastDrag) { mapLastDrag = point; return; }
+      moveFromMap(point.x - mapLastDrag.x, point.y - mapLastDrag.y, 1);
+      mapLastDrag = point;
+    });
+    map.addEventListener('pointerup', finishMapPointer);
+    map.addEventListener('pointercancel', finishMapPointer);
+    map.addEventListener('lostpointercapture', finishMapPointer);
+    map.addEventListener('wheel', e => {
+      e.preventDefault();
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? map.height : 1;
+      const dx = (e.deltaX || (e.shiftKey ? e.deltaY : 0)) * unit;
+      const dy = (e.shiftKey ? 0 : e.deltaY) * unit;
+      moveFromMap(dx, dy, 0.45);
+    }, { passive: false });
+    map.addEventListener('keydown', e => {
+      const g = mapGeometry();
+      const xStep = g.width / (e.shiftKey ? 18 : 36);
+      const yStep = g.height / (e.shiftKey ? 9 : 18);
+      if (['ArrowLeft', 'a', 'A'].includes(e.key)) { e.preventDefault(); moveFromMap(-xStep, 0); }
+      if (['ArrowRight', 'd', 'D'].includes(e.key)) { e.preventDefault(); moveFromMap(xStep, 0); }
+      if (['ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); moveFromMap(0, -yStep); }
+      if (['ArrowDown', 's', 'S'].includes(e.key)) { e.preventDefault(); moveFromMap(0, yStep); }
+    });
+
     $('#miscBack').addEventListener('click', () => {
       miscState.view = 'home';
       renderMisc();
@@ -6856,16 +6940,62 @@
       scheduleDraw();
       focusSphere();
     });
-    $('#projectionRotateCCW').addEventListener('click', () => {
-      rotateBasis(ensureOrientation().f, -15 * Math.PI / 180);
+    function rotateProjectionFrame(direction, degrees = 3) {
+      rotateBasis(ensureOrientation().f, direction * degrees * Math.PI / 180);
       scheduleDraw();
-      focusSphere();
-    });
-    $('#projectionRotateCW').addEventListener('click', () => {
-      rotateBasis(ensureOrientation().f, 15 * Math.PI / 180);
-      scheduleDraw();
-      focusSphere();
-    });
+    }
+    function wireProjectionRotateHold(button, direction) {
+      let holdTimer = null;
+      let holdRaf = null;
+      let holding = false;
+      let pointerActive = false;
+      let previousTime = 0;
+      function stopHold() {
+        if (holdTimer !== null) clearTimeout(holdTimer);
+        if (holdRaf !== null) cancelAnimationFrame(holdRaf);
+        holdTimer = null;
+        holdRaf = null;
+        holding = false;
+        previousTime = 0;
+      }
+      function frame(now) {
+        if (!holding || !button.isConnected) { stopHold(); return; }
+        if (!previousTime) previousTime = now;
+        const dt = Math.min(40, now - previousTime);
+        previousTime = now;
+        rotateProjectionFrame(direction, 0.026 * dt);
+        holdRaf = requestAnimationFrame(frame);
+      }
+      button.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        pointerActive = true;
+        holding = false;
+        try { button.setPointerCapture(e.pointerId); } catch {}
+        holdTimer = setTimeout(() => {
+          holdTimer = null;
+          if (!pointerActive || !button.isConnected) return;
+          holding = true;
+          holdRaf = requestAnimationFrame(frame);
+        }, 240);
+      });
+      button.addEventListener('pointerup', e => {
+        const wasHolding = holding;
+        pointerActive = false;
+        stopHold();
+        if (!wasHolding) rotateProjectionFrame(direction, 3);
+        focusSphere();
+        try { button.releasePointerCapture(e.pointerId); } catch {}
+      });
+      button.addEventListener('pointercancel', () => { pointerActive = false; stopHold(); });
+      button.addEventListener('lostpointercapture', () => { pointerActive = false; stopHold(); });
+      button.addEventListener('click', e => {
+        if (e.detail !== 0) return;
+        rotateProjectionFrame(direction, 3);
+        focusSphere();
+      });
+    }
+    wireProjectionRotateHold($('#projectionRotateCCW'), -1);
+    wireProjectionRotateHold($('#projectionRotateCW'), 1);
     $('#projectionZodiacs').addEventListener('change', e => {
       state.highlightZodiacs = e.target.checked;
       scheduleDraw();
