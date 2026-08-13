@@ -6396,6 +6396,10 @@
           <h3>Celestial sphere</h3>
           <canvas id="projectionSphereCanvas" width="820" height="820" tabindex="0" aria-label="rotatable celestial sphere defining right ascension and declination axes"></canvas>
           <div class="controls projection-reset-controls"><button type="button" id="projectionVernalEquinox">Vernal Equinox</button></div>
+          <div class="controls projection-rotate-controls">
+            <button type="button" id="projectionRotateCCW">↶ rotate</button>
+            <button type="button" id="projectionRotateCW">rotate ↷</button>
+          </div>
           <div class="projection-display-controls">
             <label class="checkline"><input id="projectionZodiacs" type="checkbox" ${state.highlightZodiacs ? 'checked' : ''}><span>highlight zodiacs</span></label>
             <label class="checkline"><input id="projectionGalacticPlane" type="checkbox" ${state.galacticPlane ? 'checked' : ''}><span>galactic plane</span></label>
@@ -6504,9 +6508,9 @@
     }
     const projectionZodiacConstellations = new Set([
       'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-      'Libra', 'Scorpius', 'Ophiuchus', 'Sagittarius', 'Capricornus', 'Aquarius', 'Pisces'
+      'Libra', 'Scorpius', 'Sagittarius', 'Capricornus', 'Aquarius', 'Pisces'
     ]);
-    const projectionZodiacPurple = '#8a2be2';
+    const projectionZodiacPurple = '#b79be8';
     function drawProjectionZodiacSphereLines(basis, radius) {
       if (!state.highlightZodiacs || !skyConstellationLineDb || !skyHipByNumber.size) return;
       const edgeMarginRad = Math.min(Math.PI, Math.max(35 * Math.PI / 180, fovRad * 0.45));
@@ -6849,6 +6853,16 @@
         right: vecFromRaDec(90, 0),
         up: vecFromRaDec(0, 90)
       };
+      scheduleDraw();
+      focusSphere();
+    });
+    $('#projectionRotateCCW').addEventListener('click', () => {
+      rotateBasis(ensureOrientation().f, -15 * Math.PI / 180);
+      scheduleDraw();
+      focusSphere();
+    });
+    $('#projectionRotateCW').addEventListener('click', () => {
+      rotateBasis(ensureOrientation().f, 15 * Math.PI / 180);
       scheduleDraw();
       focusSphere();
     });
