@@ -6391,8 +6391,9 @@
       <h2>Projection Distortion</h2>
       <div class="projection-distortion-layout">
         <section class="panel projection-sphere-panel">
-          <h3>Celestial sphere · 120° FOV</h3>
-          <canvas id="projectionSphereCanvas" width="820" height="820" tabindex="0" aria-label="rotatable celestial sphere defining new right ascension and declination axes"></canvas>
+          <h3>Celestial sphere</h3>
+          <canvas id="projectionSphereCanvas" width="820" height="820" tabindex="0" aria-label="rotatable celestial sphere defining right ascension and declination axes"></canvas>
+          <div class="controls projection-reset-controls"><button type="button" id="projectionVernalEquinox">Vernal Equinox</button></div>
         </section>
         <section class="panel projection-map-panel">
           <h3>Rectangular projection</h3>
@@ -6556,12 +6557,9 @@
       sctx.font = '15px Arial';
       sctx.textBaseline = 'middle';
       sctx.textAlign = 'right';
-      sctx.fillText('new RA', sphere.width / 2 + radius - 10, sphere.height / 2 - 14);
+      sctx.fillText('RA', sphere.width / 2 + radius - 10, sphere.height / 2 - 14);
       sctx.textAlign = 'left';
-      sctx.fillText('new Dec', sphere.width / 2 + 10, sphere.height / 2 - radius + 16);
-      sctx.fillStyle = '#555';
-      sctx.font = '13px Arial';
-      sctx.fillText('new VE', sphere.width / 2 + 10, sphere.height / 2 + 15);
+      sctx.fillText('Dec', sphere.width / 2 + 10, sphere.height / 2 - radius + 16);
     }
     function drawRectangularMap(basis) {
       mctx.clearRect(0, 0, map.width, map.height);
@@ -6651,11 +6649,6 @@
       mctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
       mctx.fill();
       mctx.stroke();
-      mctx.fillStyle = '#555';
-      mctx.font = '12px Arial';
-      mctx.textAlign = 'left';
-      mctx.textBaseline = 'bottom';
-      mctx.fillText('new VE', origin.x + 8, origin.y - 5);
       mctx.restore();
 
       mctx.strokeStyle = '#111';
@@ -6673,13 +6666,13 @@
       mctx.font = '14px Arial';
       mctx.textAlign = 'center';
       mctx.textBaseline = 'bottom';
-      mctx.fillText('new RA', g.left + g.width / 2, map.height - 4);
+      mctx.fillText('RA', g.left + g.width / 2, map.height - 4);
       mctx.save();
       mctx.translate(14, g.top + g.height / 2);
       mctx.rotate(-Math.PI / 2);
       mctx.textAlign = 'center';
       mctx.textBaseline = 'top';
-      mctx.fillText('new Dec', 0, 0);
+      mctx.fillText('Dec', 0, 0);
       mctx.restore();
     }
 
@@ -6747,6 +6740,15 @@
     $('#miscBack').addEventListener('click', () => {
       miscState.view = 'home';
       renderMisc();
+    });
+    $('#projectionVernalEquinox').addEventListener('click', () => {
+      state.orient = {
+        f: vecFromRaDec(0, 0),
+        right: vecFromRaDec(90, 0),
+        up: vecFromRaDec(0, 90)
+      };
+      scheduleDraw();
+      focusSphere();
     });
 
     if (!state.loaded && !state.loading) {

@@ -1176,7 +1176,7 @@ input[type='range'].analemma-orbit-range::-moz-range-thumb {
 /* Projection distortion */
 .projection-distortion-layout {
   display: grid;
-  grid-template-columns: minmax(300px, 0.82fr) minmax(500px, 1.35fr);
+  grid-template-columns: minmax(270px, 0.66fr) minmax(560px, 1.55fr);
   gap: 14px;
   align-items: start;
 }
@@ -1199,6 +1199,9 @@ input[type='range'].analemma-orbit-range::-moz-range-thumb {
   cursor: grab;
 }
 #projectionSphereCanvas:active { cursor: grabbing; }
+.projection-reset-controls {
+  margin-top: 8px;
+}
 #projectionRectCanvas { aspect-ratio: 2 / 1; }
 @media (max-width: 1000px) {
   .projection-distortion-layout { grid-template-columns: 1fr; }
