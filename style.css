@@ -1172,3 +1172,35 @@ input[type='range'].analemma-orbit-range::-moz-range-thumb {
     gap: 8px;
   }
 }
+
+/* Projection distortion */
+.projection-distortion-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(500px, 1.35fr);
+  gap: 14px;
+  align-items: start;
+}
+.projection-distortion-layout .panel { min-width: 0; }
+.projection-distortion-layout h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+#projectionSphereCanvas,
+#projectionRectCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+  border: 1px solid #111;
+}
+#projectionSphereCanvas {
+  aspect-ratio: 1 / 1;
+  touch-action: none;
+  cursor: grab;
+}
+#projectionSphereCanvas:active { cursor: grabbing; }
+#projectionRectCanvas { aspect-ratio: 2 / 1; }
+@media (max-width: 1000px) {
+  .projection-distortion-layout { grid-template-columns: 1fr; }
+  .projection-sphere-panel { max-width: 760px; width: 100%; margin: 0 auto; }
+}

@@ -5974,6 +5974,11 @@
       id: 'hevelius-gallery',
       title: 'Hevelius Gallery',
       render: renderHeveliusGallery
+    },
+    {
+      id: 'projection-distortion',
+      title: 'Projection Distortion',
+      render: renderProjectionDistortion
     }
   ];
 
@@ -6368,6 +6373,401 @@
     }, { once: true }));
     wireMiscImageZoom();
     wireMiscTopButton();
+  }
+
+
+  function renderProjectionDistortion() {
+    const miscState = states.misc || (states.misc = { view: 'projection-distortion' });
+    const state = states.projectionDistortion || (states.projectionDistortion = {
+      loaded: false,
+      loading: false,
+      error: '',
+      magLimit: defaultMag(),
+      orient: null
+    });
+    miscState.view = 'projection-distortion';
+
+    app.innerHTML = `<div class="controls misc-back-controls"><button type="button" id="miscBack">← Misc</button></div>
+      <h2>Projection Distortion</h2>
+      <div class="projection-distortion-layout">
+        <section class="panel projection-sphere-panel">
+          <h3>Celestial sphere · 120° FOV</h3>
+          <canvas id="projectionSphereCanvas" width="820" height="820" tabindex="0" aria-label="rotatable celestial sphere defining new right ascension and declination axes"></canvas>
+        </section>
+        <section class="panel projection-map-panel">
+          <h3>Rectangular projection</h3>
+          <canvas id="projectionRectCanvas" width="1240" height="620" aria-label="rectangular projection in the rotated coordinate system"></canvas>
+        </section>
+      </div>`;
+
+    const sphere = $('#projectionSphereCanvas');
+    const map = $('#projectionRectCanvas');
+    const sctx = sphere.getContext('2d');
+    const mctx = map.getContext('2d');
+    const fov = 120;
+    const fovRad = fov * Math.PI / 180;
+
+    function focusSphere() {
+      try { sphere.focus({ preventScroll: true }); } catch { sphere.focus(); }
+    }
+    function makeBasisFromForward(forward) {
+      const f = normVec(forward);
+      const ref = Math.abs(f.z) > 0.96 ? { x: 0, y: 1, z: 0 } : { x: 0, y: 0, z: 1 };
+      let right = normVec(cross(ref, f));
+      if (!Number.isFinite(right.x)) right = { x: 0, y: 1, z: 0 };
+      let up = normVec(cross(f, right));
+      right = normVec(cross(up, f));
+      return { f, right, up };
+    }
+    function cleanBasis(basis) {
+      const f = normVec(basis.f);
+      let right = basis.right;
+      const projection = dot(right, f);
+      right = normVec({
+        x: right.x - projection * f.x,
+        y: right.y - projection * f.y,
+        z: right.z - projection * f.z
+      });
+      if (!Number.isFinite(right.x)) return makeBasisFromForward(f);
+      const up = normVec(cross(f, right));
+      return { f, right: normVec(cross(up, f)), up };
+    }
+    function ensureOrientation() {
+      if (!state.orient) {
+        state.orient = {
+          f: vecFromRaDec(0, 0),
+          right: vecFromRaDec(90, 0),
+          up: vecFromRaDec(0, 90)
+        };
+      }
+      state.orient = cleanBasis(state.orient);
+      return state.orient;
+    }
+    function rotateAround(v, axis, angle) {
+      const c = Math.cos(angle), sin = Math.sin(angle), d = dot(axis, v), cr = cross(axis, v);
+      return normVec({
+        x: v.x * c + cr.x * sin + axis.x * d * (1 - c),
+        y: v.y * c + cr.y * sin + axis.y * d * (1 - c),
+        z: v.z * c + cr.z * sin + axis.z * d * (1 - c)
+      });
+    }
+    function rotateBasis(axis, angle) {
+      const b = ensureOrientation();
+      state.orient = cleanBasis({
+        f: rotateAround(b.f, axis, angle),
+        right: rotateAround(b.right, axis, angle),
+        up: rotateAround(b.up, axis, angle)
+      });
+    }
+    function sphereProject(v, basis, radius, viewFovRad) {
+      const z = dot(v, basis.f);
+      const ang = Math.acos(Math.max(-1, Math.min(1, z)));
+      if (ang > viewFovRad / 2) return null;
+      const x = dot(v, basis.right), y = dot(v, basis.up);
+      const sin = Math.sin(ang) || 1e-9;
+      const rr = (ang / (viewFovRad / 2)) * radius;
+      return {
+        x: sphere.width / 2 + rr * x / sin,
+        y: sphere.height / 2 - rr * y / sin,
+        z
+      };
+    }
+    function newCoordinates(v, basis) {
+      const x = dot(v, basis.f);
+      const y = dot(v, basis.right);
+      const z = Math.max(-1, Math.min(1, dot(v, basis.up)));
+      let ra = Math.atan2(y, x) * 180 / Math.PI;
+      if (ra >= 180) ra -= 360;
+      if (ra < -180) ra += 360;
+      return { ra, dec: Math.asin(z) * 180 / Math.PI };
+    }
+    function mapGeometry() {
+      const left = 52, right = 20, top = 20, bottom = 42;
+      return {
+        left, top,
+        width: map.width - left - right,
+        height: map.height - top - bottom
+      };
+    }
+    function mapPoint(ra, dec, geometry) {
+      return {
+        x: geometry.left + (ra + 180) / 360 * geometry.width,
+        y: geometry.top + (90 - dec) / 180 * geometry.height
+      };
+    }
+    function drawSphere(basis) {
+      sctx.clearRect(0, 0, sphere.width, sphere.height);
+      sctx.fillStyle = '#fff';
+      sctx.fillRect(0, 0, sphere.width, sphere.height);
+      sctx.strokeStyle = '#111';
+      sctx.lineWidth = 1;
+      sctx.strokeRect(0.5, 0.5, sphere.width - 1, sphere.height - 1);
+      if (!state.loaded) {
+        sctx.fillStyle = '#111';
+        sctx.font = '18px Arial';
+        sctx.fillText(state.error || 'loading sky...', 22, 34);
+        return;
+      }
+
+      const radius = Math.min(sphere.width, sphere.height) * 0.465;
+      sctx.save();
+      sctx.beginPath();
+      sctx.arc(sphere.width / 2, sphere.height / 2, radius, 0, Math.PI * 2);
+      sctx.clip();
+
+      if (skyConstellationLineDb) drawSkyAsterismLines(sctx, sphereProject, basis, radius, fovRad);
+      const visible = skyStars.filter(star => star.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
+      sctx.fillStyle = '#111';
+      visible.forEach(star => {
+        const point = sphereProject(star.v, basis, radius, fovRad);
+        if (!point) return;
+        const r = Math.max(0.8, Math.min(4.5, 4.0 - star.mag * 0.52));
+        sctx.beginPath();
+        sctx.arc(point.x, point.y, r, 0, Math.PI * 2);
+        sctx.fill();
+      });
+
+      const cx = sphere.width / 2, cy = sphere.height / 2;
+      sctx.strokeStyle = '#111';
+      sctx.lineWidth = 1.4;
+      sctx.beginPath();
+      sctx.moveTo(cx - radius, cy);
+      sctx.lineTo(cx + radius, cy);
+      sctx.moveTo(cx, cy - radius);
+      sctx.lineTo(cx, cy + radius);
+      sctx.stroke();
+
+      sctx.fillStyle = '#fff';
+      sctx.strokeStyle = '#111';
+      sctx.lineWidth = 1.5;
+      sctx.beginPath();
+      sctx.arc(cx, cy, 5.5, 0, Math.PI * 2);
+      sctx.fill();
+      sctx.stroke();
+      sctx.restore();
+
+      sctx.strokeStyle = '#111';
+      sctx.lineWidth = 2;
+      sctx.beginPath();
+      sctx.arc(sphere.width / 2, sphere.height / 2, radius, 0, Math.PI * 2);
+      sctx.stroke();
+
+      sctx.fillStyle = '#111';
+      sctx.font = '15px Arial';
+      sctx.textBaseline = 'middle';
+      sctx.textAlign = 'right';
+      sctx.fillText('new RA', sphere.width / 2 + radius - 10, sphere.height / 2 - 14);
+      sctx.textAlign = 'left';
+      sctx.fillText('new Dec', sphere.width / 2 + 10, sphere.height / 2 - radius + 16);
+      sctx.fillStyle = '#555';
+      sctx.font = '13px Arial';
+      sctx.fillText('new VE', sphere.width / 2 + 10, sphere.height / 2 + 15);
+    }
+    function drawRectangularMap(basis) {
+      mctx.clearRect(0, 0, map.width, map.height);
+      mctx.fillStyle = '#fff';
+      mctx.fillRect(0, 0, map.width, map.height);
+      mctx.strokeStyle = '#111';
+      mctx.lineWidth = 1;
+      mctx.strokeRect(0.5, 0.5, map.width - 1, map.height - 1);
+      if (!state.loaded) {
+        mctx.fillStyle = '#111';
+        mctx.font = '18px Arial';
+        mctx.fillText(state.error || 'loading sky...', 22, 34);
+        return;
+      }
+
+      const g = mapGeometry();
+      const mx = ra => g.left + (ra + 180) / 360 * g.width;
+      const my = dec => g.top + (90 - dec) / 180 * g.height;
+
+      mctx.save();
+      mctx.beginPath();
+      mctx.rect(g.left, g.top, g.width, g.height);
+      mctx.clip();
+
+      mctx.strokeStyle = '#dedede';
+      mctx.lineWidth = 1;
+      for (let ra = -180; ra <= 180; ra += 30) {
+        mctx.beginPath();
+        mctx.moveTo(mx(ra), g.top);
+        mctx.lineTo(mx(ra), g.top + g.height);
+        mctx.stroke();
+      }
+      for (let dec = -90; dec <= 90; dec += 30) {
+        mctx.beginPath();
+        mctx.moveTo(g.left, my(dec));
+        mctx.lineTo(g.left + g.width, my(dec));
+        mctx.stroke();
+      }
+      mctx.strokeStyle = '#999';
+      mctx.lineWidth = 1.2;
+      mctx.beginPath();
+      mctx.moveTo(mx(0), g.top);
+      mctx.lineTo(mx(0), g.top + g.height);
+      mctx.moveTo(g.left, my(0));
+      mctx.lineTo(g.left + g.width, my(0));
+      mctx.stroke();
+
+      if (skyConstellationLineDb) {
+        mctx.strokeStyle = '#777';
+        mctx.globalAlpha = 0.76;
+        mctx.lineWidth = 1.2;
+        mctx.lineCap = 'round';
+        mctx.lineJoin = 'round';
+        skyLineEdgesFromDatabase().forEach(edge => {
+          if (angularDeg(edge.s1.v, edge.s2.v) > 60) return;
+          const a = newCoordinates(edge.s1.v, basis);
+          const b = newCoordinates(edge.s2.v, basis);
+          let ra1 = a.ra, ra2 = b.ra;
+          if (ra2 - ra1 > 180) ra2 -= 360;
+          else if (ra2 - ra1 < -180) ra2 += 360;
+          [-360, 0, 360].forEach(shift => {
+            mctx.beginPath();
+            mctx.moveTo(mx(ra1 + shift), my(a.dec));
+            mctx.lineTo(mx(ra2 + shift), my(b.dec));
+            mctx.stroke();
+          });
+        });
+        mctx.globalAlpha = 1;
+      }
+
+      const visible = skyStars.filter(star => star.mag <= state.magLimit).sort((a, b) => b.mag - a.mag);
+      mctx.fillStyle = '#111';
+      visible.forEach(star => {
+        const coord = newCoordinates(star.v, basis);
+        const point = mapPoint(coord.ra, coord.dec, g);
+        const r = Math.max(0.75, Math.min(3.6, 3.3 - star.mag * 0.42));
+        mctx.beginPath();
+        mctx.arc(point.x, point.y, r, 0, Math.PI * 2);
+        mctx.fill();
+      });
+
+      const origin = mapPoint(0, 0, g);
+      mctx.fillStyle = '#fff';
+      mctx.strokeStyle = '#111';
+      mctx.lineWidth = 1.5;
+      mctx.beginPath();
+      mctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
+      mctx.fill();
+      mctx.stroke();
+      mctx.fillStyle = '#555';
+      mctx.font = '12px Arial';
+      mctx.textAlign = 'left';
+      mctx.textBaseline = 'bottom';
+      mctx.fillText('new VE', origin.x + 8, origin.y - 5);
+      mctx.restore();
+
+      mctx.strokeStyle = '#111';
+      mctx.lineWidth = 1.2;
+      mctx.strokeRect(g.left, g.top, g.width, g.height);
+      mctx.fillStyle = '#555';
+      mctx.font = '13px Arial';
+      mctx.textBaseline = 'top';
+      mctx.textAlign = 'center';
+      for (let ra = -180; ra <= 180; ra += 60) mctx.fillText(`${ra}°`, mx(ra), g.top + g.height + 8);
+      mctx.textBaseline = 'middle';
+      mctx.textAlign = 'right';
+      for (let dec = -90; dec <= 90; dec += 30) mctx.fillText(`${dec}°`, g.left - 8, my(dec));
+      mctx.fillStyle = '#111';
+      mctx.font = '14px Arial';
+      mctx.textAlign = 'center';
+      mctx.textBaseline = 'bottom';
+      mctx.fillText('new RA', g.left + g.width / 2, map.height - 4);
+      mctx.save();
+      mctx.translate(14, g.top + g.height / 2);
+      mctx.rotate(-Math.PI / 2);
+      mctx.textAlign = 'center';
+      mctx.textBaseline = 'top';
+      mctx.fillText('new Dec', 0, 0);
+      mctx.restore();
+    }
+
+    let drawScheduled = false;
+    function draw() {
+      drawScheduled = false;
+      const basis = ensureOrientation();
+      drawSphere(basis);
+      drawRectangularMap(basis);
+    }
+    function scheduleDraw() {
+      if (drawScheduled) return;
+      drawScheduled = true;
+      requestAnimationFrame(draw);
+    }
+    function move(dx, dy, multiplier = 1) {
+      const b = ensureOrientation();
+      const anglePerPx = fovRad / Math.min(sphere.width, sphere.height) * multiplier;
+      const yaw = -dx * anglePerPx;
+      const pitch = -dy * anglePerPx;
+      rotateBasis(b.up, yaw);
+      rotateBasis(ensureOrientation().right, pitch);
+      scheduleDraw();
+    }
+
+    const activePointers = new Map();
+    let lastDrag = null;
+    function finishPointer(e) {
+      activePointers.delete(e.pointerId);
+      lastDrag = activePointers.size === 1 ? [...activePointers.values()][0] : null;
+    }
+    sphere.addEventListener('pointerdown', e => {
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      sphere.setPointerCapture(e.pointerId);
+      focusSphere();
+      if (activePointers.size === 1) lastDrag = { x: e.clientX, y: e.clientY };
+    });
+    sphere.addEventListener('pointermove', e => {
+      if (!activePointers.has(e.pointerId)) return;
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (activePointers.size !== 1) return;
+      const point = activePointers.get(e.pointerId);
+      if (!lastDrag) { lastDrag = point; return; }
+      move(point.x - lastDrag.x, point.y - lastDrag.y, 0.9);
+      lastDrag = point;
+    });
+    sphere.addEventListener('pointerup', finishPointer);
+    sphere.addEventListener('pointercancel', finishPointer);
+    sphere.addEventListener('lostpointercapture', finishPointer);
+    sphere.addEventListener('wheel', e => {
+      e.preventDefault();
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? sphere.height : 1;
+      const dx = (e.deltaX || (e.shiftKey ? e.deltaY : 0)) * unit;
+      const dy = (e.shiftKey ? 0 : e.deltaY) * unit;
+      move(dx, dy, 0.45);
+    }, { passive: false });
+    sphere.addEventListener('keydown', e => {
+      const step = e.shiftKey ? 28 : 12;
+      if (['ArrowLeft', 'a', 'A'].includes(e.key)) { e.preventDefault(); move(-step, 0); }
+      if (['ArrowRight', 'd', 'D'].includes(e.key)) { e.preventDefault(); move(step, 0); }
+      if (['ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); move(0, -step); }
+      if (['ArrowDown', 's', 'S'].includes(e.key)) { e.preventDefault(); move(0, step); }
+    });
+
+    $('#miscBack').addEventListener('click', () => {
+      miscState.view = 'home';
+      renderMisc();
+    });
+
+    if (!state.loaded && !state.loading) {
+      state.loading = true;
+      showLoadingOverlay('loading sky data');
+      Promise.all([loadSkyData(), loadSkyConstellationLines()]).then(() => {
+        state.loaded = true;
+        state.loading = false;
+        hideLoadingOverlay();
+        draw();
+        focusSphere();
+      }).catch(err => {
+        console.warn('iloveastro: Projection Distortion sky data could not be loaded.', err);
+        state.error = 'sky data unavailable';
+        state.loading = false;
+        hideLoadingOverlay();
+        draw();
+      });
+    }
+    draw();
+    setTimeout(() => focusSphere(), 0);
   }
 
 
