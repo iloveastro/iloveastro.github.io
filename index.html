@@ -88,27 +88,46 @@
     window.__iloveastroLoaderMs = 70;
     window.__iloveastroLaunchStartedAt = Date.now();
     window.__iloveastroMinLaunchMs = window.__iloveastroLoadingFrames.length * window.__iloveastroLoaderMs;
-    window.__iloveastroLaunchLoader = (function () {
-      var i = 0;
-      return setInterval(function () {
-        var el = document.querySelector('#loadingOverlay .loading-word');
-        if (!el) return;
-        i = (i + 1) % window.__iloveastroLoadingFrames.length;
-        el.textContent = window.__iloveastroLoadingFrames[i];
-      }, window.__iloveastroLoaderMs);
-    })();
     window.__iloveastroUnlocked = false;
+    window.__iloveastroUnlockRequested = false;
+    window.__iloveastroUnlockCompletionQueued = false;
     window.__iloveastroUnlockBuffer = '';
+    window.__iloveastroLaunchFrameIndex = 0;
+    window.__iloveastroCompleteUnlock = function () {
+      if (window.__iloveastroUnlocked) return;
+      window.__iloveastroUnlocked = true;
+      window.__iloveastroUnlockRequested = false;
+      window.__iloveastroUnlockCompletionQueued = false;
+      window.dispatchEvent(new Event('iloveastro-unlock'));
+    };
+    window.__iloveastroQueueUnlockCompletion = function () {
+      if (window.__iloveastroUnlockCompletionQueued || window.__iloveastroUnlocked) return;
+      window.__iloveastroUnlockCompletionQueued = true;
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { window.__iloveastroCompleteUnlock(); });
+      });
+    };
+    window.__iloveastroLaunchLoader = setInterval(function () {
+      var el = document.querySelector('#loadingOverlay .loading-word');
+      if (!el) return;
+      window.__iloveastroLaunchFrameIndex = (window.__iloveastroLaunchFrameIndex + 1) % window.__iloveastroLoadingFrames.length;
+      el.textContent = window.__iloveastroLoadingFrames[window.__iloveastroLaunchFrameIndex];
+      if (window.__iloveastroUnlockRequested && window.__iloveastroLaunchFrameIndex === window.__iloveastroLoadingFrames.length - 1) {
+        window.__iloveastroQueueUnlockCompletion();
+      }
+    }, window.__iloveastroLoaderMs);
     window.__iloveastroUnlockHandler = function (event) {
       if (event.ctrlKey || event.metaKey || event.altKey || typeof event.key !== 'string' || event.key.length !== 1) return;
       var ch = event.key.toLowerCase();
       if (ch < 'a' || ch > 'z') return;
       window.__iloveastroUnlockBuffer = (window.__iloveastroUnlockBuffer + ch).slice(-6);
       if (window.__iloveastroUnlockBuffer !== 'cygnus') return;
-      window.__iloveastroUnlocked = true;
+      window.__iloveastroUnlockRequested = true;
       window.removeEventListener('keydown', window.__iloveastroUnlockHandler, true);
       window.__iloveastroUnlockHandler = null;
-      window.dispatchEvent(new Event('iloveastro-unlock'));
+      if (window.__iloveastroLaunchFrameIndex === window.__iloveastroLoadingFrames.length - 1) {
+        window.__iloveastroQueueUnlockCompletion();
+      }
     };
     window.addEventListener('keydown', window.__iloveastroUnlockHandler, true);
   </script>

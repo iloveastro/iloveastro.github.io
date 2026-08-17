@@ -6468,7 +6468,7 @@
       const z = dot(v, basis.f);
       const ang = Math.acos(Math.max(-1, Math.min(1, z)));
       if (ang > viewFovRad / 2) return null;
-      const x = -dot(v, basis.right), y = dot(v, basis.up);
+      const x = dot(v, basis.right), y = dot(v, basis.up);
       const sin = Math.sin(ang) || 1e-9;
       const rr = (ang / (viewFovRad / 2)) * radius;
       return {
@@ -6512,7 +6512,7 @@
         const z = dot(v, basis.f);
         const ang = Math.acos(Math.max(-1, Math.min(1, z)));
         if (ang > Math.min(Math.PI, fovRad / 2 + edgeMarginRad)) return null;
-        const x = -dot(v, basis.right), y = dot(v, basis.up);
+        const x = dot(v, basis.right), y = dot(v, basis.up);
         const sin = Math.sin(ang) || 1e-9;
         const rr = (ang / (fovRad / 2)) * radius;
         return { x: sphere.width / 2 + rr * x / sin, y: sphere.height / 2 - rr * y / sin };
@@ -6556,7 +6556,7 @@
         const z = dot(v, basis.f);
         const ang = Math.acos(Math.max(-1, Math.min(1, z)));
         if (ang > fovRad / 2 + 5 * Math.PI / 180) return null;
-        const x = -dot(v, basis.right), y = dot(v, basis.up);
+        const x = dot(v, basis.right), y = dot(v, basis.up);
         const sin = Math.sin(ang) || 1e-9;
         const rr = (ang / (fovRad / 2)) * radius;
         return { x: sphere.width / 2 + rr * x / sin, y: sphere.height / 2 - rr * y / sin };
