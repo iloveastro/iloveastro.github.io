@@ -97,6 +97,20 @@
         el.textContent = window.__iloveastroLoadingFrames[i];
       }, window.__iloveastroLoaderMs);
     })();
+    window.__iloveastroUnlocked = false;
+    window.__iloveastroUnlockBuffer = '';
+    window.__iloveastroUnlockHandler = function (event) {
+      if (event.ctrlKey || event.metaKey || event.altKey || typeof event.key !== 'string' || event.key.length !== 1) return;
+      var ch = event.key.toLowerCase();
+      if (ch < 'a' || ch > 'z') return;
+      window.__iloveastroUnlockBuffer = (window.__iloveastroUnlockBuffer + ch).slice(-6);
+      if (window.__iloveastroUnlockBuffer !== 'cygnus') return;
+      window.__iloveastroUnlocked = true;
+      window.removeEventListener('keydown', window.__iloveastroUnlockHandler, true);
+      window.__iloveastroUnlockHandler = null;
+      window.dispatchEvent(new Event('iloveastro-unlock'));
+    };
+    window.addEventListener('keydown', window.__iloveastroUnlockHandler, true);
   </script>
   <script src="data.js"></script>
   <script src="app.js"></script>

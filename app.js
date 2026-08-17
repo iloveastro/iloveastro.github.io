@@ -93,19 +93,10 @@
   }
 
   function hideLaunchLoadingOverlay() {
+    if (!window.__iloveastroUnlocked) return;
     const overlay = document.getElementById('loadingOverlay');
     if (!overlay || !overlay.dataset.launch) return;
-    const started = window.__iloveastroLaunchStartedAt || Date.now();
-    const minMs = window.__iloveastroMinLaunchMs || (LOADING_WORD_FRAMES.length * (window.__iloveastroLoaderMs || 70));
-    const elapsed = Date.now() - started;
-    const remaining = Math.max(0, minMs - elapsed);
-    const removeLaunch = () => {
-      const later = document.getElementById('loadingOverlay');
-      if (later && later.dataset.launch) hideLoadingOverlay();
-      launchState.active = false;
-    };
-    if (remaining) setTimeout(removeLaunch, remaining);
-    else removeLaunch();
+    hideLoadingOverlay();
   }
 
   window.addEventListener('error', () => hideLaunchLoadingOverlay());
@@ -6477,7 +6468,7 @@
       const z = dot(v, basis.f);
       const ang = Math.acos(Math.max(-1, Math.min(1, z)));
       if (ang > viewFovRad / 2) return null;
-      const x = dot(v, basis.right), y = dot(v, basis.up);
+      const x = -dot(v, basis.right), y = dot(v, basis.up);
       const sin = Math.sin(ang) || 1e-9;
       const rr = (ang / (viewFovRad / 2)) * radius;
       return {
@@ -6521,7 +6512,7 @@
         const z = dot(v, basis.f);
         const ang = Math.acos(Math.max(-1, Math.min(1, z)));
         if (ang > Math.min(Math.PI, fovRad / 2 + edgeMarginRad)) return null;
-        const x = dot(v, basis.right), y = dot(v, basis.up);
+        const x = -dot(v, basis.right), y = dot(v, basis.up);
         const sin = Math.sin(ang) || 1e-9;
         const rr = (ang / (fovRad / 2)) * radius;
         return { x: sphere.width / 2 + rr * x / sin, y: sphere.height / 2 - rr * y / sin };
@@ -6565,7 +6556,7 @@
         const z = dot(v, basis.f);
         const ang = Math.acos(Math.max(-1, Math.min(1, z)));
         if (ang > fovRad / 2 + 5 * Math.PI / 180) return null;
-        const x = dot(v, basis.right), y = dot(v, basis.up);
+        const x = -dot(v, basis.right), y = dot(v, basis.up);
         const sin = Math.sin(ang) || 1e-9;
         const rr = (ang / (fovRad / 2)) * radius;
         return { x: sphere.width / 2 + rr * x / sin, y: sphere.height / 2 - rr * y / sin };
@@ -7361,8 +7352,10 @@
     else if (activeGame === 'misc') renderMisc();
   }
   function finishLaunchThenRender() {
+    if (!launchState.active) return;
     launchState.active = false;
     hideLoadingOverlay();
+    window.removeEventListener('iloveastro-unlock', finishLaunchThenRender);
     render();
   }
 
@@ -7374,11 +7367,11 @@
       render();
       return;
     }
-    const started = window.__iloveastroLaunchStartedAt || Date.now();
-    const minMs = window.__iloveastroMinLaunchMs || (LOADING_WORD_FRAMES.length * (window.__iloveastroLoaderMs || 70));
-    const elapsed = Date.now() - started;
-    const remaining = Math.max(0, minMs - elapsed);
-    setTimeout(finishLaunchThenRender, remaining);
+    if (window.__iloveastroUnlocked) {
+      finishLaunchThenRender();
+      return;
+    }
+    window.addEventListener('iloveastro-unlock', finishLaunchThenRender);
   }
 
   beginLaunch();
