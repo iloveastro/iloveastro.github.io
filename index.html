@@ -120,7 +120,7 @@
       if (event.ctrlKey || event.metaKey || event.altKey || typeof event.key !== 'string' || event.key.length !== 1) return;
       var ch = event.key.toLowerCase();
       if (ch < 'a' || ch > 'z') return;
-      window.__iloveastroUnlockBuffer = (window.__iloveastroUnlockBuffer + ch).slice(-6);
+      window.__iloveastroUnlockBuffer = (window.__iloveastroUnlockBuffer + ch).slice(-8);
       if (window.__iloveastroUnlockBuffer !== 'crescent') return;
       window.__iloveastroUnlockRequested = true;
       window.removeEventListener('keydown', window.__iloveastroUnlockHandler, true);
