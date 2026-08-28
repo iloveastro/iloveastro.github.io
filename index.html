@@ -121,7 +121,7 @@
       var ch = event.key.toLowerCase();
       if (ch < 'a' || ch > 'z') return;
       window.__iloveastroUnlockBuffer = (window.__iloveastroUnlockBuffer + ch).slice(-6);
-      if (window.__iloveastroUnlockBuffer !== 'cygnus') return;
+      if (window.__iloveastroUnlockBuffer !== 'crescent') return;
       window.__iloveastroUnlockRequested = true;
       window.removeEventListener('keydown', window.__iloveastroUnlockHandler, true);
       window.__iloveastroUnlockHandler = null;
